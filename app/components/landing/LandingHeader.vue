@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-
-const { user, userAvatar, fetchUser, logout } = useAuth()
-
-onMounted(async () => {
-  await fetchUser()
-})
+const { user, userAvatar, isAdmin, fetchUser, logout } = useAuth()
 
 const colorMode = useColorMode()
 const isDark = computed({
@@ -21,6 +15,81 @@ const toggleColorMode = () => {
 
 // Mobile menu toggle
 const isMobileMenuOpen = ref(false)
+
+// User Dropdown State & Handlers
+const isUserDropdownOpen = ref(false)
+const userDropdownRef = ref<HTMLElement | null>(null)
+let closeDropdownTimer: ReturnType<typeof setTimeout> | null = null
+
+const openDropdown = () => {
+  if (closeDropdownTimer) {
+    clearTimeout(closeDropdownTimer)
+    closeDropdownTimer = null
+  }
+  isUserDropdownOpen.value = true
+}
+
+const scheduleCloseDropdown = () => {
+  if (closeDropdownTimer) clearTimeout(closeDropdownTimer)
+  closeDropdownTimer = setTimeout(() => {
+    isUserDropdownOpen.value = false
+  }, 200)
+}
+
+const toggleUserDropdown = () => {
+  if (closeDropdownTimer) {
+    clearTimeout(closeDropdownTimer)
+    closeDropdownTimer = null
+  }
+  isUserDropdownOpen.value = !isUserDropdownOpen.value
+}
+
+const closeUserDropdown = () => {
+  if (closeDropdownTimer) {
+    clearTimeout(closeDropdownTimer)
+    closeDropdownTimer = null
+  }
+  isUserDropdownOpen.value = false
+}
+
+const handleLogout = async () => {
+  closeUserDropdown()
+  await logout()
+  navigateTo('/login')
+}
+
+// Close dropdown on click outside
+const handleClickOutside = (event: MouseEvent) => {
+  if (userDropdownRef.value && !userDropdownRef.value.contains(event.target as Node)) {
+    closeUserDropdown()
+  }
+}
+
+// Close dropdown on Escape key
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    closeUserDropdown()
+  }
+}
+
+// Close dropdown on route navigation
+const route = useRoute()
+watch(() => route.fullPath, () => {
+  closeUserDropdown()
+  isMobileMenuOpen.value = false
+})
+
+onMounted(async () => {
+  await fetchUser()
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleKeyDown)
+  if (closeDropdownTimer) clearTimeout(closeDropdownTimer)
+})
 </script>
 
 <template>
@@ -207,17 +276,26 @@ const isMobileMenuOpen = ref(false)
               </svg>
             </button>
 
-            <!-- User Auth Buttons Desktop -->
+            <!-- User Profile & Dropdown Menu Desktop -->
             <div
               v-if="user"
-              class="flex items-center gap-2"
+              ref="userDropdownRef"
+              class="relative"
+              @mouseenter="openDropdown"
+              @mouseleave="scheduleCloseDropdown"
             >
-              <NuxtLink
-                to="/profile"
-                class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 rounded-xl transition-colors"
-                title="Buka Halaman Profil"
+              <!-- Avatar Trigger Button (Click / Hover) -->
+              <button
+                type="button"
+                aria-label="Menu Akun Pengguna"
+                :aria-expanded="isUserDropdownOpen"
+                aria-haspopup="true"
+                class="flex items-center gap-2 pl-1.5 pr-2.5 sm:pr-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-neutral-800 bg-slate-50/80 hover:bg-slate-100 dark:bg-neutral-900 dark:hover:bg-neutral-800/80 transition-all cursor-pointer select-none group"
+                :class="{ 'ring-2 ring-primary-500/20 border-primary-500/50 bg-white dark:bg-neutral-800': isUserDropdownOpen }"
+                @click="toggleUserDropdown"
               >
-                <div class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                <!-- Avatar -->
+                <div class="w-7 h-7 rounded-lg bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0 overflow-hidden shadow-sm shadow-primary-500/20">
                   <img
                     v-if="userAvatar"
                     :src="userAvatar"
@@ -226,18 +304,188 @@ const isMobileMenuOpen = ref(false)
                   >
                   <span v-else>{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</span>
                 </div>
-                <span class="text-xs font-semibold text-slate-800 dark:text-neutral-200 max-w-[120px] truncate">
-                  {{ user.name || user.email }}
-                </span>
-              </NuxtLink>
-              <button
-                type="button"
-                aria-label="Logout"
-                class="h-10 px-4 bg-slate-100 hover:bg-red-50 dark:bg-neutral-800 dark:hover:bg-red-900/30 text-slate-700 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
-                @click="logout"
-              >
-                Keluar
+
+                <!-- Display Name & Chevron -->
+                <div class="hidden sm:flex items-center gap-1.5 text-left">
+                  <span class="text-xs font-semibold text-slate-800 dark:text-neutral-200 max-w-[110px] md:max-w-[130px] truncate">
+                    {{ user.name || user.email }}
+                  </span>
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-400 dark:text-neutral-500 transition-transform duration-200"
+                    :class="{ 'rotate-180': isUserDropdownOpen }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </button>
+
+              <!-- Dropdown Menu Content -->
+              <Transition
+                enter-active-class="transition duration-150 ease-out"
+                enter-from-class="transform scale-95 opacity-0 -translate-y-1"
+                enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                leave-active-class="transition duration-100 ease-in"
+                leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                leave-to-class="transform scale-95 opacity-0 -translate-y-1"
+              >
+                <div
+                  v-if="isUserDropdownOpen"
+                  class="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-xl shadow-slate-900/10 dark:shadow-neutral-950/50 overflow-hidden z-50 py-1.5 focus:outline-none"
+                  @mouseenter="openDropdown"
+                  @mouseleave="scheduleCloseDropdown"
+                >
+                  <!-- Header: Info Pengguna -->
+                  <div class="px-4 py-3 border-b border-slate-100 dark:border-neutral-800/80 bg-slate-50/60 dark:bg-neutral-800/30">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-primary-600 text-white font-bold text-sm flex items-center justify-center shrink-0 overflow-hidden shadow-sm shadow-primary-500/20">
+                        <img
+                          v-if="userAvatar"
+                          :src="userAvatar"
+                          :alt="user.name || 'Profil'"
+                          class="w-full h-full object-cover"
+                        >
+                        <span v-else>{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</span>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                          {{ user.name || 'Pengguna' }}
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-neutral-400 truncate">
+                          {{ user.email }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="user.prefs?.pekerjaan || user.prefs?.afiliasi || user.prefs?.affiliasi"
+                      class="mt-2 text-[11px] font-medium text-primary-600 dark:text-primary-400 truncate"
+                    >
+                      {{ [user.prefs?.pekerjaan, user.prefs?.afiliasi || user.prefs?.affiliasi].filter(Boolean).join(' • ') }}
+                    </div>
+                  </div>
+
+                  <!-- Navigasi Menu Dropdown -->
+                  <div class="p-1.5 space-y-0.5">
+                    <!-- Menu Profile -->
+                    <NuxtLink
+                      to="/profile"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      @click="closeUserDropdown"
+                    >
+                      <svg
+                        class="w-4 h-4 text-slate-400 dark:text-neutral-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      <div class="flex-1">
+                        <span>Profil Saya</span>
+                      </div>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400">
+                        Akun
+                      </span>
+                    </NuxtLink>
+
+                    <!-- Menu Keamanan & Sandi -->
+                    <NuxtLink
+                      to="/profile"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      @click="closeUserDropdown"
+                    >
+                      <svg
+                        class="w-4 h-4 text-slate-400 dark:text-neutral-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                      <div class="flex-1">
+                        <span>Keamanan & 2FA</span>
+                      </div>
+                    </NuxtLink>
+
+                    <!-- Menu Admin Panel (Khusus akun dengan label 'admin') -->
+                    <NuxtLink
+                      v-if="isAdmin"
+                      to="/admin/setting"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-50/80 hover:bg-primary-100 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 transition-colors"
+                      @click="closeUserDropdown"
+                    >
+                      <svg
+                        class="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <div class="flex-1">
+                        <span>Panel Admin</span>
+                      </div>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-bold">
+                        Admin
+                      </span>
+                    </NuxtLink>
+
+                    <!-- Garis Pemisah -->
+                    <div class="my-1 border-t border-slate-100 dark:border-neutral-800" />
+
+                    <!-- Menu Keluar (Logout) -->
+                    <button
+                      type="button"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer text-left"
+                      @click="handleLogout"
+                    >
+                      <svg
+                        class="w-4 h-4 text-red-500 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      <span>Keluar (Logout)</span>
+                    </button>
+                  </div>
+                </div>
+              </Transition>
             </div>
 
             <div
@@ -364,6 +612,38 @@ const isMobileMenuOpen = ref(false)
                   d="M9 5l7 7-7 7"
                 />
               </svg>
+            </NuxtLink>
+            <NuxtLink
+              v-if="isAdmin"
+              to="/admin/setting"
+              class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-50 dark:bg-primary-950/40 text-sm font-semibold text-primary-700 dark:text-primary-300 transition-colors"
+              @click="isMobileMenuOpen = false"
+            >
+              <div class="flex items-center gap-2.5">
+                <svg
+                  class="w-4 h-4 text-primary-600 dark:text-primary-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span>Panel Admin (Pengaturan)</span>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-bold">
+                Admin
+              </span>
             </NuxtLink>
             <button
               type="button"

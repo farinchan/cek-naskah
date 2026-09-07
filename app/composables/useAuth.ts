@@ -20,6 +20,13 @@ export const useAuth = () => {
     return (user.value?.prefs?.avatarUrl as string) || (user.value?.prefs?.photoUrl as string) || ''
   })
 
+  // Check if current user has 'admin' label assigned in Appwrite
+  const isAdmin = computed(() => {
+    if (!user.value) return false
+    const labels = user.value.labels || []
+    return labels.some(l => l.toLowerCase() === 'admin')
+  })
+
   const clearMessages = () => {
     error.value = null
     success.value = null
@@ -589,6 +596,7 @@ export const useAuth = () => {
   return {
     user,
     userAvatar,
+    isAdmin,
     loading,
     error,
     success,
