@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Models } from 'appwrite'
+
 useSeoMeta({
   title: 'Profil Saya — Cek Naskah',
   description: 'Kelola informasi profil, nomor telepon, dan keamanan akun Cek Naskah Anda.',
@@ -16,11 +18,19 @@ const {
   updateAvatar,
   sendEmailVerification,
   confirmEmailVerification,
+  createMFAAuthenticator,
+  verifyAndEnableMFA,
+  disableMFA,
+  getMFARecoveryCodes,
+  listSessions,
+  deleteSession,
+  deleteOtherSessions,
+  deleteAllSessions,
   forgotPassword,
   logout
 } = useAuth()
 
-const activeTab = ref<'account' | 'security'>('account')
+const activeTab = ref<'account' | 'security' | 'sessions'>('account')
 
 // Feedback messages for profile page actions
 const actionError = ref<string | null>(null)
@@ -60,12 +70,12 @@ const affiliationInput = ref('')
 
 // Preset Avatars
 const PRESET_AVATARS = [
-  { id: 'p1', name: 'Akademisi Pria', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=Profesor' },
-  { id: 'p2', name: 'Akademisi Wanita', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=Cendekia' },
-  { id: 'p3', name: 'Peneliti Muda', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Akademisi' },
-  { id: 'p4', name: 'Penulis Buku', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Peneliti' },
-  { id: 'p5', name: 'Mahasiswa Kreatif', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Mahasiswa' },
-  { id: 'p6', name: 'Robot Cek Naskah', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=NaskahBot' }
+  { id: 'p1', name: 'Akademisi Pria', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=mbnxc' },
+  { id: 'p2', name: 'Akademisi Wanita', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=profe' },
+  { id: 'p3', name: 'Peneliti Muda', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=mahasss' },
+  { id: 'p4', name: 'Penulis Buku', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=Cendekia' },
+  { id: 'p5', name: 'Mahasiswa Kreatif', url: 'https://api.dicebear.com/7.x/notionists/svg?seed=Mahasiswa' },
+  { id: 'p6', name: 'Robot', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=NaskahBot' }
 ]
 
 // User Photo / Avatar States
@@ -333,6 +343,7 @@ onMounted(async () => {
   }
 
   resetFormToUser()
+  loadSessions()
 
   // Check if landing with email verification callback (userId & secret)
   const route = useRoute()
@@ -540,6 +551,221 @@ const handleRequestPasswordReset = async () => {
   } else {
     actionError.value = res.error || 'Gagal mengirim email reset kata sandi.'
   }
+}
+
+// Multi-Factor Authentication (MFA / 2FA) States
+const isSettingUpMfa = ref(false)
+const mfaQrUrl = ref('')
+const mfaOtpInput = ref('')
+const mfaLoading = ref(false)
+const recoveryCodes = ref<string[]>([])
+const showRecoveryCodesModal = ref(false)
+const areCodesCopied = ref(false)
+const showDisableMfaConfirm = ref(false)
+
+// Start MFA Setup: request authenticator creation from Appwrite
+const startMfaSetup = async () => {
+  clearActionFeedback()
+  mfaLoading.value = true
+  mfaOtpInput.value = ''
+  try {
+    const res = await createMFAAuthenticator()
+    if (res.success && res.qrUrl) {
+      mfaQrUrl.value = res.qrUrl
+      isSettingUpMfa.value = true
+    } else {
+      actionError.value = res.error || 'Gagal memulai konfigurasi 2FA. Silakan coba lagi.'
+    }
+  } finally {
+    mfaLoading.value = false
+  }
+}
+
+// Cancel MFA Setup
+const cancelMfaSetup = () => {
+  isSettingUpMfa.value = false
+  mfaQrUrl.value = ''
+  mfaOtpInput.value = ''
+}
+
+// Verify OTP & Activate 2FA
+const confirmEnableMfa = async () => {
+  clearActionFeedback()
+  const code = mfaOtpInput.value.replace(/\D/g, '').trim()
+  if (code.length !== 6) {
+    actionError.value = 'Masukkan 6 digit kode verifikasi dari aplikasi autentikator.'
+    return
+  }
+  mfaLoading.value = true
+  try {
+    const res = await verifyAndEnableMFA(code)
+    if (res.success) {
+      actionSuccess.value = 'Autentikasi Dua Faktor (2FA) berhasil diaktifkan untuk akun Anda!'
+      isSettingUpMfa.value = false
+      if (res.recoveryCodes && res.recoveryCodes.length > 0) {
+        recoveryCodes.value = res.recoveryCodes
+        showRecoveryCodesModal.value = true
+      }
+    } else {
+      actionError.value = res.error || 'Verifikasi gagal. Pastikan kode 6 digit sudah tepat.'
+    }
+  } finally {
+    mfaLoading.value = false
+  }
+}
+
+// Disable 2FA
+const handleDisableMfa = async () => {
+  clearActionFeedback()
+  mfaLoading.value = true
+  try {
+    const res = await disableMFA()
+    if (res.success) {
+      actionSuccess.value = 'Autentikasi Dua Faktor (2FA) berhasil dinonaktifkan.'
+      showDisableMfaConfirm.value = false
+      recoveryCodes.value = []
+    } else {
+      actionError.value = res.error || 'Gagal menonaktifkan 2FA.'
+    }
+  } finally {
+    mfaLoading.value = false
+  }
+}
+
+// View or Regenerate Recovery Codes
+const handleViewRecoveryCodes = async () => {
+  clearActionFeedback()
+  mfaLoading.value = true
+  try {
+    const res = await getMFARecoveryCodes(false)
+    if (res.success && res.recoveryCodes) {
+      recoveryCodes.value = res.recoveryCodes
+      showRecoveryCodesModal.value = true
+    } else {
+      actionError.value = res.error || 'Tidak dapat memuat kode pemulihan cadangan.'
+    }
+  } finally {
+    mfaLoading.value = false
+  }
+}
+
+// Copy All Recovery Codes
+const copyAllRecoveryCodes = async () => {
+  if (!recoveryCodes.value.length) return
+  try {
+    await navigator.clipboard.writeText(recoveryCodes.value.join('\n'))
+    areCodesCopied.value = true
+    setTimeout(() => {
+      areCodesCopied.value = false
+    }, 2500)
+  } catch {
+    // clipboard error
+  }
+}
+
+// Session Management States
+const sessionList = ref<Models.Session[]>([])
+const sessionsLoading = ref(false)
+const revokingSessionId = ref<string | null>(null)
+const isRevokingOthers = ref(false)
+const showRevokeOthersConfirm = ref(false)
+
+const currentSession = computed(() => sessionList.value.find(s => s.current))
+const otherSessions = computed(() => sessionList.value.filter(s => !s.current))
+
+const loadSessions = async () => {
+  sessionsLoading.value = true
+  try {
+    const res = await listSessions()
+    if (res.success && res.sessions) {
+      sessionList.value = res.sessions
+    }
+  } finally {
+    sessionsLoading.value = false
+  }
+}
+
+const handleRevokeSession = async (sessionId: string) => {
+  clearActionFeedback()
+  revokingSessionId.value = sessionId
+  try {
+    const res = await deleteSession(sessionId)
+    if (res.success) {
+      actionSuccess.value = 'Sesi perangkat berhasil dihentikan.'
+      sessionList.value = sessionList.value.filter(s => s.$id !== sessionId)
+    } else {
+      actionError.value = res.error || 'Gagal menghentikan sesi perangkat.'
+    }
+  } finally {
+    revokingSessionId.value = null
+  }
+}
+
+const handleRevokeOtherSessions = async () => {
+  clearActionFeedback()
+  isRevokingOthers.value = true
+  try {
+    const res = await deleteOtherSessions()
+    if (res.success) {
+      actionSuccess.value = `Berhasil menghentikan ${res.count || 0} sesi perangkat lain.`
+      showRevokeOthersConfirm.value = false
+      await loadSessions()
+    } else {
+      actionError.value = res.error || 'Gagal menghentikan sesi perangkat lain.'
+    }
+  } finally {
+    isRevokingOthers.value = false
+  }
+}
+
+const handleRevokeAllAndLogout = async () => {
+  clearActionFeedback()
+  sessionsLoading.value = true
+  try {
+    await deleteAllSessions()
+    navigateTo('/login')
+  } catch (err: unknown) {
+    const msg = err && typeof err === 'object' && 'message' in err
+      ? String((err as { message: unknown }).message)
+      : 'Gagal menghentikan semua sesi.'
+    actionError.value = msg
+  } finally {
+    sessionsLoading.value = false
+  }
+}
+
+const formatSessionDate = (dateStr: string) => {
+  if (!dateStr) return '-'
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return dateStr
+  }
+}
+
+const getDeviceType = (session: Models.Session): 'mobile' | 'tablet' | 'desktop' => {
+  const os = (session.osName || '').toLowerCase()
+  const clientType = (session.clientType || '').toLowerCase()
+  if (os.includes('ios') || os.includes('android')) {
+    if (os.includes('ipad') || clientType.includes('tablet')) {
+      return 'tablet'
+    }
+    return 'mobile'
+  }
+  return 'desktop'
+}
+
+const getDeviceTitle = (session: Models.Session) => {
+  const client = session.clientName || 'Browser'
+  const os = session.osName || 'Perangkat'
+  return `${client} di ${os}`
 }
 
 // Handle Logout
@@ -781,6 +1007,25 @@ const handleLogout = async () => {
             @click="activeTab = 'security'; clearActionFeedback()"
           >
             Keamanan & Kata Sandi
+          </button>
+          <button
+            type="button"
+            class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2"
+            :class="activeTab === 'sessions'
+              ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+              : 'border-transparent text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
+            @click="activeTab = 'sessions'; clearActionFeedback(); loadSessions()"
+          >
+            <span>Manajemen Sesi</span>
+            <span
+              v-if="sessionList.length"
+              class="px-2 py-0.5 rounded-md text-[11px] font-bold"
+              :class="activeTab === 'sessions'
+                ? 'bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
+                : 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400'"
+            >
+              {{ sessionList.length }}
+            </span>
           </button>
         </div>
 
@@ -1676,7 +1921,410 @@ const handleLogout = async () => {
             </form>
           </div>
 
-          <!-- Card 2: Informasi Keamanan Akun & Tips -->
+          <!-- Card 2: Autentikasi Dua Faktor (MFA / 2FA) -->
+          <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
+            <!-- Card Header -->
+            <div class="p-6 sm:p-8 border-b border-slate-100 dark:border-neutral-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2.5">
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                      Autentikasi Dua Faktor (2FA / MFA)
+                    </h2>
+                    <span
+                      class="px-2.5 py-0.5 rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                      :class="user?.mfa
+                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400'"
+                    >
+                      <span
+                        class="w-1.5 h-1.5 rounded-full"
+                        :class="user?.mfa ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"
+                      />
+                      {{ user?.mfa ? '2FA Aktif' : 'Belum Aktif' }}
+                    </span>
+                  </div>
+                  <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">
+                    Lindungi akun dengan verifikasi 6 digit dari aplikasi autentikator (TOTP) seperti Google Authenticator.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Top Action if inactive and not currently in setup mode -->
+              <div v-if="!user?.mfa && !isSettingUpMfa">
+                <button
+                  type="button"
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-2 shadow-sm shadow-indigo-600/20"
+                  :disabled="mfaLoading"
+                  @click="startMfaSetup"
+                >
+                  <svg
+                    v-if="mfaLoading"
+                    class="animate-spin w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    />
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
+                  </svg>
+                  <svg
+                    v-else
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <span>Konfigurasi 2FA</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Case 1: MFA is ACTIVE -->
+            <div
+              v-if="user?.mfa"
+              class="p-6 sm:p-8 space-y-6"
+            >
+              <div class="p-4 sm:p-5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 flex items-start gap-4">
+                <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                    Akun Anda Dilindungi dengan Lapisan Keamanan Tambahan
+                  </h4>
+                  <p class="text-xs text-emerald-700 dark:text-emerald-300/90 mt-1 leading-relaxed">
+                    Setiap kali Anda masuk menggunakan email dan kata sandi, sistem akan meminta 6 digit kode OTP yang dibuat oleh aplikasi autentikator terdaftar.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Active Actions -->
+              <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+                <div class="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 text-xs font-semibold text-slate-700 dark:text-neutral-200 transition-colors cursor-pointer flex items-center gap-2 shadow-sm"
+                    :disabled="mfaLoading"
+                    @click="handleViewRecoveryCodes"
+                  >
+                    <svg
+                      class="w-4 h-4 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                      />
+                    </svg>
+                    <span>Kode Cadangan Pemulihan</span>
+                  </button>
+                </div>
+
+                <div v-if="!showDisableMfaConfirm">
+                  <button
+                    type="button"
+                    class="px-4 py-2.5 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs font-semibold transition-colors cursor-pointer"
+                    @click="showDisableMfaConfirm = true"
+                  >
+                    Nonaktifkan 2FA
+                  </button>
+                </div>
+
+                <!-- Confirmation Box to Disable -->
+                <div
+                  v-else
+                  class="flex items-center gap-2.5 p-2 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl"
+                >
+                  <span class="text-xs text-red-700 dark:text-red-300 font-medium pl-1">
+                    Yakin ingin menonaktifkan?
+                  </span>
+                  <button
+                    type="button"
+                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                    :disabled="mfaLoading"
+                    @click="handleDisableMfa"
+                  >
+                    {{ mfaLoading ? 'Memproses...' : 'Ya, Matikan' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="px-2.5 py-1.5 text-xs text-slate-600 dark:text-neutral-300 hover:bg-white dark:hover:bg-neutral-800 rounded-lg cursor-pointer"
+                    @click="showDisableMfaConfirm = false"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Case 2: MFA SETUP FLOW -->
+            <div
+              v-else-if="isSettingUpMfa"
+              class="p-6 sm:p-8 space-y-6"
+            >
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <!-- QR Code Box -->
+                <div class="p-6 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/80 dark:border-neutral-700/80 flex flex-col items-center text-center">
+                  <div class="w-48 h-48 bg-white p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-neutral-700 flex items-center justify-center mb-4">
+                    <img
+                      v-if="mfaQrUrl"
+                      :src="mfaQrUrl"
+                      alt="Kode QR Autentikator"
+                      class="w-full h-full object-contain"
+                    >
+                    <div
+                      v-else
+                      class="text-xs text-slate-400"
+                    >
+                      Memuat QR Code...
+                    </div>
+                  </div>
+
+                  <span class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                    Langkah 1: Pindai Kode QR
+                  </span>
+                  <p class="text-[11px] text-slate-500 dark:text-neutral-400 max-w-xs">
+                    Buka aplikasi autentikator di ponsel Anda (Google Authenticator, Microsoft Authenticator, atau 1Password), lalu pindai kode di atas.
+                  </p>
+                </div>
+
+                <!-- OTP Input Form -->
+                <div class="space-y-4">
+                  <div>
+                    <span class="text-xs font-bold text-slate-900 dark:text-white block mb-1">
+                      Langkah 2: Masukkan 6 Digit Kode OTP
+                    </span>
+                    <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed mb-4">
+                      Setelah berhasil dipindai, aplikasi autentikator Anda akan menampilkan 6 digit angka yang berganti secara berkala. Masukkan kode tersebut untuk verifikasi.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      for="mfaOtpCode"
+                      class="block text-xs font-semibold text-slate-700 dark:text-neutral-300 mb-2"
+                    >
+                      Kode Verifikasi (6 Digit) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="mfaOtpCode"
+                      v-model="mfaOtpInput"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="6"
+                      placeholder="Contoh: 123456"
+                      class="w-full px-4 py-3 bg-slate-50 dark:bg-neutral-800/80 border border-slate-200 dark:border-neutral-700 rounded-xl text-slate-900 dark:text-white text-lg font-mono tracking-widest text-center focus:outline-none focus:border-indigo-500 transition-colors"
+                      @keydown.enter.prevent="confirmEnableMfa"
+                    >
+                  </div>
+
+                  <div class="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-neutral-800 text-white disabled:text-slate-400 dark:disabled:text-neutral-500 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm shadow-indigo-600/20 disabled:cursor-not-allowed"
+                      :disabled="mfaLoading || mfaOtpInput.replace(/\D/g, '').length !== 6"
+                      @click="confirmEnableMfa"
+                    >
+                      <svg
+                        v-if="mfaLoading"
+                        class="animate-spin w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        />
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        />
+                      </svg>
+                      <span>{{ mfaLoading ? 'Memverifikasi...' : 'Verifikasi & Aktifkan 2FA' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="px-4 py-2.5 border border-slate-200 dark:border-neutral-700 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-xl text-xs font-semibold text-slate-600 dark:text-neutral-300 transition-colors cursor-pointer"
+                      @click="cancelMfaSetup"
+                    >
+                      Batalkan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Case 3: Inactive Overview & Educational Benefits -->
+            <div
+              v-else
+              class="p-6 sm:p-8 space-y-6"
+            >
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/40 border border-slate-100 dark:border-neutral-800">
+                  <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2.5">
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                    Cegah Peretasan Sandi
+                  </h4>
+                  <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                    Meskipun kata sandi Anda diketahui pihak ketiga, akun tetap terlindungi karena membutuhkan ponsel Anda.
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/40 border border-slate-100 dark:border-neutral-800">
+                  <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-950 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-2.5">
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                    Kode Berganti Tiap 30 Detik
+                  </h4>
+                  <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                    Standar algoritma TOTP industri memastikan kode verifikasi selalu baru dan hanya dapat digunakan satu kali.
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/40 border border-slate-100 dark:border-neutral-800">
+                  <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2.5">
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                    Kompatibel Luas
+                  </h4>
+                  <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                    Mendukung Google Authenticator, Microsoft Authenticator, Apple Passwords, Bitwarden, atau 1Password.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="text-xs text-indigo-950 dark:text-indigo-200 leading-relaxed">
+                  <span class="font-bold block mb-0.5">Siap mengamankan akun naskah Anda?</span>
+                  Proses konfigurasi hanya membutuhkan waktu kurang dari 1 menit dengan memindai kode QR.
+                </div>
+                <button
+                  type="button"
+                  class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm shadow-indigo-600/20 whitespace-nowrap flex items-center gap-1.5"
+                  :disabled="mfaLoading"
+                  @click="startMfaSetup"
+                >
+                  <svg
+                    v-if="mfaLoading"
+                    class="animate-spin w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    />
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
+                  </svg>
+                  <span>Aktifkan 2FA Sekarang</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Informasi Keamanan Akun & Tips -->
           <div class="p-6 sm:p-8 bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm">
             <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
               <svg
@@ -1773,8 +2421,739 @@ const handleLogout = async () => {
             </div>
           </div>
         </div>
+
+        <!-- TAB 3: MANAJEMEN SESI -->
+        <div
+          v-else-if="activeTab === 'sessions'"
+          class="space-y-8"
+        >
+          <!-- Card Utama: Ringkasan Sesi & Tombol Aksi Cepat -->
+          <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100 dark:border-neutral-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+                  <svg
+                    class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>Manajemen Sesi & Perangkat Terhubung</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-1">
+                  Pantau dan kelola seluruh perangkat atau peramban yang sedang aktif masuk ke akun Cek Naskah Anda.
+                </p>
+              </div>
+
+              <!-- Quick Action Toolbar -->
+              <div class="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-xs font-semibold text-slate-700 dark:text-neutral-200 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                  :disabled="sessionsLoading"
+                  @click="loadSessions"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400"
+                    :class="{ 'animate-spin': sessionsLoading }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>{{ sessionsLoading ? 'Memperbarui...' : 'Segarkan' }}</span>
+                </button>
+
+                <button
+                  v-if="otherSessions.length > 0"
+                  type="button"
+                  class="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-semibold transition-colors cursor-pointer border border-red-200 dark:border-red-900/60 flex items-center gap-1.5"
+                  @click="showRevokeOthersConfirm = true"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  <span>Keluarkan Sesi Lain ({{ otherSessions.length }})</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Stats Metric Highlights -->
+            <div class="p-6 sm:p-8 bg-slate-50/50 dark:bg-neutral-800/20 border-b border-slate-100 dark:border-neutral-800/80">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="p-4 rounded-2xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 shadow-sm">
+                  <div class="text-xs font-medium text-slate-500 dark:text-neutral-400 mb-1">
+                    Total Sesi Aktif
+                  </div>
+                  <div class="text-2xl font-black text-slate-900 dark:text-white">
+                    {{ sessionList.length }}
+                  </div>
+                  <div class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+                    Terdaftar di sistem Appwrite
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-neutral-800 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+                  <div class="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Perangkat Saat Ini</span>
+                  </div>
+                  <div class="text-2xl font-black text-slate-900 dark:text-white">
+                    1
+                  </div>
+                  <div class="text-[11px] text-emerald-600 dark:text-emerald-400/90 mt-1">
+                    {{ currentSession ? getDeviceTitle(currentSession) : 'Browser ini' }}
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 shadow-sm">
+                  <div class="text-xs font-medium text-slate-500 dark:text-neutral-400 mb-1">
+                    Perangkat Lain
+                  </div>
+                  <div class="text-2xl font-black text-slate-900 dark:text-white">
+                    {{ otherSessions.length }}
+                  </div>
+                  <div class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+                    {{ otherSessions.length > 0 ? 'Perangkat terhubung lain' : 'Tidak ada perangkat lain' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading State -->
+            <div
+              v-if="sessionsLoading && !sessionList.length"
+              class="p-12 text-center"
+            >
+              <svg
+                class="w-8 h-8 text-primary-600 animate-spin mx-auto mb-3"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <p class="text-sm font-medium text-slate-600 dark:text-neutral-400">
+                Memuat daftar sesi aktif Anda...
+              </p>
+            </div>
+
+            <div
+              v-else
+              class="p-6 sm:p-8 space-y-8"
+            >
+              <!-- PERANGKAT SAAT INI (HIGHLIGHTED) -->
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                    Perangkat yang Sedang Anda Gunakan
+                  </h3>
+                  <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    Sesi Aktif Sekarang
+                  </span>
+                </div>
+
+                <div
+                  v-if="currentSession"
+                  class="p-5 sm:p-6 rounded-2xl bg-primary-50/40 dark:bg-primary-950/20 border-2 border-primary-500/40 dark:border-primary-600/40 transition-colors"
+                >
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-start gap-4">
+                      <!-- Icon Device -->
+                      <div class="w-12 h-12 rounded-2xl bg-primary-100 dark:bg-primary-900/60 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+                        <!-- Desktop / Laptop -->
+                        <svg
+                          v-if="getDeviceType(currentSession) === 'desktop'"
+                          class="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <!-- Mobile -->
+                        <svg
+                          v-else-if="getDeviceType(currentSession) === 'mobile'"
+                          class="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <!-- Tablet -->
+                        <svg
+                          v-else
+                          class="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+
+                      <div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                          <h4 class="text-base font-bold text-slate-900 dark:text-white">
+                            {{ getDeviceTitle(currentSession) }}
+                          </h4>
+                          <span class="px-2 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-[11px] font-semibold">
+                            Perangkat Ini
+                          </span>
+                        </div>
+
+                        <div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 dark:text-neutral-400">
+                          <div class="flex items-center gap-1.5">
+                            <svg
+                              class="w-3.5 h-3.5 text-slate-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                              />
+                            </svg>
+                            <span>IP: <code class="font-mono font-medium text-slate-700 dark:text-neutral-300">{{ currentSession.ip || '127.0.0.1' }}</code></span>
+                          </div>
+
+                          <div class="flex items-center gap-1.5">
+                            <svg
+                              class="w-3.5 h-3.5 text-slate-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            <span>{{ currentSession.countryName || 'Indonesia' }}</span>
+                          </div>
+
+                          <div class="flex items-center gap-1.5">
+                            <svg
+                              class="w-3.5 h-3.5 text-slate-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span>Login sejak: {{ formatSessionDate(currentSession.$createdAt) }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="self-stretch sm:self-center flex sm:flex-col items-end justify-between sm:justify-center gap-2">
+                      <button
+                        type="button"
+                        class="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 text-slate-600 dark:text-neutral-300 text-xs font-semibold transition-colors cursor-pointer"
+                        @click="handleLogout"
+                      >
+                        Keluar Akun
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DAFTAR PERANGKAT LAIN -->
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                    Perangkat Terhubung Lainnya ({{ otherSessions.length }})
+                  </h3>
+                </div>
+
+                <!-- Empty State jika tidak ada sesi lain -->
+                <div
+                  v-if="otherSessions.length === 0"
+                  class="p-8 rounded-2xl bg-slate-50 dark:bg-neutral-800/40 border border-slate-200/80 dark:border-neutral-800 text-center"
+                >
+                  <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-neutral-700 text-slate-400 dark:text-neutral-400 flex items-center justify-center mx-auto mb-3">
+                    <svg
+                      class="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 class="text-sm font-bold text-slate-800 dark:text-neutral-200 mb-1">
+                    Tidak Ada Sesi di Perangkat Lain
+                  </h4>
+                  <p class="text-xs text-slate-500 dark:text-neutral-400 max-w-md mx-auto">
+                    Akun Anda hanya aktif pada peramban ini saat ini. Jika Anda pernah masuk di laptop kantor, ponsel lain, atau komputer umum, semua sesi tersebut telah terputus.
+                  </p>
+                </div>
+
+                <!-- List Sesi Lain -->
+                <div
+                  v-else
+                  class="space-y-3"
+                >
+                  <div
+                    v-for="session in otherSessions"
+                    :key="session.$id"
+                    class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600 transition-all shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div class="flex items-start gap-3.5">
+                      <!-- Icon Device -->
+                      <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-neutral-700 text-slate-600 dark:text-neutral-300 flex items-center justify-center shrink-0">
+                        <svg
+                          v-if="getDeviceType(session) === 'desktop'"
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <svg
+                          v-else-if="getDeviceType(session) === 'mobile'"
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <svg
+                          v-else
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                            {{ getDeviceTitle(session) }}
+                          </h4>
+                        </div>
+
+                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-neutral-400">
+                          <span>IP: <code class="font-mono text-slate-700 dark:text-neutral-300">{{ session.ip || '-' }}</code></span>
+                          <span class="text-slate-300 dark:text-neutral-600">•</span>
+                          <span>{{ session.countryName || 'Lokasi tidak diketahui' }}</span>
+                          <span class="text-slate-300 dark:text-neutral-600">•</span>
+                          <span>Masuk: {{ formatSessionDate(session.$createdAt) }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="self-end sm:self-center">
+                      <button
+                        type="button"
+                        class="px-3.5 py-1.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/50 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                        :disabled="revokingSessionId === session.$id"
+                        @click="handleRevokeSession(session.$id)"
+                      >
+                        <svg
+                          v-if="revokingSessionId === session.$id"
+                          class="w-3.5 h-3.5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          />
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span>{{ revokingSessionId === session.$id ? 'Memutuskan...' : 'Putus Sesi' }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Zona Tindakan Global / Keluar Semua Sesi -->
+              <div class="pt-6 border-t border-slate-100 dark:border-neutral-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900 dark:text-white">
+                    Keluar dari Semua Perangkat (Termasuk Ini)
+                  </h4>
+                  <p class="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
+                    Hentikan seluruh sesi akun secara global dan kembali ke halaman login.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-red-50 dark:bg-neutral-800 dark:hover:bg-red-950/40 text-slate-700 hover:text-red-600 dark:text-neutral-300 dark:hover:text-red-400 text-xs font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-neutral-700 shrink-0"
+                  :disabled="sessionsLoading"
+                  @click="handleRevokeAllAndLogout"
+                >
+                  Keluar dari Semua Sesi
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Panduan & Keamanan Akses Akun -->
+          <div class="p-6 sm:p-8 bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+              <svg
+                class="w-4 h-4 text-primary-600 dark:text-primary-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>Tips Keamanan Sesi & Perangkat</span>
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-neutral-400 mb-6">
+              Langkah proaktif untuk mencegah penyalahgunaan akses akun Anda oleh pihak ketiga.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800">
+                <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                  Perangkat Asing?
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Jika terdapat peramban atau lokasi yang tidak Anda kenali, segera tekan <strong>Putus Sesi</strong> dan ubah kata sandi akun Anda.
+                </p>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800">
+                <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-950 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-3">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+                <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                  Aktifkan Autentikasi 2FA
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Autentikasi dua faktor memastikan tidak ada yang dapat masuk ke akun Anda tanpa kode TOTP dari ponsel pribadi Anda.
+                </p>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800">
+                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                </div>
+                <h4 class="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                  Komputer Publik / Kampus
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Selalu biasakan keluar akun setelah selesai mengoreksi naskah di laboratorium kampus, perpustakaan, atau perangkat bersama.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
+
+    <!-- Modal Kode Pemulihan Cadangan 2FA -->
+    <div
+      v-if="showRecoveryCodesModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+    >
+      <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-5">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                Kode Cadangan Pemulihan 2FA
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
+                Simpan kode ini di tempat yang aman dan rahasia.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 cursor-pointer"
+            @click="showRecoveryCodesModal = false"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+          Setiap kode cadangan hanya dapat digunakan <strong>satu kali</strong> jika Anda kehilangan akses ke aplikasi autentikator di ponsel Anda.
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 p-4 bg-slate-50 dark:bg-neutral-800/80 rounded-2xl border border-slate-200 dark:border-neutral-700">
+          <code
+            v-for="(code, idx) in recoveryCodes"
+            :key="idx"
+            class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-center font-mono text-xs font-bold text-slate-800 dark:text-neutral-200 select-all"
+          >
+            {{ code }}
+          </code>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <button
+            type="button"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+            @click="copyAllRecoveryCodes"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            <span>{{ areCodesCopied ? 'Semua Kode Tersalin!' : 'Salin Semua Kode' }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            @click="showRecoveryCodesModal = false"
+          >
+            Saya Sudah Menyimpan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfirmasi Keluarkan Semua Perangkat Lain -->
+    <div
+      v-if="showRevokeOthersConfirm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+    >
+      <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-5">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">
+              Keluarkan Semua Perangkat Lain?
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-neutral-400 mt-1 leading-relaxed">
+              Tindakan ini akan memutuskan akses akun pada seluruh perangkat dan peramban lain (<strong>{{ otherSessions.length }} sesi</strong>). Sesi di peramban saat ini akan tetap aktif.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            :disabled="isRevokingOthers"
+            @click="showRevokeOthersConfirm = false"
+          >
+            Batal
+          </button>
+
+          <button
+            type="button"
+            class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+            :disabled="isRevokingOthers"
+            @click="handleRevokeOtherSessions"
+          >
+            <svg
+              v-if="isRevokingOthers"
+              class="w-3.5 h-3.5 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            <span>{{ isRevokingOthers ? 'Mengeluarkan...' : 'Ya, Keluarkan Semua' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <LandingFooter />
   </div>

@@ -1,5 +1,5 @@
 import type { Models } from 'appwrite'
-import { account, ID, OAuthProvider } from '~/utils/appwrite.js'
+import { account, avatars, AuthenticatorType, ID, OAuthProvider } from '~/utils/appwrite.js'
 
 export interface UserPreferences extends Models.Preferences {
   pekerjaan?: string
@@ -55,6 +55,18 @@ export const useAuth = () => {
       }
       if (msg.includes('Rate limit')) {
         return 'Terlalu banyak percobaan. Harap tunggu beberapa saat sebelum mencoba lagi.'
+      }
+      if (msg.includes('user_mfa_already_enabled') || msg.includes('already enabled')) {
+        return 'Autentikasi dua faktor (2FA) sudah aktif pada akun Anda.'
+      }
+      if (msg.includes('user_mfa_not_enrolled') || msg.includes('not enrolled')) {
+        return 'Harap daftarkan aplikasi autentikator terlebih dahulu sebelum mengaktifkan 2FA.'
+      }
+      if (msg.includes('user_mfa_invalid_token') || msg.includes('Invalid TOTP') || msg.includes('invalid_otp') || msg.includes('Failed to verify authenticator')) {
+        return 'Kode verifikasi 6 digit tidak valid atau telah kedaluwarsa. Pastikan jam di perangkat Anda akurat.'
+      }
+      if (msg.includes('user_mfa_challenge_required') || msg.includes('mfa_challenge_required') || msg.includes('mfa_required')) {
+        return 'Akun Anda dilindungi 2FA. Masukkan kode autentikator untuk melanjutkan.'
       }
       if (msg.includes('Project not found') || msg.includes('Failed to fetch')) {
         return 'Gagal terhubung ke server Appwrite. Pastikan Project ID dan Endpoint sudah benar di konfigurasi.'
@@ -389,6 +401,191 @@ export const useAuth = () => {
     }
   }
 
+  // 1. Create MFA Authenticator (returns TOTP secret & QR code URI)
+  const createMFAAuthenticator = async () => {
+    loading.value = true
+    clearMessages()
+    try {
+      const auth = await account.createMFAAuthenticator({
+        type: AuthenticatorType.Totp
+      })
+      const qrUrl = avatars.getQR({
+        text: auth.uri,
+        size: 240
+      })
+      return {
+        success: true,
+        secret: auth.secret,
+        uri: auth.uri,
+        qrUrl
+      }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 2. Verify OTP Code and Enable MFA
+  const verifyAndEnableMFA = async (otpVal: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      await account.updateMFAAuthenticator({
+        type: AuthenticatorType.Totp,
+        otp: otpVal.trim()
+      })
+      const updatedUser = await account.updateMFA<UserPreferences>({
+        mfa: true
+      })
+      user.value = updatedUser
+      success.value = 'Autentikasi Dua Faktor (2FA) berhasil diaktifkan untuk akun Anda.'
+
+      let recoveryCodes: string[] = []
+      try {
+        const codesRes = await account.createMFARecoveryCodes()
+        recoveryCodes = codesRes.recoveryCodes || []
+      } catch (codeErr) {
+        console.warn('Gagal membuat kode pemulihan otomatis:', codeErr)
+      }
+
+      return {
+        success: true,
+        user: updatedUser,
+        recoveryCodes
+      }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 3. Disable MFA on account
+  const disableMFA = async () => {
+    loading.value = true
+    clearMessages()
+    try {
+      const updatedUser = await account.updateMFA<UserPreferences>({
+        mfa: false
+      })
+      user.value = updatedUser
+
+      try {
+        await account.deleteMFAAuthenticator({
+          type: AuthenticatorType.Totp
+        })
+      } catch (delErr) {
+        console.warn('Gagal menghapus authenticator app:', delErr)
+      }
+
+      success.value = 'Autentikasi Dua Faktor (2FA) berhasil dinonaktifkan.'
+      return { success: true, user: updatedUser }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 4. Get or Generate MFA Recovery Codes
+  const getMFARecoveryCodes = async (generateNew = false) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const codesRes = generateNew
+        ? await account.createMFARecoveryCodes()
+        : await account.getMFARecoveryCodes()
+
+      return {
+        success: true,
+        recoveryCodes: codesRes.recoveryCodes || []
+      }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 5. Session Management: List active sessions
+  const listSessions = async () => {
+    loading.value = true
+    clearMessages()
+    try {
+      const res = await account.listSessions()
+      return { success: true, sessions: res.sessions, total: res.total }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted, sessions: [], total: 0 }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 6. Delete a specific session by ID
+  const deleteSession = async (sessionId: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      await account.deleteSession({ sessionId })
+      success.value = 'Sesi perangkat berhasil dihentikan.'
+      return { success: true }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 7. Revoke all other sessions except the current active session
+  const deleteOtherSessions = async () => {
+    loading.value = true
+    clearMessages()
+    try {
+      const res = await account.listSessions()
+      const otherSessions = res.sessions.filter(s => !s.current)
+      await Promise.all(otherSessions.map(s => account.deleteSession({ sessionId: s.$id })))
+      success.value = `Berhasil menghentikan ${otherSessions.length} sesi perangkat lain.`
+      return { success: true, count: otherSessions.length }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 8. Delete all sessions (global logout)
+  const deleteAllSessions = async () => {
+    loading.value = true
+    clearMessages()
+    try {
+      await account.deleteSessions()
+      user.value = null
+      success.value = 'Semua sesi berhasil dihentikan. Anda telah keluar dari semua perangkat.'
+      return { success: true }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     user,
     userAvatar,
@@ -409,6 +606,14 @@ export const useAuth = () => {
     updatePrefs,
     updateAvatar,
     sendEmailVerification,
-    confirmEmailVerification
+    confirmEmailVerification,
+    createMFAAuthenticator,
+    verifyAndEnableMFA,
+    disableMFA,
+    getMFARecoveryCodes,
+    listSessions,
+    deleteSession,
+    deleteOtherSessions,
+    deleteAllSessions
   }
 }
