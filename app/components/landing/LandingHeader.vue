@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
-const { user, fetchUser, logout } = useAuth()
+const { user, userAvatar, fetchUser, logout } = useAuth()
 
 onMounted(async () => {
   await fetchUser()
@@ -212,14 +212,24 @@ const isMobileMenuOpen = ref(false)
               v-if="user"
               class="flex items-center gap-2"
             >
-              <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-neutral-800 rounded-xl">
-                <div class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
-                  {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
+              <NuxtLink
+                to="/profile"
+                class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 rounded-xl transition-colors"
+                title="Buka Halaman Profil"
+              >
+                <div class="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                  <img
+                    v-if="userAvatar"
+                    :src="userAvatar"
+                    :alt="user.name || 'Profil'"
+                    class="w-full h-full object-cover"
+                  >
+                  <span v-else>{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</span>
                 </div>
                 <span class="text-xs font-semibold text-slate-800 dark:text-neutral-200 max-w-[120px] truncate">
                   {{ user.name || user.email }}
                 </span>
-              </div>
+              </NuxtLink>
               <button
                 type="button"
                 aria-label="Logout"
@@ -319,9 +329,42 @@ const isMobileMenuOpen = ref(false)
             v-if="user"
             class="pt-2 border-t border-slate-100 dark:border-neutral-900 space-y-2"
           >
-            <div class="px-3 py-2 text-xs text-slate-500 dark:text-neutral-400">
-              Masuk sebagai: <strong class="text-slate-900 dark:text-white">{{ user.name || user.email }}</strong>
-            </div>
+            <NuxtLink
+              to="/profile"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+              @click="isMobileMenuOpen = false"
+            >
+              <div class="w-8 h-8 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                <img
+                  v-if="userAvatar"
+                  :src="userAvatar"
+                  :alt="user.name || 'Profil'"
+                  class="w-full h-full object-cover"
+                >
+                <span v-else>{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold text-slate-800 dark:text-neutral-200 truncate">
+                  {{ user.name || 'Profil Pengguna' }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-neutral-400 truncate">
+                  Buka Pengaturan Profil
+                </div>
+              </div>
+              <svg
+                class="w-4 h-4 text-slate-400 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </NuxtLink>
             <button
               type="button"
               class="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-red-600 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-900/20"

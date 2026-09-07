@@ -1,12 +1,24 @@
-import { ref } from 'vue'
 import type { Models } from 'appwrite'
 import { account, ID, OAuthProvider } from '~/utils/appwrite.js'
 
+export interface UserPreferences extends Models.Preferences {
+  pekerjaan?: string
+  afiliasi?: string
+  affiliasi?: string
+  avatarUrl?: string
+  photoUrl?: string
+  [key: string]: unknown
+}
+
 export const useAuth = () => {
-  const user = useState<Models.User<Models.Preferences> | null>('auth_user', () => null)
+  const user = useState<Models.User<UserPreferences> | null>('auth_user', () => null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const success = ref<string | null>(null)
+
+  const userAvatar = computed(() => {
+    return (user.value?.prefs?.avatarUrl as string) || (user.value?.prefs?.photoUrl as string) || ''
+  })
 
   const clearMessages = () => {
     error.value = null
@@ -35,6 +47,12 @@ export const useAuth = () => {
       if (msg.includes('Invalid email') || msg.includes('email must be a valid')) {
         return 'Format email tidak valid.'
       }
+      if (msg.includes('user_invalid_token') || msg.includes('token has expired') || msg.includes('Invalid token')) {
+        return 'Tautan verifikasi tidak valid atau telah kedaluwarsa. Silakan minta tautan verifikasi baru.'
+      }
+      if (msg.includes('already verified') || msg.includes('user_already_verified')) {
+        return 'Alamat email ini sudah berhasil diverifikasi sebelumnya.'
+      }
       if (msg.includes('Rate limit')) {
         return 'Terlalu banyak percobaan. Harap tunggu beberapa saat sebelum mencoba lagi.'
       }
@@ -47,9 +65,9 @@ export const useAuth = () => {
   }
 
   // Fetch current logged-in user
-  const fetchUser = async (): Promise<Models.User<Models.Preferences> | null> => {
+  const fetchUser = async (): Promise<Models.User<UserPreferences> | null> => {
     try {
-      const current = await account.get()
+      const current = await account.get<UserPreferences>()
       user.value = current
       return current
     } catch {
@@ -67,7 +85,7 @@ export const useAuth = () => {
         email: emailVal,
         password: passwordVal
       })
-      const currentUser = await account.get()
+      const currentUser = await account.get<UserPreferences>()
       user.value = currentUser
       success.value = 'Berhasil masuk ke akun Anda.'
       return { success: true, user: currentUser }
@@ -121,7 +139,7 @@ export const useAuth = () => {
         }
       }
 
-      const currentUser = await account.get()
+      const currentUser = await account.get<UserPreferences>()
       user.value = currentUser
       success.value = 'Akun berhasil dibuat dan Anda telah masuk.'
       return { success: true, user: currentUser }
@@ -224,8 +242,156 @@ export const useAuth = () => {
     }
   }
 
+  // Update Profile Name
+  const updateName = async (nameVal: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const updated = await account.updateName<UserPreferences>({ name: nameVal })
+      user.value = updated
+      success.value = 'Nama profil berhasil diperbarui.'
+      return { success: true, user: updated }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Update Profile Phone
+  const updatePhone = async (phoneVal: string, passwordVal: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const formattedPhone = formatE164Phone(phoneVal)
+      const updated = await account.updatePhone<UserPreferences>({
+        phone: formattedPhone,
+        password: passwordVal
+      })
+      user.value = updated
+      success.value = 'Nomor telepon berhasil diperbarui.'
+      return { success: true, user: updated }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Update Password
+  const updatePassword = async (newPasswordVal: string, oldPasswordVal: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const updated = await account.updatePassword<UserPreferences>({
+        password: newPasswordVal,
+        oldPassword: oldPasswordVal
+      })
+      user.value = updated
+      success.value = 'Kata sandi berhasil diperbarui.'
+      return { success: true, user: updated }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Update User Preferences (Key-Value pairs)
+  const updatePrefs = async (newPrefs: Record<string, unknown>) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const existingPrefs = (user.value?.prefs as Record<string, unknown>) || {}
+      const mergedPrefs = {
+        ...existingPrefs,
+        ...newPrefs
+      }
+      const updated = await account.updatePrefs<UserPreferences>({ prefs: mergedPrefs as Partial<UserPreferences> })
+      user.value = updated
+      success.value = 'Preferensi profil berhasil diperbarui.'
+      return { success: true, user: updated }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Send Email Verification Link
+  const sendEmailVerification = async () => {
+    loading.value = true
+    clearMessages()
+    try {
+      const origin = typeof window !== 'undefined'
+        ? window.location.origin
+        : 'http://localhost:3000'
+
+      const verifyUrl = `${origin}/profile`
+      await account.createEmailVerification({
+        url: verifyUrl
+      })
+      success.value = 'Tautan verifikasi telah dikirim ke email Anda. Silakan periksa kotak masuk atau spam.'
+      return { success: true }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Confirm Email Verification with Token
+  const confirmEmailVerification = async (userId: string, secret: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      await account.updateEmailVerification({
+        userId,
+        secret
+      })
+      const updatedUser = await fetchUser()
+      success.value = 'Selamat! Alamat email Anda telah berhasil diverifikasi.'
+      return { success: true, user: updatedUser }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Update Profile Avatar
+  const updateAvatar = async (avatarUrlVal: string | null) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const res = await updatePrefs({
+        avatarUrl: avatarUrlVal || '',
+        photoUrl: avatarUrlVal || ''
+      })
+      if (res.success) {
+        success.value = avatarUrlVal ? 'Foto profil berhasil diperbarui.' : 'Foto profil berhasil dihapus.'
+      }
+      return res
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     user,
+    userAvatar,
     loading,
     error,
     success,
@@ -236,6 +402,13 @@ export const useAuth = () => {
     loginWithGoogle,
     forgotPassword,
     resetPassword,
-    logout
+    logout,
+    updateName,
+    updatePhone,
+    updatePassword,
+    updatePrefs,
+    updateAvatar,
+    sendEmailVerification,
+    confirmEmailVerification
   }
 }
