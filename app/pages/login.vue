@@ -4,6 +4,11 @@ import { ref, onMounted } from 'vue'
 const route = useRoute()
 const { user, loading, error, success, clearMessages, fetchUser, login, logout, loginWithGoogle } = useAuth()
 
+useSeoMeta({
+  title: 'Masuk Akun — Cek Naskah',
+  description: 'Masuk ke Cek Naskah untuk Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+})
+
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -58,20 +63,20 @@ const handleLogout = async () => {
     <main class="py-12 sm:py-20 flex-1">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          <!-- Left Column: Branding, Value Proposition & Testimonial -->
+          <!-- Left Column: Branding, Value Proposition & 4 Products -->
           <div class="lg:col-span-7 space-y-8">
             <div class="space-y-5">
               <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-tight">
-                <span>Masuk & Sempurnakan </span>
-                <span class="text-primary-600 dark:text-primary-400">Naskah Anda</span>
+                <span>Masuk & Kelola </span>
+                <span class="text-primary-600 dark:text-primary-400">Naskah Ilmiah Anda</span>
               </h1>
 
               <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-                Akses editor cerdas untuk memeriksa kesesuaian EYD V, mendeteksi kata mubazir, serta menyimpan riwayat perbaikan naskah Anda di cloud.
+                Satu akun untuk seluruh kebutuhan publikasi ilmiah Anda: Cek Plagiarisme iThenticate/Turnitin No-Repository, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.
               </p>
             </div>
 
-            <!-- Features Highlights -->
+            <!-- Features Highlights: 4 Products -->
             <div class="grid sm:grid-cols-2 gap-4 pt-2">
               <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800">
                 <div class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-3">
@@ -85,15 +90,15 @@ const handleLogout = async () => {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
                 </div>
                 <h2 class="font-semibold text-slate-900 dark:text-white text-base mb-1">
-                  Aturan EYD V & PUEBI
+                  Turnitin No-Repository
                 </h2>
                 <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
-                  Deteksi kata baku vs non-baku dan pemakaian tanda baca yang tepat.
+                  Cek similarity iThenticate & Turnitin resmi tanpa naskah tersimpan di database.
                 </p>
               </div>
 
@@ -109,15 +114,63 @@ const handleLogout = async () => {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
                 </div>
                 <h2 class="font-semibold text-slate-900 dark:text-white text-base mb-1">
-                  Tersimpan di Appwrite
+                  AI Writer Detector
                 </h2>
                 <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
-                  Sesi login aman dan data dokumen tersinkronisasi secara otomatis.
+                  Deteksi skor ChatGPT, Claude, dan AI generator berstandar algoritma Turnitin.
+                </p>
+              </div>
+
+              <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800">
+                <div class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-3">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                </div>
+                <h2 class="font-semibold text-slate-900 dark:text-white text-base mb-1">
+                  Ambil Artikel Scopus
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Unduh full PDF artikel jurnal ilmiah Scopus (Q1-Q4) lengkap dengan metadata sitasi.
+                </p>
+              </div>
+
+              <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800">
+                <div class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 mb-3">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </div>
+                <h2 class="font-semibold text-slate-900 dark:text-white text-base mb-1">
+                  Parafrase Manual
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Dikerjakan manual oleh tim editor akademik manusia untuk menurunkan similarity.
                 </p>
               </div>
             </div>
@@ -149,7 +202,7 @@ const handleLogout = async () => {
                     to="/"
                     class="block w-full py-3.5 px-4 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl text-center shadow-lg shadow-primary-600/25 transition-all"
                   >
-                    Buka Editor / Beranda
+                    Buka Beranda & Layanan
                   </NuxtLink>
                   <button
                     type="button"

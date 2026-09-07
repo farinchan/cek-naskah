@@ -4,6 +4,11 @@ import { ref, onMounted } from 'vue'
 const route = useRoute()
 const { user, loading, error, success, clearMessages, register, loginWithGoogle } = useAuth()
 
+useSeoMeta({
+  title: 'Daftar Akun — Cek Naskah',
+  description: 'Daftar akun Cek Naskah untuk akses Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+})
+
 const name = ref('')
 const email = ref('')
 const phone = ref('')
@@ -42,11 +47,12 @@ const handleRegister = async () => {
     return
   }
 
+  const formattedPhone = formatE164Phone(parseResult.data.phone)
   const result = await register(
     parseResult.data.email,
     parseResult.data.password,
     parseResult.data.name,
-    parseResult.data.phone
+    formattedPhone
   )
   if (result.success) {
     setTimeout(() => {
@@ -65,7 +71,7 @@ const handleRegister = async () => {
     <main class="py-12 sm:py-20 flex-1">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          <!-- Left Column: Value Prop & Checklist -->
+          <!-- Left Column: Value Prop & 4 Products Checklist -->
           <div class="lg:col-span-7 space-y-8">
             <div class="space-y-5">
               <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-tight">
@@ -74,11 +80,11 @@ const handleRegister = async () => {
               </h1>
 
               <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-                Tingkatkan mutu tulisan, artikel ilmiah, dan karya sastra Anda dengan analisis EYD V, struktur kalimat efektif, serta integrasi penyimpanan awan Appwrite.
+                Solusi terlengkap naskah akademik Anda: bebas plagiasi dengan garansi No-Repository, deteksi AI akurat, akses jurnal Scopus Q1-Q4, dan layanan parafrase profesional.
               </p>
             </div>
 
-            <!-- Benefits Checklist -->
+            <!-- Benefits Checklist: 4 Products -->
             <div class="space-y-3 pt-2">
               <div class="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
                 <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -97,8 +103,8 @@ const handleRegister = async () => {
                   </svg>
                 </div>
                 <div>
-                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">Analisis Tata Bahasa & EYD V</span>
-                  <span class="text-xs text-slate-500 dark:text-neutral-400">Deteksi otomatis ribuan kosakata baku KBBI dan aturan ejaan resmi.</span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">Cek Plagiarisme iThenticate / Turnitin (100% No-Repo)</span>
+                  <span class="text-xs text-slate-500 dark:text-neutral-400">Pengecekan resmi standar kampus tanpa naskah tersimpan di database sistem.</span>
                 </div>
               </div>
 
@@ -119,8 +125,8 @@ const handleRegister = async () => {
                   </svg>
                 </div>
                 <div>
-                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">Pemeriksaan Kata Mubazir & Efektivitas</span>
-                  <span class="text-xs text-slate-500 dark:text-neutral-400">Identifikasi frasa berulang dan kalimat bertingkat yang tidak efektif.</span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">AI Writer Detector Turnitin</span>
+                  <span class="text-xs text-slate-500 dark:text-neutral-400">Deteksi akurat teks buatan ChatGPT, Claude, dan LLM lain sesuai kriteria jurnal.</span>
                 </div>
               </div>
 
@@ -141,8 +147,30 @@ const handleRegister = async () => {
                   </svg>
                 </div>
                 <div>
-                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">Keamanan & Privasi Terjamin</span>
-                  <span class="text-xs text-slate-500 dark:text-neutral-400">Dokumen Anda disimpan secara terenkripsi menggunakan infrastruktur Appwrite.</span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">Ambil Artikel Scopus (Q1 - Q4)</span>
+                  <span class="text-xs text-slate-500 dark:text-neutral-400">Akses dan download artikel jurnal ilmiah bereputasi full-text PDF beserta sitasi.</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-white block">Parafrase Manual oleh Tim Editor Akademik</span>
+                  <span class="text-xs text-slate-500 dark:text-neutral-400">Dikerjakan langsung oleh manusia untuk menurunkan similarity index tanpa mengubah substansi.</span>
                 </div>
               </div>
             </div>
@@ -150,16 +178,16 @@ const handleRegister = async () => {
             <!-- Trust Metrics -->
             <div class="grid grid-cols-3 gap-4 pt-2">
               <div class="p-4 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 text-center">
+                <span class="text-2xl font-bold text-slate-900 dark:text-white block">25K+</span>
+                <span class="text-xs text-slate-500 dark:text-neutral-400">Naskah Diuji</span>
+              </div>
+              <div class="p-4 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 text-center">
                 <span class="text-2xl font-bold text-slate-900 dark:text-white block">100%</span>
-                <span class="text-xs text-slate-500 dark:text-neutral-400">Gratis Digunakan</span>
+                <span class="text-xs text-slate-500 dark:text-neutral-400">Garansi No-Repo</span>
               </div>
               <div class="p-4 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 text-center">
-                <span class="text-2xl font-bold text-slate-900 dark:text-white block">EYD V</span>
-                <span class="text-xs text-slate-500 dark:text-neutral-400">Standar Resmi</span>
-              </div>
-              <div class="p-4 bg-slate-50 dark:bg-neutral-900 rounded-2xl border border-slate-100 dark:border-neutral-800 text-center">
-                <span class="text-2xl font-bold text-slate-900 dark:text-white block">&lt; 1 Detik</span>
-                <span class="text-xs text-slate-500 dark:text-neutral-400">Kecepatan Cek</span>
+                <span class="text-2xl font-bold text-slate-900 dark:text-white block">&lt; 15 Mnt</span>
+                <span class="text-xs text-slate-500 dark:text-neutral-400">Proses Cepat</span>
               </div>
             </div>
           </div>
@@ -307,7 +335,7 @@ const handleRegister = async () => {
                       v-model="name"
                       type="text"
                       autocomplete="name"
-                      placeholder="Fajri Ramadhan"
+                      placeholder="Nama Kamu"
                       class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-neutral-800 border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 transition-all"
                       :class="fieldErrors.name ? 'border-red-400 focus:ring-red-400/20 focus:border-red-500' : 'border-slate-200 dark:border-neutral-700 focus:ring-primary-500/20 focus:border-primary-500'"
                     >
@@ -391,7 +419,7 @@ const handleRegister = async () => {
                       v-model="phone"
                       type="tel"
                       autocomplete="tel"
-                      placeholder="081234567890"
+                      placeholder="Contoh: +6281234567890"
                       class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-neutral-800 border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 transition-all"
                       :class="fieldErrors.phone ? 'border-red-400 focus:ring-red-400/20 focus:border-red-500' : 'border-slate-200 dark:border-neutral-700 focus:ring-primary-500/20 focus:border-primary-500'"
                     >
@@ -401,6 +429,12 @@ const handleRegister = async () => {
                     class="mt-1 text-xs text-red-500 font-medium"
                   >
                     {{ fieldErrors.phone }}
+                  </p>
+                  <p
+                    v-else
+                    class="mt-1 text-xs text-slate-400 dark:text-neutral-500"
+                  >
+                    Format awalan + tanpa spasi (contoh: +6281234567890)
                   </p>
                 </div>
 

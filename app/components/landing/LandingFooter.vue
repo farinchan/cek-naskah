@@ -44,8 +44,8 @@ const handleSubscribe = () => {
             </div>
             <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent text-2xl font-bold">Cek Naskah</span>
           </NuxtLink>
-          <p class="text-slate-600 dark:text-neutral-400 mb-8 max-w-sm leading-relaxed">
-            Find your dream property with our expert guidance and extensive listings.
+          <p class="text-slate-600 dark:text-neutral-400 mb-8 max-w-sm leading-relaxed text-sm">
+            Platform pemeriksaan naskah akademik terpercaya di Indonesia: Cek Plagiarisme iThenticate & Turnitin No-Repository, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.
           </p>
 
           <!-- Subscribe Form -->
@@ -57,14 +57,14 @@ const handleSubscribe = () => {
               v-model="emailSubscribe"
               type="email"
               placeholder="Masukkan email Anda"
-              class="flex-1 max-w-xs px-4 py-3 bg-slate-50 dark:bg-neutral-900 border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors"
+              class="flex-1 max-w-xs px-4 py-3 bg-slate-50 dark:bg-neutral-900 border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition-colors text-sm"
               :class="subscribeError ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-neutral-800 focus:border-primary-500'"
             >
             <button
               type="submit"
-              class="px-5 py-3 bg-primary-500 hover:bg-primary-600 transition-colors rounded-xl text-white font-semibold cursor-pointer shadow-sm shadow-primary-500/20"
+              class="px-5 py-3 bg-primary-500 hover:bg-primary-600 transition-colors rounded-xl text-white font-semibold cursor-pointer shadow-sm shadow-primary-500/20 text-sm"
             >
-              Subscribe
+              Langganan
             </button>
           </form>
           <div
@@ -77,7 +77,7 @@ const handleSubscribe = () => {
             v-if="subscribeSuccess"
             class="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-4"
           >
-            ✓ Terima kasih telah berlangganan newsletter!
+            ✓ Terima kasih telah berlangganan info & tips publikasi!
           </div>
 
           <!-- Social Proof -->
@@ -99,42 +99,96 @@ const handleSubscribe = () => {
                 class="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-neutral-900 shadow-sm"
               >
             </div>
-            <span class="text-slate-600 dark:text-neutral-400">
-              <span class="text-slate-900 dark:text-white font-semibold">2K+</span> Happy Clients
+            <span class="text-slate-600 dark:text-neutral-400 text-sm">
+              <span class="text-slate-900 dark:text-white font-semibold">15K+</span> Akademisi Puas
             </span>
           </div>
         </div>
 
-        <!-- Right: Contact Info -->
+        <!-- Right: Services & Contact Info -->
         <div class="grid sm:grid-cols-3 gap-8">
           <div>
-            <h4 class="text-slate-900 dark:text-white font-semibold mb-4">
-              Location
+            <h4 class="text-slate-900 dark:text-white font-semibold mb-4 text-sm">
+              Navigasi & Layanan
             </h4>
-            <p class="text-slate-600 dark:text-neutral-400 leading-relaxed text-sm">
-              123 Market Street<br>San Francisco, CA 94102
+            <ul class="space-y-2 text-sm text-slate-600 dark:text-neutral-400">
+              <li>
+                <NuxtLink
+                  to="/charge"
+                  class="hover:text-primary-500 transition-colors"
+                >Charge & Biaya Layanan</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/about-us"
+                  class="hover:text-primary-500 transition-colors"
+                >About Us (Tentang Kami)</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/testimony"
+                  class="hover:text-primary-500 transition-colors"
+                >Testimoni & Review</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/charge"
+                  class="hover:text-primary-500 transition-colors"
+                >Cek Plagiarisme Turnitin</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/charge"
+                  class="hover:text-primary-500 transition-colors"
+                >AI Writer Detector</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/charge"
+                  class="hover:text-primary-500 transition-colors"
+                >Ambil Artikel Scopus</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/charge"
+                  class="hover:text-primary-500 transition-colors"
+                >Parafrase Manual</NuxtLink>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-slate-900 dark:text-white font-semibold mb-4 text-sm">
+              Kontak & Bantuan
+            </h4>
+            <p class="text-slate-600 dark:text-neutral-400 mb-2 text-sm">
+              <a
+                href="https://wa.me/6281234567890"
+                target="_blank"
+                class="hover:text-primary-500 transition-colors"
+              >+62 812-3456-7890</a>
+            </p>
+            <p class="text-slate-600 dark:text-neutral-400 text-sm mb-2">
+              <a
+                href="mailto:bantuan@ceknaskah.id"
+                class="hover:text-primary-500 transition-colors"
+              >bantuan@ceknaskah.id</a>
+            </p>
+            <p class="text-slate-500 dark:text-neutral-500 text-xs">
+              Garansi 100% No-Repository
             </p>
           </div>
           <div>
-            <h4 class="text-slate-900 dark:text-white font-semibold mb-4">
-              Contact
+            <h4 class="text-slate-900 dark:text-white font-semibold mb-4 text-sm">
+              Jam Operasional
             </h4>
-            <p class="text-slate-600 dark:text-neutral-400 mb-2 text-sm">
-              +1 (555) 123-4567
+            <p class="text-slate-600 dark:text-neutral-400 mb-1 text-sm font-medium">
+              24 Jam Non-Stop
             </p>
-            <p class="text-slate-600 dark:text-neutral-400 text-sm">
-              hello@propertyhub.com
+            <p class="text-slate-600 dark:text-neutral-400 text-xs">
+              Fast Response: 08:00 - 21:00 WIB
             </p>
-          </div>
-          <div>
-            <h4 class="text-slate-900 dark:text-white font-semibold mb-4">
-              Hours
-            </h4>
-            <p class="text-slate-600 dark:text-neutral-400 mb-2 text-sm">
-              Monday - Friday
-            </p>
-            <p class="text-slate-600 dark:text-neutral-400 text-sm">
-              9:00 AM - 6:00 PM
+            <p class="text-slate-500 dark:text-neutral-500 text-xs mt-2">
+              Layanan Cepat & Online
             </p>
           </div>
         </div>
@@ -143,21 +197,21 @@ const handleSubscribe = () => {
       <!-- Bottom Bar -->
       <div class="py-8 flex flex-col sm:flex-row items-center justify-between gap-6">
         <p class="text-slate-500 text-sm">
-          © {{ new Date().getFullYear() }} PropertyHub. All rights reserved.
+          © {{ new Date().getFullYear() }} Cek Naskah. Seluruh hak cipta dilindungi.
         </p>
         <div class="flex items-center gap-6">
           <a
             href="#"
             class="text-slate-500 hover:text-primary-500 text-sm transition-colors"
-          >Terms</a>
+          >Syarat & Ketentuan</a>
           <a
             href="#"
             class="text-slate-500 hover:text-primary-500 text-sm transition-colors"
-          >Privacy</a>
+          >Kebijakan Privasi</a>
           <a
             href="#"
             class="text-slate-500 hover:text-primary-500 text-sm transition-colors"
-          >Cookies</a>
+          >Jaminan Keamanan Naskah</a>
         </div>
         <div class="flex items-center gap-3">
           <a

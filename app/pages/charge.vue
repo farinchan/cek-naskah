@@ -1,0 +1,372 @@
+<script setup lang="ts">
+useSeoMeta({
+  title: 'Charge & Biaya Layanan — Cek Naskah',
+  description: 'Daftar biaya layanan Cek Naskah: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.',
+  ogTitle: 'Charge & Biaya Layanan — Cek Naskah',
+  ogDescription: 'Tarif terjangkau untuk mahasiswa dan akademisi: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+})
+
+const pricingPlans = [
+  {
+    name: 'Cek Plagiarisme iThenticate / Turnitin',
+    tag: '100% No-Repository',
+    price: 'Rp 15.000',
+    unit: '/ naskah',
+    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+    description: 'Pemeriksaan similarity index resmi standar kampus dan jurnal internasional tanpa naskah tersimpan di database.',
+    features: [
+      'Garansi 100% No-Repository (Aman)',
+      'Laporan PDF Resmi Full Color & Original',
+      'Rincian Seluruh Sumber Kemiripan Teks',
+      'Waktu Proses Cepat (5 – 25 Menit)',
+      'Dukungan File .docx, .pdf, .txt'
+    ],
+    highlight: false,
+    ctaText: 'Pesan Cek Plagiarisme',
+    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20plagiarisme%20Turnitin/iThenticate'
+  },
+  {
+    name: 'AI Writer Detector Turnitin',
+    tag: 'Standar Turnitin AI',
+    price: 'Rp 20.000',
+    unit: '/ naskah',
+    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+    description: 'Deteksi akurat persentase teks yang diidentifikasi sebagai hasil generate AI (ChatGPT, Claude, Gemini).',
+    features: [
+      'Skor Resmi Turnitin AI Writing Score',
+      'Highlight Kalimat & Paragraf Terindikasi AI',
+      'Deteksi Model ChatGPT 4, Claude, Gemini',
+      'Laporan PDF Analisis AI Lengkap',
+      'Dukungan Bahasa Indonesia & Inggris'
+    ],
+    highlight: false,
+    ctaText: 'Pesan AI Detector',
+    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20AI%20Writer%20Detector'
+  },
+  {
+    name: 'Ambil Artikel Scopus',
+    tag: 'Scopus Q1 - Q4',
+    price: 'Rp 10.000',
+    unit: '/ artikel',
+    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+    description: 'Bantuan download artikel jurnal internasional bereputasi yang terkunci paywall lengkap dengan file sitasi.',
+    features: [
+      'Full-Text PDF Original Bersih',
+      'Jurnal Scopus Q1, Q2, Q3, Q4',
+      'Penerbit Elsevier, Springer, IEEE, Wiley',
+      'File Metadata Sitasi (RIS / BibTeX)',
+      'Pengiriman Cepat via WhatsApp / Email'
+    ],
+    highlight: false,
+    ctaText: 'Pesan Artikel Scopus',
+    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20bantuan%20ambil%20artikel%20Scopus'
+  },
+  {
+    name: 'Parafrase Manual',
+    tag: 'Rekomendasi Utama',
+    price: 'Mulai Rp 35.000',
+    unit: '/ halaman',
+    badgeClass: 'bg-white/20 text-white',
+    description: 'Rekonstruksi kalimat oleh tim editor akademik manusia untuk menurunkan similarity index tanpa merusak arti.',
+    features: [
+      '100% Dikerjakan Editor Manusia (Bukan Bot)',
+      'Target Penurunan Similarity (< 15-20%)',
+      'Substansi Ilmiah & Istilah Baku Terjaga',
+      'Kesesuaian Tata Bahasa & Kaidah EYD V',
+      'Garansi Revisi Sampai Lolos Target Kampus'
+    ],
+    highlight: true,
+    ctaText: 'Konsultasi Parafrase',
+    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi%20layanan%20parafrase%20manual'
+  }
+]
+
+const bundlePlans = [
+  {
+    title: 'Paket Bundling Cek Turnitin + AI Detector',
+    price: 'Rp 30.000',
+    saving: 'Hemat Rp 5.000',
+    desc: 'Pilihan terfavorit mahasiswa akhir dan dosen untuk memastikan naskah bebas dari kesamaan teks sekaligus bebas dari skor AI tinggi.',
+    items: [
+      '1x Cek Similarity Turnitin No-Repository',
+      '1x Uji AI Writer Detector Turnitin',
+      '2 Laporan PDF Resmi Terpisah',
+      'Proses Cepat (5 – 25 Menit)'
+    ],
+    link: 'https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20pesan%20Paket%20Bundling%20Turnitin%20%2B%20AI%20Detector'
+  },
+  {
+    title: 'Paket Riset Scopus (5 Artikel)',
+    price: 'Rp 45.000',
+    saving: 'Hemat Rp 5.000',
+    desc: 'Layanan lengkap pencarian dan pengunduhan 5 artikel jurnal internasional Scopus Q1-Q4 beserta referensi sitasi riset Anda.',
+    items: [
+      '5 Artikel Jurnal Internasional Full-Text PDF',
+      'Akses Database Elsevier, Springer, IEEE',
+      '5 File Sitasi Lengkap (Mendeley/Zotero)',
+      'Bantuan Pencarian Berdasarkan Topik / DOI'
+    ],
+    link: 'https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20pesan%20Paket%20Riset%20Scopus%205%20Artikel'
+  }
+]
+</script>
+
+<template>
+  <div class="min-h-screen bg-white dark:bg-neutral-950 text-slate-900 dark:text-white selection:bg-primary-500 selection:text-white transition-colors duration-200 flex flex-col justify-between">
+    <LandingHeader />
+
+    <main class="flex-1">
+      <!-- Hero Section -->
+      <section class="py-16 sm:py-24 bg-slate-50/70 dark:bg-neutral-900/40 border-b border-slate-100 dark:border-neutral-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight mb-5 max-w-4xl mx-auto">
+            Biaya Layanan <span class="text-primary-600 dark:text-primary-400">Cek Naskah</span> Akademik
+          </h1>
+          <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+            Daftar tarif resmi 4 produk unggulan kami: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.
+          </p>
+        </div>
+      </section>
+
+      <!-- 4 Core Products Pricing -->
+      <section class="py-16 sm:py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              v-for="(plan, idx) in pricingPlans"
+              :key="idx"
+              class="rounded-3xl p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 relative border"
+              :class="plan.highlight
+                ? 'bg-primary-600 text-white border-primary-600 shadow-xl shadow-primary-600/25 lg:-translate-y-2'
+                : 'bg-white dark:bg-neutral-900 text-slate-900 dark:text-white border-slate-200/80 dark:border-neutral-800 hover:border-primary-300 dark:hover:border-primary-800 shadow-sm'"
+            >
+              <div
+                v-if="plan.highlight"
+                class="absolute -top-3 left-6 bg-amber-400 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-sm"
+              >
+                Rekomendasi
+              </div>
+
+              <div>
+                <div class="mb-4">
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider mb-2 block"
+                    :class="plan.highlight ? 'text-primary-200' : 'text-primary-600 dark:text-primary-400'"
+                  >
+                    {{ plan.tag }}
+                  </span>
+                  <h2
+                    class="text-lg font-bold"
+                    :class="plan.highlight ? 'text-white' : 'text-slate-900 dark:text-white'"
+                  >
+                    {{ plan.name }}
+                  </h2>
+                </div>
+
+                <!-- Price -->
+                <div
+                  class="mb-4 pb-4 border-b"
+                  :class="plan.highlight ? 'border-white/20' : 'border-slate-200 dark:border-neutral-800'"
+                >
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                      {{ plan.price }}
+                    </span>
+                    <span
+                      class="text-xs"
+                      :class="plan.highlight ? 'text-primary-100' : 'text-slate-500 dark:text-neutral-400'"
+                    >
+                      {{ plan.unit }}
+                    </span>
+                  </div>
+                  <p
+                    class="text-xs mt-2 leading-relaxed"
+                    :class="plan.highlight ? 'text-primary-100' : 'text-slate-600 dark:text-neutral-400'"
+                  >
+                    {{ plan.description }}
+                  </p>
+                </div>
+
+                <!-- Features list -->
+                <ul class="space-y-2.5 mb-6 text-xs sm:text-sm">
+                  <li
+                    v-for="(feat, fIdx) in plan.features"
+                    :key="fIdx"
+                    class="flex items-start gap-2.5"
+                  >
+                    <svg
+                      class="w-4 h-4 shrink-0 mt-0.5"
+                      :class="plan.highlight ? 'text-amber-300' : 'text-primary-600 dark:text-primary-400'"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2.5"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span :class="plan.highlight ? 'text-primary-50' : 'text-slate-700 dark:text-neutral-300'">
+                      {{ feat }}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Action CTA -->
+              <a
+                :href="plan.ctaLink"
+                target="_blank"
+                class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-2"
+                :class="plan.highlight
+                  ? 'bg-white text-primary-700 hover:bg-primary-50 shadow-md'
+                  : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm shadow-primary-600/20'"
+              >
+                <span>{{ plan.ctaText }}</span>
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bundling Packages -->
+      <section class="py-16 bg-slate-50 dark:bg-neutral-900/60 border-y border-slate-100 dark:border-neutral-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center max-w-2xl mx-auto mb-12">
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+              Paket Bundling Lebih Hemat
+            </h2>
+            <p class="text-sm text-slate-600 dark:text-neutral-400">
+              Kombinasi layanan pemeriksaan komprehensif untuk draft skripsi, tesis, disertasi, dan artikel jurnal ilmiah Anda.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div
+              v-for="(bundle, bIdx) in bundlePlans"
+              :key="bIdx"
+              class="p-7 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm flex flex-col justify-between"
+            >
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
+                    {{ bundle.saving }}
+                  </span>
+                  <span class="text-2xl font-black text-slate-900 dark:text-white">
+                    {{ bundle.price }}
+                  </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                  {{ bundle.title }}
+                </h3>
+                <p class="text-xs text-slate-600 dark:text-neutral-400 leading-relaxed mb-5">
+                  {{ bundle.desc }}
+                </p>
+
+                <ul class="space-y-2 mb-6">
+                  <li
+                    v-for="(item, iIdx) in bundle.items"
+                    :key="iIdx"
+                    class="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-neutral-300"
+                  >
+                    <svg
+                      class="w-4 h-4 text-emerald-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2.5"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>{{ item }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                :href="bundle.link"
+                target="_blank"
+                class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-slate-900 rounded-xl text-xs sm:text-sm font-semibold text-center transition-colors cursor-pointer"
+              >
+                Pilih Paket Ini
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Help & FAQ Link -->
+      <section class="py-14 bg-white dark:bg-neutral-950 text-center">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            Ada Pertanyaan Seputar Layanan Kami?
+          </h3>
+          <p class="text-sm text-slate-600 dark:text-neutral-400 mb-6">
+            Temukan jawaban lengkap mengenai jaminan No-Repository, keaslian dokumen Scopus, waktu pengerjaan, dan ketentuan garansi revisi.
+          </p>
+          <NuxtLink
+            to="/about-us#faq"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:border-primary-400 dark:hover:border-primary-600 bg-slate-50 dark:bg-neutral-900 text-primary-600 dark:text-primary-400 font-semibold text-sm transition-colors"
+          >
+            <span>Lihat Pertanyaan yang Sering Diajukan (FAQ)</span>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- Bottom Guarantee Banner -->
+      <section class="py-12 bg-primary-600 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold mb-1">
+              Punya Naskah yang Perlu Segera Diperiksa?
+            </h2>
+            <p class="text-primary-100 text-sm">
+              Hubungi tim kami via WhatsApp sekarang. Layanan aktif 24 jam dengan fast response pukul 08:00 - 21:00 WIB.
+            </p>
+          </div>
+          <a
+            href="https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi%20layanan"
+            target="_blank"
+            class="shrink-0 px-6 py-3.5 bg-white text-primary-700 hover:bg-primary-50 font-bold text-sm rounded-xl transition-colors shadow-lg cursor-pointer"
+          >
+            Hubungi Admin WhatsApp
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <LandingFooter />
+  </div>
+</template>

@@ -14,6 +14,42 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>
 
+/**
+ * Formats a phone number to standard E.164 format (+ followed strictly by digits only, no spaces or other characters)
+ */
+export const formatE164Phone = (rawPhone: string): string => {
+  if (!rawPhone) return ''
+  let cleaned = rawPhone.trim().replace(/[\s\-().]/g, '')
+
+  if (cleaned.startsWith('+62')) {
+    if (cleaned.startsWith('+620')) {
+      cleaned = '+62' + cleaned.slice(4)
+    }
+    return '+' + cleaned.slice(1).replace(/\D/g, '')
+  }
+
+  if (cleaned.startsWith('62')) {
+    if (cleaned.startsWith('620')) {
+      cleaned = '62' + cleaned.slice(3)
+    }
+    return '+' + cleaned.replace(/\D/g, '')
+  }
+
+  if (cleaned.startsWith('0')) {
+    return '+62' + cleaned.slice(1).replace(/\D/g, '')
+  }
+
+  if (cleaned.startsWith('+')) {
+    return '+' + cleaned.slice(1).replace(/\D/g, '')
+  }
+
+  if (cleaned.startsWith('8')) {
+    return '+62' + cleaned.replace(/\D/g, '')
+  }
+
+  return '+' + cleaned.replace(/\D/g, '')
+}
+
 export const registerSchema = z
   .object({
     name: z
@@ -31,8 +67,12 @@ export const registerSchema = z
       .string()
       .trim()
       .min(1, 'Nomor telepon wajib diisi')
-      .refine(val => /^(\+62|62|0)[0-9]{9,13}$/.test(val.replace(/[\s-]/g, '')), {
-        message: 'Format nomor telepon tidak valid (contoh: 081234567890)'
+      .refine((val) => {
+        const formatted = formatE164Phone(val)
+        // Must start with + followed strictly by 8 to 15 digits (no spaces, no symbols)
+        return /^\+[1-9]\d{7,14}$/.test(formatted)
+      }, {
+        message: 'Format nomor telepon tidak valid (contoh: 081234567890 atau +6281234567890)'
       }),
     password: z
       .string()

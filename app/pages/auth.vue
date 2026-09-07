@@ -4,8 +4,8 @@ import type { Models } from 'appwrite'
 import { account, ID, OAuthProvider } from '~/utils/appwrite.js'
 
 useSeoMeta({
-  title: 'Appwrite Auth — Cek Naskah',
-  description: 'Appwrite Authentication (Login, Register, Logout) for Cek Naskah'
+  title: 'Autentikasi Cepat — Cek Naskah',
+  description: 'Akses masuk dan pendaftaran akun Cek Naskah'
 })
 
 const route = useRoute()
@@ -138,14 +138,14 @@ const logout = async () => {
         <div class="flex items-center justify-between border-b border-slate-200 dark:border-neutral-800 pb-4 mb-6">
           <div>
             <h1 class="text-xl font-bold text-slate-900 dark:text-white">
-              Appwrite Auth Test
+              Autentikasi Cek Naskah
             </h1>
             <p class="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
-              Testing module login, register, dan logout
+              Akses akun untuk 4 layanan pemeriksaan naskah akademik
             </p>
           </div>
           <span
-            class="px-2.5 py-1 text-xs font-semibold rounded-full"
+            class="px-2.5 py-1 text-xs font-semibold rounded-lg"
             :class="loggedInUser ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800' : 'bg-slate-200 text-slate-700 dark:bg-neutral-800 dark:text-neutral-400'"
           >
             {{ loggedInUser ? 'Active Session' : 'No Session' }}

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Cek Naskah — Intelligent Workflow Platform',
-  description: 'Automate your development workflow with intelligent tools. From code to production in minutes, not hours.',
-  ogTitle: 'Cek Naskah — Intelligent Workflow Platform',
-  ogDescription: 'Automate your development workflow with intelligent tools. From code to production in minutes, not hours.'
+  title: 'Cek Naskah — Layanan Uji Plagiarisme, AI Detector & Naskah Ilmiah',
+  description: 'Solusi terpercaya pemeriksaan naskah akademik: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector Turnitin, Ambil Artikel Scopus, dan Parafrase Manual.',
+  ogTitle: 'Cek Naskah — Layanan Uji Plagiarisme, AI Detector & Naskah Ilmiah',
+  ogDescription: 'Solusi terpercaya pemeriksaan naskah akademik: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector Turnitin, Ambil Artikel Scopus, dan Parafrase Manual.'
 })
 </script>
 
@@ -14,6 +14,7 @@ useSeoMeta({
     <main>
       <LandingHero />
       <LandingFeatures />
+      <LandingPricing />
       <LandingTestimonials />
     </main>
 

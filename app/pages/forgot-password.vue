@@ -3,6 +3,11 @@ import { ref, onMounted } from 'vue'
 
 const { loading, error, success, clearMessages, forgotPassword } = useAuth()
 
+useSeoMeta({
+  title: 'Lupa Kata Sandi — Cek Naskah',
+  description: 'Pemulihan kata sandi akun Cek Naskah untuk akses uji plagiarisme, deteksi AI, artikel Scopus, dan parafrase manual.'
+})
+
 const email = ref('')
 const emailSent = ref(false)
 const fieldErrors = ref<Record<string, string>>({})
@@ -49,7 +54,7 @@ const handleForgotPassword = async () => {
               </h1>
 
               <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-                Jangan khawatir. Cukup masukkan email terdaftar Anda dan kami akan mengirimkan tautan verifikasi aman untuk membuat kata sandi baru.
+                Jangan khawatir. Cukup masukkan email terdaftar Anda dan kami akan mengirimkan tautan verifikasi aman untuk memulihkan akses akun Cek Naskah Anda.
               </p>
             </div>
 
@@ -76,7 +81,7 @@ const handleForgotPassword = async () => {
                     Tautan Pemulihan Enkripsi Aman
                   </h3>
                   <p class="text-xs text-slate-500 dark:text-neutral-400">
-                    Tautan diverifikasi langsung oleh Appwrite Auth Engine dan hanya berlaku untuk waktu terbatas.
+                    Tautan diverifikasi langsung secara aman dan hanya berlaku untuk waktu terbatas.
                   </p>
                 </div>
               </div>
@@ -102,7 +107,7 @@ const handleForgotPassword = async () => {
                     Konfirmasi Instan ke Email
                   </h3>
                   <p class="text-xs text-slate-500 dark:text-neutral-400">
-                    Periksa folder kotak masuk atau folder spam jika email konfirmasi belum tiba dalam 1 menit.
+                    Periksa kotak masuk atau folder spam email Anda. Hubungi WhatsApp bantuan jika membutuhkan asistensi.
                   </p>
                 </div>
               </div>

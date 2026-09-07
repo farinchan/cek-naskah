@@ -10,14 +10,14 @@
         <div class="lg:col-span-7 space-y-8">
           <div class="space-y-6">
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-tight">
-              <span>Ship </span>
-              <span class="text-primary-600 dark:text-primary-400">Faster</span>,
-              <span> Build </span>
-              <span class="text-primary-600 dark:text-primary-400">Smarter</span>
+              <span>Solusi Naskah </span>
+              <span class="text-primary-600 dark:text-primary-400">Akademik</span>,
+              <span> Bebas </span>
+              <span class="text-primary-600 dark:text-primary-400">Plagiasi</span>
             </h1>
 
             <p class="text-lg text-slate-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-              Automate your development workflow with intelligent tools. From code to production in minutes, not hours.
+              Layanan terpercaya untuk mahasiswa, dosen, dan peneliti: Cek Plagiarisme iThenticate & Turnitin No-Repository, AI Writer Detector, Ambil Artikel Scopus, hingga Parafrase Manual profesional.
             </p>
 
             <div class="flex flex-wrap items-center gap-4 pt-2">
@@ -25,7 +25,7 @@
                 to="/login"
                 class="px-8 py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-full transition-all flex items-center gap-2 shadow-lg shadow-primary-600/25 hover:gap-3"
               >
-                Start Building Free
+                Mulai Cek Sekarang
                 <svg
                   class="w-5 h-5"
                   fill="none"
@@ -44,7 +44,7 @@
                 href="#_features_split_panel_v6_001"
                 class="px-8 py-3.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-900 dark:text-white font-semibold rounded-full transition-colors"
               >
-                View Documentation
+                Lihat 4 Layanan
               </a>
             </div>
           </div>
@@ -52,17 +52,17 @@
           <!-- Dashboard Preview -->
           <div class="relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-neutral-900 p-2 border border-slate-200/60 dark:border-neutral-800 shadow-xl">
             <img
-              src="https://images.unsplash.com/photo-1528747008803-f9f5cc8f1a64?ixid=M3wzOTQxMzN8MHwxfHNlYXJjaHwxfHxsYXd5ZXIlMjBhdHRvcm5leSUyMGxlZ2FsJTIwYnVzaW5lc3N8ZW58MXwwfHx8MTc2OTMxOTk0OHww&amp;ixlib=rb-4.1.0&amp;w=1200&amp;auto=format&amp;fit=crop&amp;q=80"
-              alt="Analytics dashboard"
+              src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&amp;auto=format&amp;fit=crop&amp;q=80"
+              alt="Pemeriksaan Naskah Akademik"
               class="w-full h-64 sm:h-80 object-cover rounded-xl"
             >
 
             <!-- Floating Metrics -->
             <div class="absolute top-6 right-6 p-4 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-100 dark:border-neutral-700">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
                   <svg
-                    class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                    class="w-5 h-5 text-emerald-600 dark:text-emerald-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -71,27 +71,27 @@
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
                 </div>
                 <div>
-                  <span class="text-lg font-bold text-slate-900 dark:text-white block">+127%</span>
-                  <span class="text-xs text-slate-500 dark:text-neutral-400">Deploy Speed</span>
+                  <span class="text-lg font-bold text-slate-900 dark:text-white block">100% Aman</span>
+                  <span class="text-xs text-slate-500 dark:text-neutral-400">Garansi No-Repository</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Feature Cards -->
-        <div class="lg:col-span-5 space-y-5">
-          <!-- Feature Card 1 -->
-          <div class="p-6 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-transparent hover:border-primary-200 dark:hover:border-primary-800">
+        <!-- Right Feature Cards - 4 Core Products -->
+        <div class="lg:col-span-5 space-y-4">
+          <!-- Product Card 1: Cek Plagiarisme iThenticate/Turnitin -->
+          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
+              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
                 <svg
-                  class="w-6 h-6 text-primary-600 dark:text-primary-400"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -100,27 +100,27 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                  Instant Deploy
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                  Cek Plagiarisme iThenticate / Turnitin
                 </h3>
-                <p class="text-slate-600 dark:text-neutral-400 text-sm leading-relaxed">
-                  Push to production in seconds with zero-config deployments and automatic rollbacks.
+                <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
+                  Pemeriksaan similarity index resmi dengan garansi 100% No Repository. Naskah tidak tersimpan di database sistem.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Feature Card 2 -->
-          <div class="p-6 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-transparent hover:border-primary-200 dark:hover:border-primary-800">
+          <!-- Product Card 2: AI Writer Detector Turnitin -->
+          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
+              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
                 <svg
-                  class="w-6 h-6 text-primary-600 dark:text-primary-400"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -129,27 +129,27 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   />
                 </svg>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                  Smart Integrations
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                  AI Writer Detector Turnitin
                 </h3>
-                <p class="text-slate-600 dark:text-neutral-400 text-sm leading-relaxed">
-                  Connect with 200+ tools your team already uses, from GitHub to Slack.
+                <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
+                  Deteksi tulisan generator AI (ChatGPT, Claude, Gemini) berstandar algoritma Turnitin terbaru untuk menjaga orisinalitas riset.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Feature Card 3 -->
-          <div class="p-6 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-transparent hover:border-primary-200 dark:hover:border-primary-800">
+          <!-- Product Card 3: Ambil Artikel Scopus -->
+          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
+              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
                 <svg
-                  class="w-6 h-6 text-primary-600 dark:text-primary-400"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -158,27 +158,27 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                  Live Analytics
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                  Ambil Artikel Scopus
                 </h3>
-                <p class="text-slate-600 dark:text-neutral-400 text-sm leading-relaxed">
-                  Real-time insights to track performance, errors, and user behavior.
+                <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
+                  Bantuan unduh artikel jurnal ilmiah Scopus (Q1–Q4), IEEE, Springer, dan ScienceDirect full PDF lengkap dengan metadata sitasi.
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Feature Card 4 -->
-          <div class="p-6 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-transparent hover:border-primary-200 dark:hover:border-primary-800">
+          <!-- Product Card 4: Parafrase Manual -->
+          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
+              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
                 <svg
-                  class="w-6 h-6 text-primary-600 dark:text-primary-400"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -187,34 +187,34 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
                 </svg>
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                  Auto Scaling
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                  Parafrase Manual
                 </h3>
-                <p class="text-slate-600 dark:text-neutral-400 text-sm leading-relaxed">
-                  Infrastructure that grows with your traffic automatically, pay only for what you use.
+                <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
+                  Dikerjakan manual oleh tim editor akademik berpengalaman. Menurunkan similarity index tanpa mengubah substansi ilmiah dan istilah baku.
                 </p>
               </div>
             </div>
           </div>
 
           <!-- Stats Row -->
-          <div class="grid grid-cols-3 gap-4 pt-4">
-            <div class="text-center p-4 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
-              <span class="text-2xl font-bold text-slate-900 dark:text-white block">10K+</span>
-              <span class="text-xs text-slate-500 dark:text-neutral-400">Teams</span>
+          <div class="grid grid-cols-3 gap-3 pt-2">
+            <div class="text-center p-3 sm:p-4 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
+              <span class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white block">25K+</span>
+              <span class="text-xs text-slate-500 dark:text-neutral-400">Naskah Diuji</span>
             </div>
-            <div class="text-center p-4 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
-              <span class="text-2xl font-bold text-slate-900 dark:text-white block">99.9%</span>
-              <span class="text-xs text-slate-500 dark:text-neutral-400">Uptime</span>
+            <div class="text-center p-3 sm:p-4 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
+              <span class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white block">100%</span>
+              <span class="text-xs text-slate-500 dark:text-neutral-400">No-Repository</span>
             </div>
-            <div class="text-center p-4 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
-              <span class="text-2xl font-bold text-slate-900 dark:text-white block">50ms</span>
-              <span class="text-xs text-slate-500 dark:text-neutral-400">Avg Deploy</span>
+            <div class="text-center p-3 sm:p-4 bg-slate-50 dark:bg-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-800">
+              <span class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white block">&lt; 15 Mnt</span>
+              <span class="text-xs text-slate-500 dark:text-neutral-400">Proses Cepat</span>
             </div>
           </div>
         </div>

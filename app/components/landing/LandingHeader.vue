@@ -34,7 +34,7 @@ const isMobileMenuOpen = ref(false)
         <div class="flex items-center justify-between h-10">
           <div class="flex items-center gap-4 text-xs text-slate-400">
             <a
-              href="mailto:hello@brand.com"
+              href="mailto:bantuan@ceknaskah.id"
               class="hover:text-white transition-colors flex items-center gap-1.5"
             >
               <svg
@@ -50,11 +50,12 @@ const isMobileMenuOpen = ref(false)
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              hello@brand.com
+              bantuan@ceknaskah.id
             </a>
             <span class="hidden sm:inline">|</span>
             <a
-              href="tel:+1234567890"
+              href="https://wa.me/6281234567890"
+              target="_blank"
               class="hidden sm:flex hover:text-white transition-colors items-center gap-1.5"
             >
               <svg
@@ -70,7 +71,7 @@ const isMobileMenuOpen = ref(false)
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                 />
               </svg>
-              +1 (234) 567-890
+              +62 812-3456-7890
             </a>
           </div>
 
@@ -141,30 +142,30 @@ const isMobileMenuOpen = ref(false)
 
           <!-- Navigation Desktop -->
           <nav class="hidden lg:flex items-center gap-8">
-            <a
-              href="#_hero_workflow_platform_v6_001"
+            <NuxtLink
+              to="/"
               class="text-sm font-medium text-slate-900 dark:text-white hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
-            >Home</a>
-            <a
-              href="#_features_split_panel_v6_001"
+            >
+              Beranda
+            </NuxtLink>
+            <NuxtLink
+              to="/charge"
               class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
-            >About</a>
-            <a
-              href="#_hero_workflow_platform_v6_001"
+            >
+              Charge
+            </NuxtLink>
+            <NuxtLink
+              to="/about-us"
               class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
-            >Services</a>
-            <a
-              href="#_features_split_panel_v6_001"
+            >
+              About Us
+            </NuxtLink>
+            <NuxtLink
+              to="/testimony"
               class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
-            >Portfolio</a>
-            <a
-              href="#_testimonial_shaped_cards_v6_t28_001"
-              class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
-            >Testimonials</a>
-            <a
-              href="#_footer_subscribe_contact_v6_001"
-              class="text-sm font-medium text-slate-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
-            >Contact</a>
+            >
+              Testimoni
+            </NuxtLink>
           </nav>
 
           <!-- Right Actions -->
@@ -284,36 +285,34 @@ const isMobileMenuOpen = ref(false)
           v-if="isMobileMenuOpen"
           class="lg:hidden py-4 border-t border-slate-100 dark:border-neutral-900 space-y-2"
         >
-          <a
-            href="#_hero_workflow_platform_v6_001"
+          <NuxtLink
+            to="/"
             class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-900"
             @click="isMobileMenuOpen = false"
-          >Home</a>
-          <a
-            href="#_features_split_panel_v6_001"
+          >
+            Beranda
+          </NuxtLink>
+          <NuxtLink
+            to="/charge"
             class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-900"
             @click="isMobileMenuOpen = false"
-          >About</a>
-          <a
-            href="#_hero_workflow_platform_v6_001"
+          >
+            Charge
+          </NuxtLink>
+          <NuxtLink
+            to="/about-us"
             class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-900"
             @click="isMobileMenuOpen = false"
-          >Services</a>
-          <a
-            href="#_features_split_panel_v6_001"
+          >
+            About Us
+          </NuxtLink>
+          <NuxtLink
+            to="/testimony"
             class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-900"
             @click="isMobileMenuOpen = false"
-          >Portfolio</a>
-          <a
-            href="#_testimonial_shaped_cards_v6_t28_001"
-            class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-900"
-            @click="isMobileMenuOpen = false"
-          >Testimonials</a>
-          <a
-            href="#_footer_subscribe_contact_v6_001"
-            class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-neutral-200 hover:bg-slate-50 dark:hover:bg-neutral-900"
-            @click="isMobileMenuOpen = false"
-          >Contact</a>
+          >
+            Testimoni
+          </NuxtLink>
 
           <!-- Mobile Auth Actions -->
           <div

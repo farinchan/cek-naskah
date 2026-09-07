@@ -4,6 +4,11 @@ import { ref, onMounted } from 'vue'
 const route = useRoute()
 const { loading, error, success, clearMessages, resetPassword } = useAuth()
 
+useSeoMeta({
+  title: 'Atur Ulang Kata Sandi — Cek Naskah',
+  description: 'Atur ulang kata sandi akun Cek Naskah Anda.'
+})
+
 const userId = ref('')
 const secret = ref('')
 const newPassword = ref('')
@@ -67,7 +72,7 @@ const handleResetPassword = async () => {
               </h1>
 
               <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 leading-relaxed max-w-xl">
-                Buat kata sandi baru yang kuat untuk melindungi akun dan seluruh berkas naskah Anda.
+                Buat kata sandi baru yang aman untuk melindungi akun dan seluruh riwayat pengujian naskah ilmiah Anda di Cek Naskah.
               </p>
             </div>
 

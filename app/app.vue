@@ -1,9 +1,9 @@
 <script setup lang="ts">
 useHead({
-  title: 'Cek Naskah — Intelligent Workflow Platform',
+  title: 'Cek Naskah — Layanan Uji Plagiarisme, AI Detector & Naskah Ilmiah',
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-    { name: 'description', content: 'Automate your development workflow with intelligent tools. From code to production in minutes, not hours.' }
+    { name: 'description', content: 'Platform profesional pemeriksaan naskah akademik: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector Turnitin, Ambil Artikel Scopus, dan Parafrase Manual.' }
   ],
   link: [
     { rel: 'icon', href: '/favicon.ico' }

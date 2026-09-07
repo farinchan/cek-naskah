@@ -17,6 +17,12 @@ export const useAuth = () => {
   const formatError = (err: unknown): string => {
     if (err && typeof err === 'object' && 'message' in err) {
       const msg = String((err as { message: unknown }).message)
+      if (msg.includes('phone') && (msg.includes('already exists') || msg.includes('user_phone_already_exists'))) {
+        return 'Nomor telepon ini sudah terdaftar pada akun lain.'
+      }
+      if (msg.includes('Invalid phone') || msg.includes('phone must be a valid') || msg.includes('user_phone_invalid')) {
+        return 'Format nomor telepon tidak valid. Pastikan nomor diawali dengan tanda + dan kode negara tanpa spasi (contoh: +6281234567890).'
+      }
       if (msg.includes('Invalid credentials') || msg.includes('password')) {
         return 'Email atau kata sandi yang Anda masukkan salah.'
       }
@@ -92,16 +98,26 @@ export const useAuth = () => {
         password: passwordVal
       })
 
-      // Save phone number in user preferences if provided
+      // Update user's official phone number using account.updatePhone
       if (phoneVal) {
+        const formattedPhone = formatE164Phone(phoneVal)
         try {
-          await account.updatePrefs({
-            prefs: {
-              phone: phoneVal
-            }
+          await account.updatePhone({
+            phone: formattedPhone,
+            password: passwordVal
           })
-        } catch (prefErr) {
-          console.warn('Gagal menyimpan nomor telepon ke preferensi akun:', prefErr)
+        } catch (phoneErr: unknown) {
+          console.warn('Gagal memperbarui nomor telepon akun:', phoneErr)
+          const phoneMsg = phoneErr && typeof phoneErr === 'object' && 'message' in phoneErr
+            ? String((phoneErr as { message: unknown }).message)
+            : ''
+          if (phoneMsg.includes('already exists') || phoneMsg.includes('user_phone_already_exists')) {
+            throw new Error('Nomor telepon ini sudah digunakan oleh akun lain.', { cause: phoneErr })
+          }
+          if (phoneMsg.includes('Invalid phone') || phoneMsg.includes('must be a valid') || phoneMsg.includes('user_phone_invalid')) {
+            throw new Error('Format nomor telepon tidak valid. Pastikan nomor diawali tanda + tanpa spasi (contoh: +6281234567890).', { cause: phoneErr })
+          }
+          throw phoneErr
         }
       }
 

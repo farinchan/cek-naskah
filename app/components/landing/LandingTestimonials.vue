@@ -14,38 +14,38 @@ const scrollCarousel = (direction: 'prev' | 'next') => {
 
 const testimonials = [
   {
-    name: 'Marcus Chen',
-    role: 'CTO, TechVentures',
+    name: 'Dr. Hendra Pratama, M.Si',
+    role: 'Dosen & Peneliti, Universitas Indonesia',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-    quote: '"The automation features saved our team countless hours. Highly recommend for any growing business."',
+    quote: '"Cek plagiarisme iThenticate di sini sangat memuaskan, prosesnya cepat dan yang paling penting garansi no-repository membuat kami tenang saat mengirimkan draft naskah jurnal."',
     bgClass: 'bg-primary-50 dark:bg-primary-900/20'
   },
   {
-    name: 'Sarah Mitchell',
-    role: 'Product Lead, Innovate',
+    name: 'Anisa Rahmawati, S.T., M.T.',
+    role: 'Kandidat Doktor, ITB Bandung',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-    quote: '"Incredible support team and intuitive interface. Our onboarding was seamless from day one."',
+    quote: '"Fitur AI Writer Detector Turnitin sangat presisi mendeteksi kalimat rawan AI pada naskah tesis saya. Rekomendasi perbaikannya sangat membantu!"',
     bgClass: 'bg-slate-100 dark:bg-neutral-800'
   },
   {
-    name: 'David Park',
-    role: 'Founder, StartupX',
+    name: 'Prof. Dr. Ir. Bambang Wijaya',
+    role: 'Guru Besar, Universitas Gadjah Mada',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-    quote: '"We\'ve seen a 40% increase in efficiency since implementing this solution. Game changer!"',
+    quote: '"Layanan ambil artikel Scopus sangat memudahkan tim riset kami mengunduh literatur Q1 yang terkunci paywall secara cepat dan lengkap dengan metadata sitasi."',
     bgClass: 'bg-primary-50 dark:bg-primary-900/20'
   },
   {
-    name: 'Emma Rodriguez',
-    role: 'VP Engineering, DataCo',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80',
-    quote: '"The analytics dashboard gives us insights we never had before. Absolutely essential tool."',
+    name: 'Rian Hidayat, M.Pd',
+    role: 'Author Jurnal Sinta 2, Universitas Negeri Malang',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+    quote: '"Layanan Parafrase Manual sukses menurunkan skor kemiripan naskah saya dari 36% menjadi 12% tanpa merubah konteks dan istilah ilmiah. Luar biasa profesional."',
     bgClass: 'bg-slate-100 dark:bg-neutral-800'
   },
   {
-    name: 'James Wilson',
-    role: 'Director, CloudScale',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-    quote: '"Best investment we\'ve made this year. The ROI was visible within the first month."',
+    name: 'drg. Fitri Lestari, Sp.KG',
+    role: 'Peneliti Biomedis, Universitas Airlangga',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80',
+    quote: '"Hasil uji Turnitin dan AI detector keluar kurang dari 15 menit. Dokumen PDF rapi dan customer care via WhatsApp sangat ramah dan sigap membantu."',
     bgClass: 'bg-primary-50 dark:bg-primary-900/20'
   }
 ]
@@ -60,13 +60,13 @@ const testimonials = [
       <!-- Header -->
       <div class="text-center mb-14">
         <span class="text-primary-600 dark:text-primary-400 text-sm font-semibold tracking-wide uppercase mb-3 block">
-          Testimonials
+          Testimoni Akademisi
         </span>
         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
-          What our clients say
+          Apa Kata Dosen & Peneliti
         </h2>
         <p class="text-lg text-slate-600 dark:text-neutral-400 max-w-2xl mx-auto">
-          Real stories from teams who transformed their workflow with our platform.
+          Pengalaman nyata para akademisi dan mahasiswa yang berhasil menerbitkan karya ilmiah bebas plagiasi.
         </p>
       </div>
 
