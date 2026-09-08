@@ -1,4 +1,8 @@
 export default defineNuxtPlugin(async () => {
   const { fetchSettings } = useAppSettings()
-  await fetchSettings()
+  const { fetchServices } = useServices()
+  await Promise.allSettled([
+    fetchSettings(),
+    fetchServices()
+  ])
 })

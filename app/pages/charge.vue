@@ -7,110 +7,22 @@ useSeoMeta({
 })
 
 const { getWhatsappUrl } = useAppSettings()
+const { activeServices, activeBundles } = useServices()
 
-const pricingPlans = computed(() => [
-  {
-    name: 'Cek Plagiarisme iThenticate / Turnitin',
-    tag: '100% No-Repository',
-    price: 'Rp 15.000',
-    unit: '/ naskah',
-    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
-    description: 'Pemeriksaan similarity index resmi standar kampus dan jurnal internasional tanpa naskah tersimpan di database.',
-    features: [
-      'Garansi 100% No-Repository (Aman)',
-      'Laporan PDF Resmi Full Color & Original',
-      'Rincian Seluruh Sumber Kemiripan Teks',
-      'Waktu Proses Cepat (5 – 25 Menit)',
-      'Dukungan File .docx, .pdf, .txt'
-    ],
-    highlight: false,
-    ctaText: 'Pesan Cek Plagiarisme',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek plagiarisme Turnitin/iThenticate')
-  },
-  {
-    name: 'AI Writer Detector Turnitin',
-    tag: 'Standar Turnitin AI',
-    price: 'Rp 20.000',
-    unit: '/ naskah',
-    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
-    description: 'Deteksi akurat persentase teks yang diidentifikasi sebagai hasil generate AI (ChatGPT, Claude, Gemini).',
-    features: [
-      'Skor Resmi Turnitin AI Writing Score',
-      'Highlight Kalimat & Paragraf Terindikasi AI',
-      'Deteksi Model ChatGPT 4, Claude, Gemini',
-      'Laporan PDF Analisis AI Lengkap',
-      'Dukungan Bahasa Indonesia & Inggris'
-    ],
-    highlight: false,
-    ctaText: 'Pesan AI Detector',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek AI Writer Detector')
-  },
-  {
-    name: 'Ambil Artikel Scopus',
-    tag: 'Scopus Q1 - Q4',
-    price: 'Rp 10.000',
-    unit: '/ artikel',
-    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
-    description: 'Bantuan download artikel jurnal internasional bereputasi yang terkunci paywall lengkap dengan file sitasi.',
-    features: [
-      'Full-Text PDF Original Bersih',
-      'Jurnal Scopus Q1, Q2, Q3, Q4',
-      'Penerbit Elsevier, Springer, IEEE, Wiley',
-      'File Metadata Sitasi (RIS / BibTeX)',
-      'Pengiriman Cepat via WhatsApp / Email'
-    ],
-    highlight: false,
-    ctaText: 'Pesan Artikel Scopus',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin bantuan ambil artikel Scopus')
-  },
-  {
-    name: 'Parafrase Manual',
-    tag: 'Rekomendasi Utama',
-    price: 'Mulai Rp 35.000',
-    unit: '/ halaman',
-    badgeClass: 'bg-white/20 text-white',
-    description: 'Rekonstruksi kalimat oleh tim editor akademik manusia untuk menurunkan similarity index tanpa merusak arti.',
-    features: [
-      '100% Dikerjakan Editor Manusia (Bukan Bot)',
-      'Target Penurunan Similarity (< 15-20%)',
-      'Substansi Ilmiah & Istilah Baku Terjaga',
-      'Kesesuaian Tata Bahasa & Kaidah EYD V',
-      'Garansi Revisi Sampai Lolos Target Kampus'
-    ],
-    highlight: true,
-    ctaText: 'Konsultasi Parafrase',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi layanan parafrase manual')
-  }
-])
+const pricingPlans = computed(() => {
+  return activeServices.value.map(s => ({
+    ...s,
+    badgeClass: s.badgeClass || (s.highlight ? 'bg-white/20 text-white' : 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300'),
+    ctaLink: s.ctaLink || getWhatsappUrl(`Halo Admin Cek Naskah, saya ingin pesan ${s.name}`)
+  }))
+})
 
-const bundlePlans = computed(() => [
-  {
-    title: 'Paket Bundling Cek Turnitin + AI Detector',
-    price: 'Rp 30.000',
-    saving: 'Hemat Rp 5.000',
-    desc: 'Pilihan terfavorit mahasiswa akhir dan dosen untuk memastikan naskah bebas dari kesamaan teks sekaligus bebas dari skor AI tinggi.',
-    items: [
-      '1x Cek Similarity Turnitin No-Repository',
-      '1x Uji AI Writer Detector Turnitin',
-      '2 Laporan PDF Resmi Terpisah',
-      'Proses Cepat (5 – 25 Menit)'
-    ],
-    link: getWhatsappUrl('Halo Admin, saya ingin pesan Paket Bundling Turnitin + AI Detector')
-  },
-  {
-    title: 'Paket Riset Scopus (5 Artikel)',
-    price: 'Rp 45.000',
-    saving: 'Hemat Rp 5.000',
-    desc: 'Layanan lengkap pencarian dan pengunduhan 5 artikel jurnal internasional Scopus Q1-Q4 beserta referensi sitasi riset Anda.',
-    items: [
-      '5 Artikel Jurnal Internasional Full-Text PDF',
-      'Akses Database Elsevier, Springer, IEEE',
-      '5 File Sitasi Lengkap (Mendeley/Zotero)',
-      'Bantuan Pencarian Berdasarkan Topik / DOI'
-    ],
-    link: getWhatsappUrl('Halo Admin, saya ingin pesan Paket Riset Scopus 5 Artikel')
-  }
-])
+const bundlePlans = computed(() => {
+  return activeBundles.value.map(b => ({
+    ...b,
+    link: b.ctaLink || getWhatsappUrl(`Halo Admin Cek Naskah, saya ingin pesan ${b.title}`)
+  }))
+})
 </script>
 
 <template>
@@ -218,9 +130,26 @@ const bundlePlans = computed(() => [
               </div>
 
               <!-- Action CTA -->
-              <a
-                :href="plan.ctaLink"
-                target="_blank"
+              <button
+                v-if="!plan.active"
+                type="button"
+                disabled
+                class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
+                :class="plan.highlight
+                  ? 'bg-white/30 text-white'
+                  : 'bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400'"
+              >
+                <span>Tidak Tersedia</span>
+                <UIcon
+                  name="i-lucide-ban"
+                  class="w-4 h-4"
+                />
+              </button>
+              <NuxtLink
+                v-else
+                :to="plan.ctaLink"
+                :target="plan.ctaLink && plan.ctaLink.startsWith('http') ? '_blank' : undefined"
+                :rel="plan.ctaLink && plan.ctaLink.startsWith('http') ? 'noopener noreferrer' : undefined"
                 class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-2"
                 :class="plan.highlight
                   ? 'bg-white text-primary-700 hover:bg-primary-50 shadow-md'
@@ -240,7 +169,7 @@ const bundlePlans = computed(() => [
                     d="M14 5l7 7m0 0l-7 7m7-7H3"
                   />
                 </svg>
-              </a>
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -304,13 +233,27 @@ const bundlePlans = computed(() => [
                 </ul>
               </div>
 
-              <a
-                :href="bundle.link"
-                target="_blank"
+              <button
+                v-if="!bundle.active"
+                type="button"
+                disabled
+                class="w-full py-3 px-4 bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 rounded-xl text-xs sm:text-sm font-semibold text-center transition-colors cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
+              >
+                <span>Tidak Tersedia</span>
+                <UIcon
+                  name="i-lucide-ban"
+                  class="w-4 h-4"
+                />
+              </button>
+              <NuxtLink
+                v-else
+                :to="bundle.link"
+                :target="bundle.link && bundle.link.startsWith('http') ? '_blank' : undefined"
+                :rel="bundle.link && bundle.link.startsWith('http') ? 'noopener noreferrer' : undefined"
                 class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-slate-900 rounded-xl text-xs sm:text-sm font-semibold text-center transition-colors cursor-pointer"
               >
                 Pilih Paket Ini
-              </a>
+              </NuxtLink>
             </div>
           </div>
         </div>

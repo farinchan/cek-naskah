@@ -16,6 +16,10 @@ export const APPWRITE_TABLE_SETTINGS = import.meta.env?.APPWRITE_TABLE_SETTINGS
   || (typeof process !== 'undefined' && process.env?.APPWRITE_TABLE_SETTINGS)
   || 'settings'
 
+export const APPWRITE_TABLE_SERVICES = import.meta.env?.APPWRITE_TABLE_SERVICES
+  || (typeof process !== 'undefined' && process.env?.APPWRITE_TABLE_SERVICES)
+  || 'services'
+
 export const client = new Client()
   .setEndpoint(endpoint)
   .setProject(projectId)

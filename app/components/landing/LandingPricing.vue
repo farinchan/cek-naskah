@@ -1,76 +1,13 @@
 <script setup lang="ts">
 const { getWhatsappUrl } = useAppSettings()
+const { activeServices } = useServices()
 
-const pricingPlans = computed(() => [
-  {
-    name: 'Cek Plagiarisme iThenticate / Turnitin',
-    tag: '100% No-Repository',
-    price: 'Rp 15.000',
-    unit: '/ naskah',
-    description: 'Pengecekan similarity index resmi standar kampus dan jurnal internasional tanpa naskah tersimpan di database.',
-    features: [
-      'Garansi 100% No-Repository',
-      'Laporan PDF Resmi Full Color',
-      'Deteksi Sumber & Persentase Kemiripan',
-      'Waktu Proses Cepat (5 – 25 Menit)',
-      'Privasi Dokumen Terjamin'
-    ],
-    highlight: false,
-    ctaText: 'Cek Plagiarisme',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek plagiarisme Turnitin/iThenticate')
-  },
-  {
-    name: 'AI Writer Detector Turnitin',
-    tag: 'Standar Turnitin AI',
-    price: 'Rp 20.000',
-    unit: '/ naskah',
-    description: 'Pemeriksaan akurat indikasi tulisan hasil generate AI seperti ChatGPT, Claude, dan Gemini sesuai standar reviewer.',
-    features: [
-      'Skor Resmi Turnitin AI Score',
-      'Highlight Kalimat & Paragraf AI',
-      'Deteksi Model ChatGPT, Claude, Gemini',
-      'Laporan PDF Analisis AI Lengkap',
-      'Dukungan Naskah Indonesia & Inggris'
-    ],
-    highlight: false,
-    ctaText: 'Cek AI Detector',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek AI Writer Detector')
-  },
-  {
-    name: 'Ambil Artikel Scopus',
-    tag: 'Scopus Q1 - Q4',
-    price: 'Rp 10.000',
-    unit: '/ artikel',
-    description: 'Akses dan unduh artikel jurnal ilmiah internasional bereputasi yang terkunci paywall lengkap dengan file sitasi.',
-    features: [
-      'Full-Text PDF Original & Bersih',
-      'Jurnal Scopus Q1, Q2, Q3, Q4',
-      'Penerbit Elsevier, Springer, IEEE, Wiley',
-      'File Metadata Sitasi (RIS / BibTeX)',
-      'Pengiriman Cepat via Email / WA'
-    ],
-    highlight: false,
-    ctaText: 'Ambil Artikel',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin bantuan ambil artikel Scopus')
-  },
-  {
-    name: 'Parafrase Manual',
-    tag: 'Paling Populer',
-    price: 'Mulai Rp 35.000',
-    unit: '/ halaman',
-    description: 'Rekonstruksi kalimat oleh tim editor lulusan magister/doktor untuk menurunkan similarity index tanpa mengubah substansi.',
-    features: [
-      '100% Dikerjakan Editor Manusia (Bukan Bot)',
-      'Target Penurunan Similarity (< 15-20%)',
-      'Substansi Ilmiah & Istilah Baku Terjaga',
-      'Kesesuaian Tata Bahasa & Kaidah EYD V',
-      'Garansi Revisi Sampai Lolos Target'
-    ],
-    highlight: true,
-    ctaText: 'Konsultasi Parafrase',
-    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi parafrase manual')
-  }
-])
+const pricingPlans = computed(() => {
+  return activeServices.value.map(s => ({
+    ...s,
+    ctaLink: s.ctaLink || getWhatsappUrl(`Halo Admin Cek Naskah, saya ingin pesan layanan ${s.name}`)
+  }))
+})
 </script>
 
 <template>
@@ -180,9 +117,26 @@ const pricingPlans = computed(() => [
           </div>
 
           <!-- CTA Button -->
-          <a
-            :href="plan.ctaLink"
-            target="_blank"
+          <button
+            v-if="!plan.active"
+            type="button"
+            disabled
+            class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
+            :class="plan.highlight
+              ? 'bg-white/30 text-white'
+              : 'bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400'"
+          >
+            <span>Tidak Tersedia</span>
+            <UIcon
+              name="i-lucide-ban"
+              class="w-4 h-4"
+            />
+          </button>
+          <NuxtLink
+            v-else
+            :to="plan.ctaLink"
+            :target="plan.ctaLink && plan.ctaLink.startsWith('http') ? '_blank' : undefined"
+            :rel="plan.ctaLink && plan.ctaLink.startsWith('http') ? 'noopener noreferrer' : undefined"
             class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-2"
             :class="plan.highlight
               ? 'bg-white text-primary-700 hover:bg-primary-50 shadow-md'
@@ -202,7 +156,7 @@ const pricingPlans = computed(() => [
                 d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
             </svg>
-          </a>
+          </NuxtLink>
         </div>
       </div>
 

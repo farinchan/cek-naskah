@@ -457,9 +457,9 @@ onMounted(async () => {
                 </span>
               </button>
 
-              <!-- Tombol 4: Layanan & Tarif (Segera) -->
-              <button
-                type="button"
+              <!-- Tombol 4: Layanan & Tarif (/admin/services) -->
+              <NuxtLink
+                to="/admin/services"
                 class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors text-left cursor-pointer"
               >
                 <div class="flex items-center gap-2.5 min-w-0">
@@ -478,10 +478,7 @@ onMounted(async () => {
                   </svg>
                   <span class="truncate">Layanan & Tarif</span>
                 </div>
-                <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 font-medium">
-                  Segera
-                </span>
-              </button>
+              </NuxtLink>
 
               <!-- Tombol 5: Statistik & Log (Segera) -->
               <button
