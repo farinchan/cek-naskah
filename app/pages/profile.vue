@@ -3212,7 +3212,6 @@ const handleLogout = async () => {
             </div>
           </div>
 
-
           <!-- 4. Riwayat Transaksi Saldo Poin -->
           <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
             <div class="p-6 sm:p-8 border-b border-slate-100 dark:border-neutral-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

@@ -6,7 +6,8 @@ useHead({
     { name: 'description', content: 'Platform profesional pemeriksaan naskah akademik: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector Turnitin, Ambil Artikel Scopus, dan Parafrase Manual.' }
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' }
+    { rel: 'icon', type: 'image/png', href: '/logo.png' },
+    { rel: 'apple-touch-icon', href: '/logo.png' }
   ],
   htmlAttrs: {
     lang: 'id'

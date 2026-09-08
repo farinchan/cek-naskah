@@ -37,11 +37,13 @@ const handleSubscribe = () => {
         <div>
           <NuxtLink
             to="/"
-            class="flex items-center gap-2 font-bold text-xl tracking-tight text-slate-900 dark:text-white mb-6"
+            class="flex items-center gap-2.5 font-bold text-xl tracking-tight text-slate-900 dark:text-white mb-6 group"
           >
-            <div class="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-primary-500/20">
-              CN
-            </div>
+            <img
+              src="/logo.png"
+              alt="Logo Cek Naskah"
+              class="w-10 h-10 object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
+            >
             <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent text-2xl font-bold">Cek Naskah</span>
           </NuxtLink>
           <p class="text-slate-600 dark:text-neutral-400 mb-8 max-w-sm leading-relaxed text-sm">

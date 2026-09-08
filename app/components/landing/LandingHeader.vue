@@ -255,11 +255,13 @@ onUnmounted(() => {
           <!-- Logo -->
           <NuxtLink
             to="/"
-            class="flex items-center gap-2 font-bold text-xl tracking-tight text-slate-900 dark:text-white"
+            class="flex items-center gap-2.5 font-bold text-xl tracking-tight text-slate-900 dark:text-white group"
           >
-            <div class="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white font-black text-lg shadow-md shadow-primary-500/20">
-              CN
-            </div>
+            <img
+              src="/logo.png"
+              alt="Logo Cek Naskah"
+              class="w-9 h-9 object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
+            >
             <span class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Cek Naskah</span>
           </NuxtLink>
 

@@ -7,19 +7,19 @@
 
   /* ==========================================================================
      PALET WARNA UTAMA APLIKASI (THEME COLORS)
-     Ubah nilai HEX di bawah ini untuk mengganti warna tema seluruh aplikasi.
+     Tema Warna Biru (Blue Palette) - Senada dengan Logo Cek Naskah
      ========================================================================== */
-  --color-primary-50: #EEF2FF;
-  --color-primary-100: #E0E7FF;
-  --color-primary-200: #C7D2FE;
-  --color-primary-300: #A5B4FC;
-  --color-primary-400: #818CF8;
-  --color-primary-500: #6366F1;
-  --color-primary-600: #4F46E5;
-  --color-primary-700: #4338CA;
-  --color-primary-800: #3730A3;
-  --color-primary-900: #312E81;
-  --color-primary-950: #1E1B4B;
+  --color-primary-50: #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-200: #BFDBFE;
+  --color-primary-300: #93C5FD;
+  --color-primary-400: #60A5FA;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+  --color-primary-700: #1D4ED8;
+  --color-primary-800: #1E40AF;
+  --color-primary-900: #1E3A8A;
+  --color-primary-950: #172554;
 
   --color-brand-50: var(--color-primary-50);
   --color-brand-100: var(--color-primary-100);
