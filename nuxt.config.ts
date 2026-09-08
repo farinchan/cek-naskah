@@ -21,6 +21,11 @@ export default defineNuxtConfig({
     defaultLocale: 'id'
   },
 
+  colorMode: {
+    preference: 'light',
+    fallback: 'light'
+  },
+
   runtimeConfig: {
     appwriteApiKey: process.env.APPWRITE_API_KEY || '',
     public: {
