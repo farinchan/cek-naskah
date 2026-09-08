@@ -13,6 +13,7 @@ useSeoMeta({
 })
 
 const { user: currentUser, fetchUser, isAdmin, userAvatar } = useAuth()
+const { formatPriceToPoints } = usePoints()
 const {
   services,
   bundles,
@@ -1115,7 +1116,6 @@ onMounted(async () => {
                             <div class="min-w-0">
                               <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                                 <span>{{ plan.name }}</span>
-
                               </div>
                               <p class="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5 line-clamp-1 max-w-sm">
                                 {{ plan.description }}
@@ -1129,7 +1129,11 @@ onMounted(async () => {
                           <div class="font-bold text-sm text-primary-600 dark:text-primary-400">
                             {{ plan.price }}
                           </div>
-                          <div class="text-[11px] text-slate-400 dark:text-neutral-500">
+                          <div class="text-[11px] text-amber-700 dark:text-amber-400 font-extrabold flex items-center gap-1 mt-0.5">
+                            <span>🪙</span>
+                            <span>{{ formatPriceToPoints(plan.price) }}</span>
+                          </div>
+                          <div class="text-[10px] text-slate-400 dark:text-neutral-500">
                             {{ plan.unit || '/ naskah' }}
                           </div>
                         </td>
@@ -1319,12 +1323,18 @@ onMounted(async () => {
                       {{ plan.name }}
                     </h3>
 
-                    <div class="mt-2 mb-3 flex items-baseline gap-1.5">
-                      <span class="text-xl sm:text-2xl font-black text-primary-600 dark:text-primary-400">
-                        {{ plan.price }}
-                      </span>
-                      <span class="text-xs text-slate-500 dark:text-neutral-400 font-medium">
-                        {{ plan.unit }}
+                    <div class="mt-2 mb-3 flex items-center gap-2 flex-wrap">
+                      <div class="flex items-baseline gap-1.5">
+                        <span class="text-xl sm:text-2xl font-black text-primary-600 dark:text-primary-400">
+                          {{ plan.price }}
+                        </span>
+                        <span class="text-xs text-slate-500 dark:text-neutral-400 font-medium">
+                          {{ plan.unit }}
+                        </span>
+                      </div>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 text-xs font-bold">
+                        <span>🪙</span>
+                        <span>{{ formatPriceToPoints(plan.price) }}</span>
                       </span>
                     </div>
 
@@ -1578,6 +1588,10 @@ onMounted(async () => {
                           <div class="font-bold text-sm text-primary-600 dark:text-primary-400">
                             {{ b.price }}
                           </div>
+                          <div class="text-[11px] text-amber-700 dark:text-amber-400 font-extrabold flex items-center gap-1 mt-0.5">
+                            <span>🪙</span>
+                            <span>{{ formatPriceToPoints(b.price) }}</span>
+                          </div>
                         </td>
 
                         <!-- Kolom 3: TAMPILKAN DI WEB -->
@@ -1747,9 +1761,13 @@ onMounted(async () => {
                       {{ b.title }}
                     </h3>
 
-                    <div class="mt-2 mb-3">
+                    <div class="mt-2 mb-3 flex items-center gap-2 flex-wrap">
                       <span class="text-xl sm:text-2xl font-black text-primary-600 dark:text-primary-400">
                         {{ b.price }}
+                      </span>
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 text-xs font-bold">
+                        <span>🪙</span>
+                        <span>{{ formatPriceToPoints(b.price) }}</span>
                       </span>
                     </div>
 
@@ -1954,6 +1972,10 @@ onMounted(async () => {
                       placeholder="Contoh: Rp 15.000 atau Mulai Rp 35.000"
                       class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     >
+                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1 font-semibold">
+                      <span>🪙</span>
+                      <span>Konversi: {{ formatPriceToPoints(serviceForm.price) }} (1 Poin = Rp 1)</span>
+                    </p>
                   </div>
 
                   <!-- Satuan Tarif -->
@@ -2196,6 +2218,10 @@ onMounted(async () => {
                       placeholder="Contoh: Rp 30.000"
                       class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                     >
+                    <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1 font-semibold">
+                      <span>🪙</span>
+                      <span>Konversi: {{ formatPriceToPoints(bundleForm.price) }} (1 Poin = Rp 1)</span>
+                    </p>
                   </div>
 
                   <!-- Label Hemat -->

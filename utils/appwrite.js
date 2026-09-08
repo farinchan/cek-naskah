@@ -20,6 +20,10 @@ export const APPWRITE_TABLE_SERVICES = import.meta.env?.APPWRITE_TABLE_SERVICES
   || (typeof process !== 'undefined' && process.env?.APPWRITE_TABLE_SERVICES)
   || 'services'
 
+export const APPWRITE_TABLE_POINT_TRANSACTIONS = import.meta.env?.APPWRITE_TABLE_POINT_TRANSACTIONS
+  || (typeof process !== 'undefined' && process.env?.APPWRITE_TABLE_POINT_TRANSACTIONS)
+  || 'point_transactions'
+
 export const client = new Client()
   .setEndpoint(endpoint)
   .setProject(projectId)

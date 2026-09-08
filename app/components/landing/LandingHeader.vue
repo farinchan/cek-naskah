@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { user, userAvatar, isAdmin, fetchUser, logout, sendEmailVerification } = useAuth()
+const { userPoints, openTopupModal } = usePoints()
 const { rawPhone, supportEmail, getWhatsappUrl, settings } = useAppSettings()
 
 const isResendingVerif = ref(false)
@@ -329,6 +330,20 @@ onUnmounted(() => {
               </svg>
             </button>
 
+            <!-- User Saldo Poin Desktop Trigger Button -->
+            <button
+              v-if="user"
+              type="button"
+              class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200/90 dark:border-amber-900/60 bg-amber-50/90 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold text-xs transition-all shadow-xs cursor-pointer group select-none"
+              title="Saldo Poin Akun Anda. Klik untuk info isi ulang."
+              @click="openTopupModal"
+            >
+              <span class="text-sm group-hover:scale-115 transition-transform">🪙</span>
+              <span class="font-black text-amber-950 dark:text-amber-200 tracking-tight">{{ (userPoints || 0).toLocaleString('id-ID') }}</span>
+              <span class="text-[11px] font-semibold text-amber-700/90 dark:text-amber-400">Poin</span>
+              <span class="ml-0.5 px-1.5 py-0.5 rounded-md bg-amber-200/80 dark:bg-amber-800/70 text-[10px] text-amber-900 dark:text-amber-100 font-extrabold group-hover:bg-amber-300 dark:group-hover:bg-amber-700 transition-colors">+ Top Up</span>
+            </button>
+
             <!-- User Profile & Dropdown Menu Desktop -->
             <div
               v-if="user"
@@ -423,6 +438,39 @@ onUnmounted(() => {
                     >
                       {{ [user.prefs?.pekerjaan, user.prefs?.afiliasi || user.prefs?.affiliasi].filter(Boolean).join(' • ') }}
                     </div>
+                  </div>
+
+                  <!-- Saldo Poin Card in Dropdown -->
+                  <div class="p-3 mx-2 my-1.5 rounded-2xl bg-gradient-to-br from-amber-50/90 to-orange-50/70 dark:from-amber-950/40 dark:to-orange-950/30 border border-amber-200/80 dark:border-amber-900/50 flex items-center justify-between">
+                    <div>
+                      <div class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                        Saldo Poin Anda
+                      </div>
+                      <div class="flex items-baseline gap-1 mt-0.5">
+                        <span class="text-base font-black text-amber-950 dark:text-amber-200">🪙 {{ (userPoints || 0).toLocaleString('id-ID') }}</span>
+                        <span class="text-[11px] text-amber-700/80 dark:text-amber-400 font-semibold">Poin</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs shadow-sm shadow-amber-500/30 transition-all cursor-pointer flex items-center gap-1"
+                      @click="closeUserDropdown(); openTopupModal()"
+                    >
+                      <svg
+                        class="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2.5"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      <span>Top Up</span>
+                    </button>
                   </div>
 
                   <!-- Navigasi Menu Dropdown -->
@@ -667,6 +715,31 @@ onUnmounted(() => {
                 />
               </svg>
             </NuxtLink>
+
+            <!-- Saldo Poin Mobile Card -->
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center text-base shadow-xs">
+                  🪙
+                </div>
+                <div>
+                  <div class="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                    Saldo Poin Akun
+                  </div>
+                  <div class="text-sm font-black text-amber-950 dark:text-amber-200">
+                    {{ (userPoints || 0).toLocaleString('id-ID') }} Poin
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs shadow-sm shadow-amber-500/30 transition-all cursor-pointer"
+                @click="isMobileMenuOpen = false; openTopupModal()"
+              >
+                Top Up
+              </button>
+            </div>
+
             <NuxtLink
               v-if="isAdmin"
               to="/admin/setting"

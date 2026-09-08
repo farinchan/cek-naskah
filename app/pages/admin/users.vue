@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AdminUserItem } from '~/composables/useAdminUsers'
+import type { PointTransaction } from '~/composables/usePoints'
 
 definePageMeta({
   middleware: 'admin'
@@ -13,6 +14,7 @@ useSeoMeta({
 })
 
 const { user: currentUser, fetchUser, isAdmin, userAvatar } = useAuth()
+const { formatTransactionType, formatTransactionDate } = usePoints()
 const {
   users,
   metrics,
@@ -27,6 +29,8 @@ const {
   updateRole,
   updateStatus,
   updateVerification,
+  updatePoints,
+  fetchUserPointHistory,
   deleteUser
 } = useAdminUsers()
 
@@ -51,6 +55,10 @@ const selectedUser = ref<AdminUserItem | null>(null)
 const editRole = ref<'admin' | 'editor' | 'user'>('user')
 const editStatus = ref(true)
 const editVerification = ref(false)
+const editPoints = ref(0)
+const editPointsNotes = ref('')
+const selectedUserHistory = ref<PointTransaction[]>([])
+const isLoadingHistory = ref(false)
 
 // Modal: Konfirmasi Hapus
 const isDeleteModalOpen = ref(false)
@@ -132,6 +140,17 @@ const openEditModal = (u: AdminUserItem) => {
   editRole.value = getUserRole(u)
   editStatus.value = u.status
   editVerification.value = u.emailVerification
+  editPoints.value = Number(u.prefs?.points) || 0
+  editPointsNotes.value = ''
+  selectedUserHistory.value = Array.isArray(u.prefs?.pointHistory) ? (u.prefs.pointHistory as PointTransaction[]) : []
+  isLoadingHistory.value = true
+  fetchUserPointHistory(u.$id).then((h) => {
+    if (h && Array.isArray(h) && h.length > 0) {
+      selectedUserHistory.value = h as PointTransaction[]
+    }
+  }).finally(() => {
+    isLoadingHistory.value = false
+  })
   isEditModalOpen.value = true
 }
 
@@ -155,6 +174,12 @@ const handleSaveUserAccess = async () => {
   // 3. Update verification if changed
   if (editVerification.value !== selectedUser.value.emailVerification) {
     await updateVerification(targetId, editVerification.value)
+  }
+
+  // 4. Update points if changed
+  const currentPoints = Number(selectedUser.value.prefs?.points) || 0
+  if (editPoints.value !== currentPoints) {
+    await updatePoints(targetId, editPoints.value, 'set', editPointsNotes.value.trim() || undefined)
   }
 
   isEditModalOpen.value = false
@@ -589,7 +614,7 @@ onMounted(async () => {
           <!-- KONTEN UTAMA: METRICS, DAFTAR PENGGUNA & FILTER (KANAN) -->
           <section class="flex-1 w-full min-w-0 space-y-6">
             <!-- Metric KPI Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <!-- KPI 1: Total Pengguna -->
               <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
                 <div class="flex items-center justify-between mb-2">
@@ -614,7 +639,7 @@ onMounted(async () => {
                   {{ metrics.total || total }}
                 </div>
                 <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  Terdaftar di Appwrite Auth
+                  Terdaftar di Auth
                 </p>
               </div>
 
@@ -642,14 +667,14 @@ onMounted(async () => {
                   {{ metrics.verified }}
                 </div>
                 <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  {{ metrics.unverified }} belum verifikasi email
+                  {{ metrics.unverified }} belum verifikasi
                 </p>
               </div>
 
               <!-- KPI 3: Tim Pengelola (Admin & Editor) -->
               <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Tim Admin & Editor</span>
+                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Admin & Editor</span>
                   <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                     <svg
                       class="w-4 h-4"
@@ -677,7 +702,7 @@ onMounted(async () => {
               <!-- KPI 4: Akun Aktif -->
               <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Status Akun Aktif</span>
+                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Akun Aktif</span>
                   <div class="w-8 h-8 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
                     <svg
                       class="w-4 h-4"
@@ -698,10 +723,27 @@ onMounted(async () => {
                   {{ metrics.active }}
                 </div>
                 <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  {{ metrics.disabled }} akun dinonaktifkan
+                  {{ metrics.disabled }} dinonaktifkan
+                </p>
+              </div>
+
+              <!-- KPI 5: Total Poin Beredar -->
+              <div class="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Total Poin Beredar</span>
+                  <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+                    🪙
+                  </div>
+                </div>
+                <div class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">
+                  {{ (metrics.totalPoints || users.reduce((acc, u) => acc + (Number(u.prefs?.points) || 0), 0)).toLocaleString('id-ID') }}
+                </div>
+                <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+                  Saldo poin semua akun
                 </p>
               </div>
             </div>
+
             <!-- Search & Filters Container -->
             <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm p-4 sm:p-5">
               <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
@@ -869,6 +911,9 @@ onMounted(async () => {
                         Peran / Akses
                       </th>
                       <th class="px-4 py-3.5">
+                        Saldo Poin
+                      </th>
+                      <th class="px-4 py-3.5">
                         Verifikasi
                       </th>
                       <th class="px-4 py-3.5">
@@ -967,6 +1012,20 @@ onMounted(async () => {
                         >
                           Pengguna
                         </span>
+                      </td>
+
+                      <!-- Saldo Poin Badge -->
+                      <td class="px-4 py-4 whitespace-nowrap">
+                        <button
+                          type="button"
+                          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+                          title="Klik untuk ubah saldo poin pengguna"
+                          @click="openEditModal(u)"
+                        >
+                          <span>🪙</span>
+                          <span>{{ (Number(u.prefs?.points) || 0).toLocaleString('id-ID') }}</span>
+                          <span class="text-[10px] font-normal opacity-80">Poin</span>
+                        </button>
                       </td>
 
                       <!-- Email Verification Badge -->
@@ -1214,12 +1273,13 @@ onMounted(async () => {
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
     >
       <div
-        class="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6"
+        class="w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-2xl overflow-hidden"
         @click.stop
       >
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 pb-4">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-neutral-800 p-6 pb-4 shrink-0">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 font-bold flex items-center justify-center text-base">
+            <div class="w-10 h-10 rounded-2xl bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 font-bold flex items-center justify-center text-base shrink-0">
               {{ selectedUser.name ? selectedUser.name.charAt(0).toUpperCase() : 'U' }}
             </div>
             <div>
@@ -1233,14 +1293,15 @@ onMounted(async () => {
           </div>
           <button
             type="button"
-            class="text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 cursor-pointer"
+            class="text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
             @click="isEditModalOpen = false"
           >
             ✕
           </button>
         </div>
 
-        <div class="space-y-4">
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 pt-4 space-y-4 overflow-y-auto flex-1">
           <!-- Role Selector -->
           <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/40 border border-slate-200 dark:border-neutral-700/60 space-y-2">
             <label class="block text-xs font-bold text-slate-900 dark:text-white">
@@ -1340,9 +1401,217 @@ onMounted(async () => {
               <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
             </label>
           </div>
+
+          <!-- Saldo Poin Akun (Pengganti Rupiah) -->
+          <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>🪙</span>
+                  <span>Saldo Poin Pengguna (Pengganti Rupiah)</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                  1 Poin = Rp 1. Digunakan untuk pembayaran layanan pemeriksaan naskah.
+                </p>
+              </div>
+              <span class="text-xs font-black text-amber-700 dark:text-amber-300 font-mono">
+                {{ (Number(editPoints) || 0).toLocaleString('id-ID') }} Poin
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input
+                v-model.number="editPoints"
+                type="number"
+                min="0"
+                class="w-full px-3.5 py-2 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                placeholder="Jumlah saldo poin..."
+              >
+            </div>
+
+            <!-- Quick Add Points Buttons -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 hover:bg-amber-100 dark:hover:bg-amber-950 transition-colors cursor-pointer"
+                @click="editPoints = (Number(editPoints) || 0) + 10000"
+              >
+                +10.000 Poin
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 hover:bg-amber-100 dark:hover:bg-amber-950 transition-colors cursor-pointer"
+                @click="editPoints = (Number(editPoints) || 0) + 25000"
+              >
+                +25.000 Poin
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 hover:bg-amber-100 dark:hover:bg-amber-950 transition-colors cursor-pointer"
+                @click="editPoints = (Number(editPoints) || 0) + 50000"
+              >
+                +50.000 Poin
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 hover:bg-amber-100 dark:hover:bg-amber-950 transition-colors cursor-pointer"
+                @click="editPoints = (Number(editPoints) || 0) + 100000"
+              >
+                +100.000 Poin
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-neutral-900 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 transition-colors cursor-pointer"
+                @click="editPoints = 0"
+              >
+                Reset 0
+              </button>
+            </div>
+
+            <!-- Catatan Transaksi -->
+            <div class="space-y-1 pt-2 border-t border-amber-200/50 dark:border-amber-900/40">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-neutral-300">
+                Catatan / Alasan Transaksi (Opsional)
+              </label>
+              <input
+                v-model="editPointsNotes"
+                type="text"
+                maxlength="150"
+                class="w-full px-3.5 py-2 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                placeholder="Contoh: Top up manual via transfer bank, Bonus sambutan, Pengurangan dsb."
+              >
+              <p class="text-[10px] text-slate-400 dark:text-neutral-500">
+                Catatan ini dicatat ke riwayat transaksi poin pengguna dan database sistem.
+              </p>
+            </div>
+          </div>
+
+          <!-- Riwayat Transaksi Poin Pengguna -->
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800/40 border border-slate-200 dark:border-neutral-700/60 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>📜</span>
+                  <span>Riwayat Transaksi Poin Pengguna</span>
+                </span>
+                <span
+                  v-if="selectedUserHistory.length > 0"
+                  class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300"
+                >
+                  {{ selectedUserHistory.length }} Catatan
+                </span>
+              </div>
+              <span
+                v-if="isLoadingHistory"
+                class="text-[10px] text-slate-400 animate-pulse flex items-center gap-1 font-medium"
+              >
+                <svg
+                  class="animate-spin h-3 w-3 text-amber-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  />
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
+                </svg>
+                <span>Sinkronisasi...</span>
+              </span>
+            </div>
+
+            <!-- Table Riwayat -->
+            <div
+              v-if="selectedUserHistory.length > 0"
+              class="overflow-x-auto rounded-xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 max-h-56 overflow-y-auto"
+            >
+              <table class="w-full text-left text-[11px]">
+                <thead class="bg-slate-50 dark:bg-neutral-800/60 text-slate-500 dark:text-neutral-400 border-b border-slate-200 dark:border-neutral-700/80 uppercase font-bold text-[9px] tracking-wider sticky top-0 backdrop-blur-sm">
+                  <tr>
+                    <th class="py-2 px-3">
+                      Waktu
+                    </th>
+                    <th class="py-2 px-3">
+                      Tipe
+                    </th>
+                    <th class="py-2 px-3 text-right">
+                      Nominal
+                    </th>
+                    <th class="py-2 px-3 text-right">
+                      Saldo Akhir
+                    </th>
+                    <th class="py-2 px-3">
+                      Admin / Catatan
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800 font-medium">
+                  <tr
+                    v-for="tx in selectedUserHistory"
+                    :key="tx.id"
+                    class="hover:bg-slate-50/60 dark:hover:bg-neutral-800/30 transition-colors"
+                  >
+                    <td class="py-2.5 px-3 text-slate-600 dark:text-neutral-300 whitespace-nowrap">
+                      {{ formatTransactionDate(tx.createdAt) }}
+                    </td>
+                    <td class="py-2.5 px-3 whitespace-nowrap">
+                      <span
+                        class="px-2 py-0.5 rounded-md text-[10px] font-bold"
+                        :class="{
+                          'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300': tx.type === 'topup',
+                          'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300': tx.type === 'deduction',
+                          'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300': tx.type === 'adjustment'
+                        }"
+                      >
+                        {{ formatTransactionType(tx.type) }}
+                      </span>
+                    </td>
+                    <td
+                      class="py-2.5 px-3 text-right font-mono font-bold whitespace-nowrap"
+                      :class="tx.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : (tx.amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-neutral-300')"
+                    >
+                      {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount.toLocaleString('id-ID') }}
+                    </td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      {{ (tx.balanceAfter || 0).toLocaleString('id-ID') }}
+                    </td>
+                    <td class="py-2.5 px-3 text-slate-600 dark:text-neutral-300">
+                      <div class="font-semibold text-slate-800 dark:text-neutral-200">
+                        {{ tx.adminName || tx.adminEmail || 'Admin' }}
+                      </div>
+                      <div
+                        class="text-[10px] text-slate-400 dark:text-neutral-500 italic truncate max-w-[160px]"
+                        :title="tx.notes"
+                      >
+                        {{ tx.notes || '-' }}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty State Riwayat -->
+            <div
+              v-else-if="!isLoadingHistory"
+              class="py-5 text-center text-xs text-slate-400 dark:text-neutral-500 rounded-xl border border-dashed border-slate-200 dark:border-neutral-700 bg-white/50 dark:bg-neutral-900/50"
+            >
+              Belum ada riwayat transaksi poin untuk pengguna ini.
+            </div>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-neutral-800">
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-between p-6 pt-4 border-t border-slate-100 dark:border-neutral-800 shrink-0 bg-slate-50/50 dark:bg-neutral-900/50">
           <div class="text-[11px] text-slate-400 dark:text-neutral-500 font-mono">
             ID: {{ selectedUser.$id }}
           </div>

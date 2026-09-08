@@ -7,6 +7,7 @@ export interface UserPreferences extends Models.Preferences {
   affiliasi?: string
   avatarUrl?: string
   photoUrl?: string
+  points?: number
   [key: string]: unknown
 }
 
@@ -18,6 +19,14 @@ export const useAuth = () => {
 
   const userAvatar = computed(() => {
     return (user.value?.prefs?.avatarUrl as string) || (user.value?.prefs?.photoUrl as string) || ''
+  })
+
+  // User point balance (points will replace Rupiah for service orders)
+  const userPoints = computed(() => {
+    const pts = user.value?.prefs?.points
+    if (typeof pts === 'number' && !isNaN(pts)) return pts
+    const parsed = Number(pts)
+    return !isNaN(parsed) && parsed >= 0 ? parsed : 0
   })
 
   // Check if current user has 'admin' label assigned in Appwrite
@@ -618,6 +627,7 @@ export const useAuth = () => {
   return {
     user,
     userAvatar,
+    userPoints,
     isAdmin,
     loading,
     error,

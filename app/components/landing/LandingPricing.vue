@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { getWhatsappUrl } = useAppSettings()
 const { activeServices } = useServices()
+const { formatPriceToPoints } = usePoints()
 
 const pricingPlans = computed(() => {
   return activeServices.value.map(s => ({
@@ -25,7 +26,7 @@ const pricingPlans = computed(() => {
           Tarif Ramah Akademisi & Mahasiswa
         </h2>
         <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 leading-relaxed">
-          Biaya terjangkau dengan hasil pemeriksaan resmi, cepat, dan bergaransi kerahasiaan 100% No-Repository.
+          Biaya terjangkau dengan hasil pemeriksaan resmi, cepat, dan bergaransi kerahasiaan 100% No-Repository. Mendukung pembayaran menggunakan <strong>Sistem Poin (1 Poin = Rp 1)</strong>.
         </p>
       </div>
 
@@ -80,8 +81,26 @@ const pricingPlans = computed(() => {
                   {{ plan.unit }}
                 </span>
               </div>
+              <!-- Poin Equivalent Badge -->
+              <div class="mt-2 flex items-center gap-1.5">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs"
+                  :class="plan.highlight
+                    ? 'bg-white/20 text-white border border-white/30'
+                    : 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-200/80 dark:border-amber-900/60'"
+                >
+                  <span>🪙</span>
+                  <span>{{ formatPriceToPoints(plan.price) }}</span>
+                </span>
+                <span
+                  class="text-[11px]"
+                  :class="plan.highlight ? 'text-primary-200' : 'text-slate-400 dark:text-neutral-500'"
+                >
+                  (Setara poin)
+                </span>
+              </div>
               <p
-                class="text-xs mt-2 leading-relaxed"
+                class="text-xs mt-2.5 leading-relaxed"
                 :class="plan.highlight ? 'text-primary-100' : 'text-slate-600 dark:text-neutral-400'"
               >
                 {{ plan.description }}

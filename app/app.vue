@@ -17,5 +17,6 @@ useHead({
 <template>
   <UApp>
     <NuxtPage />
+    <PointTopupModal />
   </UApp>
 </template>

@@ -34,18 +34,19 @@ export interface AdminUserListResponse {
     editors: number
     active: number
     disabled: number
+    totalPoints: number
   }
 }
 
 /**
- * Validates that the request is authenticated and comes from a user with the 'admin' label.
+ * Validates that the request is authenticated via Appwrite JWT and returns the user account.
  */
-export async function requireAdminUser(event: H3Event) {
+export async function getAuthUser(event: H3Event) {
   const jwt = getHeader(event, 'x-appwrite-jwt')
   if (!jwt) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Autentikasi gagal: Sesi administrator (JWT) tidak ditemukan.'
+      statusMessage: 'Autentikasi gagal: Sesi (JWT) tidak ditemukan.'
     })
   }
 
@@ -54,33 +55,40 @@ export async function requireAdminUser(event: H3Event) {
   const projectId = (config.public.appwriteProjectId as string) || '6a9e987200268817ec4c'
 
   try {
-    const userRes = await $fetch<{ $id: string, name: string, email: string, labels?: string[] }>(`${endpoint}/account`, {
+    const userRes = await $fetch<{ $id: string, name: string, email: string, labels?: string[], prefs?: Record<string, unknown> }>(`${endpoint}/account`, {
       headers: {
         'x-appwrite-project': projectId,
         'x-appwrite-jwt': jwt
       }
     })
-
-    const labels = userRes.labels || []
-    const isAdmin = labels.some(l => l.toLowerCase() === 'admin')
-
-    if (!isAdmin) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Akses ditolak: Anda tidak memiliki hak akses administrator.'
-      })
-    }
-
     return userRes
   } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 403) {
+    if (err && typeof err === 'object' && 'statusCode' in err) {
       throw err
     }
     throw createError({
       statusCode: 401,
-      statusMessage: 'Sesi administrator tidak valid atau telah kedaluwarsa.'
+      statusMessage: 'Sesi pengguna tidak valid atau telah kedaluwarsa.'
     })
   }
+}
+
+/**
+ * Validates that the request is authenticated and comes from a user with the 'admin' label.
+ */
+export async function requireAdminUser(event: H3Event) {
+  const userRes = await getAuthUser(event)
+  const labels = userRes.labels || []
+  const isAdmin = labels.some(l => l.toLowerCase() === 'admin')
+
+  if (!isAdmin) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Akses ditolak: Anda tidak memiliki hak akses administrator.'
+    })
+  }
+
+  return userRes
 }
 
 /**
@@ -133,7 +141,8 @@ export function useAdminAppwrite() {
         admins: users.filter(u => (u.labels || []).some(l => l.toLowerCase() === 'admin')).length,
         editors: users.filter(u => (u.labels || []).some(l => l.toLowerCase() === 'editor')).length,
         active: users.filter(u => u.status).length,
-        disabled: users.filter(u => !u.status).length
+        disabled: users.filter(u => !u.status).length,
+        totalPoints: users.reduce((acc, u) => acc + (Number(u.prefs?.points) || 0), 0)
       }
 
       return {
@@ -199,6 +208,14 @@ export function useAdminAppwrite() {
       })
     },
 
+    async updatePrefs(userId: string, prefs: Record<string, unknown>) {
+      return await $fetch<Record<string, unknown>>(`${endpoint}/users/${userId}/prefs`, {
+        method: 'PATCH',
+        headers,
+        body: { prefs }
+      })
+    },
+
     async deleteUser(userId: string) {
       return await $fetch(`${endpoint}/users/${userId}`, {
         method: 'DELETE',
@@ -211,6 +228,50 @@ export function useAdminAppwrite() {
         method: 'DELETE',
         headers
       })
+    },
+
+    async recordPointTransaction(tx: {
+      userId: string
+      userEmail: string
+      userName?: string
+      adminId?: string
+      adminName?: string
+      adminEmail?: string
+      type: string
+      amount: number
+      balanceBefore: number
+      balanceAfter: number
+      notes: string
+      createdAt: string
+    }, jwt?: string) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'content-type': 'application/json'
+      }
+
+      if (jwt) {
+        requestHeaders['x-appwrite-jwt'] = jwt
+      } else {
+        requestHeaders['x-appwrite-key'] = apiKey
+      }
+
+      try {
+        return await $fetch(`${endpoint}/databases/${databaseId}/collections/${tableId}/documents`, {
+          method: 'POST',
+          headers: requestHeaders,
+          body: {
+            documentId: 'unique()',
+            data: tx
+          }
+        })
+      } catch (err: unknown) {
+        console.warn(`[PointHistory] Database table '${tableId}' row creation notice:`, (err as { message?: string })?.message || err)
+        return null
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ useSeoMeta({
 
 const { getWhatsappUrl } = useAppSettings()
 const { activeServices, activeBundles } = useServices()
+const { formatPriceToPoints, openTopupModal, user, userPoints } = usePoints()
 
 const pricingPlans = computed(() => {
   return activeServices.value.map(s => ({
@@ -39,6 +40,29 @@ const bundlePlans = computed(() => {
           <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             Daftar tarif resmi 4 produk unggulan kami: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.
           </p>
+
+          <!-- Point Currency Info Banner -->
+          <div class="mt-8 max-w-2xl mx-auto p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🪙</span>
+              <div>
+                <div class="text-xs font-bold text-amber-900 dark:text-amber-200">
+                  Pembayaran Praktis dengan Sistem Poin (1 Poin = Rp 1)
+                </div>
+                <div class="text-[11px] text-amber-700/80 dark:text-amber-400">
+                  Semua layanan dapat dipesan langsung menggunakan saldo poin akun Anda.
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+              @click="openTopupModal"
+            >
+              <span v-if="user">Saldo: {{ userPoints }} Poin</span>
+              <span v-else>Info Poin / Top Up</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -93,8 +117,26 @@ const bundlePlans = computed(() => {
                       {{ plan.unit }}
                     </span>
                   </div>
+                  <!-- Point Equivalent Badge -->
+                  <div class="mt-2 flex items-center gap-1.5">
+                    <span
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs"
+                      :class="plan.highlight
+                        ? 'bg-white/20 text-white border border-white/30'
+                        : 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-200 border border-amber-200/80 dark:border-amber-900/60'"
+                    >
+                      <span>🪙</span>
+                      <span>{{ formatPriceToPoints(plan.price) }}</span>
+                    </span>
+                    <span
+                      class="text-[11px]"
+                      :class="plan.highlight ? 'text-primary-200' : 'text-slate-400 dark:text-neutral-500'"
+                    >
+                      (Setara poin)
+                    </span>
+                  </div>
                   <p
-                    class="text-xs mt-2 leading-relaxed"
+                    class="text-xs mt-2.5 leading-relaxed"
                     :class="plan.highlight ? 'text-primary-100' : 'text-slate-600 dark:text-neutral-400'"
                   >
                     {{ plan.description }}
@@ -198,9 +240,15 @@ const bundlePlans = computed(() => {
                   <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
                     {{ bundle.saving }}
                   </span>
-                  <span class="text-2xl font-black text-slate-900 dark:text-white">
-                    {{ bundle.price }}
-                  </span>
+                  <div class="text-right">
+                    <span class="text-2xl font-black text-slate-900 dark:text-white block">
+                      {{ bundle.price }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-xs font-extrabold mt-1 shadow-xs">
+                      <span>🪙</span>
+                      <span>{{ formatPriceToPoints(bundle.price) }}</span>
+                    </span>
+                  </div>
                 </div>
                 <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
                   {{ bundle.title }}

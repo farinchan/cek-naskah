@@ -1,4 +1,5 @@
 import { account } from '~/utils/appwrite.js'
+import type { PointTransaction } from './usePoints'
 
 export interface AdminUserItem {
   $id: string
@@ -14,6 +15,14 @@ export interface AdminUserItem {
   phoneVerification: boolean
   mfa: boolean
   accessedAt: string
+  prefs?: {
+    points?: number
+    avatarUrl?: string
+    photoUrl?: string
+    pekerjaan?: string
+    afiliasi?: string
+    [key: string]: unknown
+  }
 }
 
 export interface AdminUserMetrics {
@@ -24,6 +33,7 @@ export interface AdminUserMetrics {
   editors: number
   active: number
   disabled: number
+  totalPoints: number
 }
 
 const defaultMetrics: AdminUserMetrics = {
@@ -33,7 +43,8 @@ const defaultMetrics: AdminUserMetrics = {
   admins: 0,
   editors: 0,
   active: 0,
-  disabled: 0
+  disabled: 0,
+  totalPoints: 0
 }
 
 export const useAdminUsers = () => {
@@ -276,6 +287,52 @@ export const useAdminUsers = () => {
     }
   }
 
+  // Update user point balance (admin only)
+  const updatePoints = async (userId: string, points: number, mode: 'set' | 'add' | 'subtract' = 'set', notes?: string) => {
+    actionLoading.value = true
+    clearFeedback()
+    try {
+      const headers = await getAuthHeaders()
+      const res = await $fetch<{ success: boolean, message: string, points: number, user: AdminUserItem }>(`/api/admin/users/${userId}/points`, {
+        method: 'PATCH',
+        headers,
+        body: { points, mode, notes }
+      })
+
+      if (res.success && res.user) {
+        const idx = users.value.findIndex(u => u.$id === userId)
+        if (idx !== -1) {
+          users.value[idx] = res.user
+        }
+        success.value = res.message || 'Saldo poin pengguna berhasil diperbarui.'
+        await fetchUsers()
+      }
+      return { success: true, user: res.user }
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'data' in err && (err as { data: { statusMessage?: string } }).data?.statusMessage
+        ? (err as { data: { statusMessage: string } }).data.statusMessage
+        : err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Gagal memperbarui saldo poin pengguna.'
+      error.value = msg
+      return { success: false, error: msg }
+    } finally {
+      actionLoading.value = false
+    }
+  }
+
+  const fetchUserPointHistory = async (userId: string) => {
+    try {
+      const headers = await getAuthHeaders()
+      const res = await $fetch<{ success: boolean, history: PointTransaction[] }>(`/api/admin/users/${userId}/points-history`, {
+        headers
+      })
+      return res.history || []
+    } catch {
+      return []
+    }
+  }
+
   return {
     users,
     metrics,
@@ -290,6 +347,8 @@ export const useAdminUsers = () => {
     updateRole,
     updateStatus,
     updateVerification,
+    updatePoints,
+    fetchUserPointHistory,
     deleteUser
   }
 }

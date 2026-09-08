@@ -10,6 +10,7 @@ useSeoMeta({
 
 const {
   user,
+  userPoints,
   fetchUser,
   updateName,
   updatePhone,
@@ -30,9 +31,33 @@ const {
   logout
 } = useAuth()
 
+const {
+  openTopupModal,
+  formatPointsAsRupiah,
+  userPointHistory,
+  historyList,
+  historyLoading,
+  fetchHistory,
+  formatTransactionType,
+  formatTransactionDate
+} = usePoints()
 const { getWhatsappUrl, settings } = useAppSettings()
 
-const activeTab = ref<'account' | 'security' | 'sessions'>('account')
+const activeTab = ref<'account' | 'security' | 'sessions' | 'points'>('account')
+
+// Point transactions list: prioritize historyList if fetched, otherwise fallback to userPointHistory
+const displayPointTransactions = computed(() => {
+  if (historyList.value && historyList.value.length > 0) {
+    return historyList.value
+  }
+  return userPointHistory.value || []
+})
+
+watch(activeTab, (newTab) => {
+  if (newTab === 'points') {
+    fetchHistory()
+  }
+})
 
 // Feedback messages for profile page actions
 const actionError = ref<string | null>(null)
@@ -1016,6 +1041,17 @@ const handleLogout = async () => {
 
           <!-- Quick Action Buttons -->
           <div class="flex items-center gap-2.5 w-full md:w-auto">
+            <!-- Saldo Poin Quick Info & Modal Button -->
+            <button
+              type="button"
+              class="flex-1 md:flex-initial px-4 py-2.5 rounded-xl border border-amber-200/90 dark:border-amber-900/60 bg-amber-50/90 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group"
+              title="Klik untuk membuka rincian poin dan cara isi ulang"
+              @click="activeTab = 'points'"
+            >
+              <span class="text-base group-hover:scale-110 transition-transform">🪙</span>
+              <span>{{ (userPoints || 0).toLocaleString('id-ID') }} Poin</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-amber-200/80 dark:bg-amber-800/70 text-[10px] text-amber-900 dark:text-amber-100 font-extrabold">+ Top Up</span>
+            </button>
             <a
               :href="getWhatsappUrl('Halo Admin Cek Naskah, saya butuh bantuan')"
               target="_blank"
@@ -1072,6 +1108,24 @@ const handleLogout = async () => {
                 : 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400'"
             >
               {{ sessionList.length }}
+            </span>
+          </button>
+          <button
+            type="button"
+            class="px-5 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2"
+            :class="activeTab === 'points'
+              ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+              : 'border-transparent text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
+            @click="activeTab = 'points'; clearActionFeedback()"
+          >
+            <span>Saldo Poin & Tarif Layanan</span>
+            <span
+              class="px-2 py-0.5 rounded-md text-[11px] font-bold"
+              :class="activeTab === 'points'
+                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
+                : 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400'"
+            >
+              🪙 {{ (userPoints || 0).toLocaleString('id-ID') }} Poin
             </span>
           </button>
         </div>
@@ -3033,6 +3087,288 @@ const handleLogout = async () => {
                 <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
                   Selalu biasakan keluar akun setelah selesai mengoreksi naskah di laboratorium kampus, perpustakaan, atau perangkat bersama.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: SALDO POIN & TARIF LAYANAN -->
+        <div
+          v-else-if="activeTab === 'points'"
+          class="space-y-8"
+        >
+          <!-- 1. Hero Saldo Poin Card -->
+          <div class="bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-amber-500/20 relative overflow-hidden">
+            <!-- Background Decorative Rings -->
+            <div class="absolute -right-8 -bottom-8 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div class="absolute right-12 top-6 text-7xl sm:text-8xl opacity-15 select-none pointer-events-none">
+              🪙
+            </div>
+
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-bold mb-3 border border-white/20">
+                  <span>🪙 Sistem Mata Uang Naskah</span>
+                  <span>•</span>
+                  <span>1 Poin = Rp 1</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-black tracking-tight">
+                  Saldo Poin Akun Anda
+                </h2>
+                <div class="flex items-baseline gap-2 mt-2">
+                  <span class="text-4xl sm:text-5xl font-black tracking-tight">
+                    {{ (userPoints || 0).toLocaleString('id-ID') }}
+                  </span>
+                  <span class="text-xl font-bold text-amber-100">
+                    Poin
+                  </span>
+                </div>
+                <p class="text-xs sm:text-sm text-amber-100 mt-2 font-medium">
+                  Setara dengan <strong class="text-white font-bold">{{ formatPointsAsRupiah(userPoints) }}</strong>
+                </p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  class="px-6 py-3.5 rounded-2xl bg-white hover:bg-amber-50 text-amber-900 font-extrabold text-sm shadow-lg shadow-black/10 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+                  @click="openTopupModal"
+                >
+                  <span class="text-base">🪙</span>
+                  <span>Isi Ulang (Top Up)</span>
+                </button>
+                <NuxtLink
+                  to="/charge"
+                  class="px-5 py-3.5 rounded-2xl bg-black/20 hover:bg-black/30 backdrop-blur-md text-white font-bold text-sm border border-white/30 transition-all flex items-center justify-center gap-2 text-center"
+                >
+                  <span>Pesan Layanan</span>
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Keuntungan Sistem Poin -->
+          <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm p-6 sm:p-8 space-y-6">
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>💡</span>
+                <span>Mengapa Menggunakan Sistem Poin?</span>
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-1">
+                Poin menggantikan mata uang Rupiah untuk memberikan kemudahan, kecepatan verifikasi, dan diskon paket di Cek Naskah.
+              </p>
+            </div>
+
+            <div class="grid sm:grid-cols-3 gap-4">
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800 space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-400 flex items-center justify-center text-lg">
+                  🪙
+                </div>
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                  1 Poin = Rp 1
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Nilai tukar tetap dan transparan. Tidak ada biaya admin tersembunyi ataupun pembulatan harga merugikan.
+                </p>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800 space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-lg">
+                  ⚡
+                </div>
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                  Tanpa Transfer Berulang
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Cukup isi saldo sekali untuk memesan uji berkali-kali: similarity Turnitin, skor AI, revisi bab naskah, atau unduh referensi.
+                </p>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800 space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-400 flex items-center justify-center text-lg">
+                  🛡️
+                </div>
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                  Masa Berlaku Selamanya
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-neutral-400 leading-relaxed">
+                  Saldo poin Anda tidak pernah hangus. Poin tersimpan aman di akun Anda dan dapat dipakai kapan pun naskah Anda siap.
+                </p>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- 4. Riwayat Transaksi Saldo Poin -->
+          <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
+            <div class="p-6 sm:p-8 border-b border-slate-100 dark:border-neutral-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>📜</span>
+                  <span>Riwayat Transaksi Poin Anda</span>
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-1">
+                  Catatan lengkap transaksi penambahan (top up), penggunaan layanan, serta penyesuaian saldo poin akun Anda.
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2.5 self-start sm:self-auto">
+                <button
+                  type="button"
+                  :disabled="historyLoading"
+                  class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 hover:bg-slate-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-xs font-semibold text-slate-700 dark:text-neutral-300 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  @click="fetchHistory"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    :class="{ 'animate-spin': historyLoading }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>{{ historyLoading ? 'Memperbarui...' : 'Segarkan Riwayat' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Table of Transactions -->
+            <div
+              v-if="displayPointTransactions.length > 0"
+              class="overflow-x-auto"
+            >
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 dark:bg-neutral-800/40 text-slate-500 dark:text-neutral-400 border-b border-slate-100 dark:border-neutral-800 uppercase font-bold text-[10px] tracking-wider">
+                  <tr>
+                    <th class="py-3.5 px-6">
+                      Waktu Transaksi
+                    </th>
+                    <th class="py-3.5 px-6">
+                      Jenis Aktivitas
+                    </th>
+                    <th class="py-3.5 px-6 text-right">
+                      Nominal Poin
+                    </th>
+                    <th class="py-3.5 px-6 text-right">
+                      Saldo Akhir
+                    </th>
+                    <th class="py-3.5 px-6">
+                      Status
+                    </th>
+                    <th class="py-3.5 px-6">
+                      Keterangan
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800/80 font-medium">
+                  <tr
+                    v-for="tx in displayPointTransactions"
+                    :key="tx.id"
+                    class="hover:bg-slate-50/60 dark:hover:bg-neutral-800/30 transition-colors"
+                  >
+                    <td class="py-4 px-6 text-slate-600 dark:text-neutral-300 whitespace-nowrap">
+                      {{ formatTransactionDate(tx.createdAt) }}
+                    </td>
+                    <td class="py-4 px-6 whitespace-nowrap">
+                      <span
+                        class="px-2.5 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1.5"
+                        :class="{
+                          'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300': tx.type === 'topup',
+                          'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300': tx.type === 'deduction',
+                          'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300': tx.type === 'adjustment'
+                        }"
+                      >
+                        <span v-if="tx.type === 'topup'">🟢</span>
+                        <span v-else-if="tx.type === 'deduction'">🔴</span>
+                        <span v-else>🟡</span>
+                        <span>{{ formatTransactionType(tx.type) }}</span>
+                      </span>
+                    </td>
+                    <td
+                      class="py-4 px-6 text-right font-mono font-bold whitespace-nowrap text-sm"
+                      :class="tx.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : (tx.amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-neutral-300')"
+                    >
+                      {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount.toLocaleString('id-ID') }} Poin
+                    </td>
+                    <td class="py-4 px-6 text-right font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      {{ (tx.balanceAfter || 0).toLocaleString('id-ID') }} Poin
+                    </td>
+                    <td class="py-4 px-6 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50">
+                        <svg
+                          class="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2.5"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span>Berhasil</span>
+                      </span>
+                    </td>
+                    <td class="py-4 px-6 text-slate-600 dark:text-neutral-300 max-w-xs">
+                      <p
+                        class="truncate"
+                        :title="tx.notes"
+                      >
+                        {{ tx.notes || '-' }}
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              v-else
+              class="p-12 text-center space-y-4"
+            >
+              <div class="w-16 h-16 rounded-3xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-3xl mx-auto shadow-sm">
+                🪙
+              </div>
+              <div class="space-y-1">
+                <h4 class="text-base font-bold text-slate-900 dark:text-white">
+                  Belum Ada Riwayat Transaksi Poin
+                </h4>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 max-w-md mx-auto">
+                  Riwayat penambahan saldo (top up) atau pemesanan layanan menggunakan poin akan secara otomatis tercatat di sini.
+                </p>
+              </div>
+              <div class="pt-2">
+                <button
+                  type="button"
+                  class="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer inline-flex items-center gap-2"
+                  @click="openTopupModal"
+                >
+                  <span>🪙</span>
+                  <span>Isi Ulang Saldo Sekarang</span>
+                </button>
               </div>
             </div>
           </div>
