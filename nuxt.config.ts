@@ -11,11 +11,24 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      appwriteEndpoint: process.env.APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1',
+      appwriteProjectId: process.env.APPWRITE_PROJECT_ID || '6a9e987200268817ec4c',
+      appwriteDatabaseId: process.env.APPWRITE_DATABASE_ID || '6a9f5bfb00026954d579',
+      appwriteTableSettings: process.env.APPWRITE_TABLE_SETTINGS || 'settings'
+    }
+  },
+
   routeRules: {
     '/': { prerender: true }
   },
 
   compatibilityDate: '2026-06-30',
+
+  vite: {
+    envPrefix: ['VITE_', 'APPWRITE_']
+  },
 
   eslint: {
     config: {

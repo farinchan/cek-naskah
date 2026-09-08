@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { getWhatsappUrl } = useAppSettings()
+
 useSeoMeta({
   title: 'About Us — Cek Naskah',
   description: 'Mengenal Cek Naskah: Platform pemeriksaan naskah akademik terpercaya di Indonesia dengan layanan Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.',
@@ -417,7 +419,7 @@ const faqs = [
               </p>
             </div>
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20naskah"
+              :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek naskah')"
               target="_blank"
               class="shrink-0 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
             >
@@ -508,7 +510,7 @@ const faqs = [
               Lihat Biaya Layanan
             </NuxtLink>
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi"
+              :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi')"
               target="_blank"
               class="px-6 py-3.5 bg-white text-primary-700 hover:bg-primary-50 font-bold text-sm rounded-xl transition-colors shadow-lg cursor-pointer"
             >

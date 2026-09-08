@@ -30,6 +30,8 @@ const {
   logout
 } = useAuth()
 
+const { getWhatsappUrl } = useAppSettings()
+
 const activeTab = ref<'account' | 'security' | 'sessions'>('account')
 
 // Feedback messages for profile page actions
@@ -970,7 +972,7 @@ const handleLogout = async () => {
           <!-- Quick Action Buttons -->
           <div class="flex items-center gap-2.5 w-full md:w-auto">
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20butuh%20bantuan"
+              :href="getWhatsappUrl('Halo Admin Cek Naskah, saya butuh bantuan')"
               target="_blank"
               class="flex-1 md:flex-initial px-4 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-xs font-semibold text-slate-700 dark:text-neutral-200 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >

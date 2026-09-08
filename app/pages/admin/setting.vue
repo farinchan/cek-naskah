@@ -11,44 +11,48 @@ useSeoMeta({
 })
 
 const { user, fetchUser, isAdmin, userAvatar } = useAuth()
+const {
+  settings,
+  loading: isDbLoading,
+  saving: isSaving,
+  dbStatus,
+  tableId,
+  fetchSettings,
+  saveSettings
+} = useAppSettings()
 
 const isPageLoading = ref(true)
 const activeTab = ref<'general' | 'contacts'>('general')
-const isSaving = ref(false)
 const isRefreshing = ref(false)
 const saveSuccess = ref(false)
+const saveError = ref(false)
 const saveMessage = ref('')
 
-// Form Settings State (Status Operasional & Kontak CS)
-const settings = ref({
-  maintenanceMode: false,
-  allowNewRegistration: true,
-  requireEmailVerification: true,
-  supportEmail: 'bantuan@ceknaskah.id',
-  supportPhone: '+62 812-3456-7890'
-})
-
 const handleSaveSettings = async () => {
-  isSaving.value = true
   saveSuccess.value = false
+  saveError.value = false
   saveMessage.value = ''
 
-  // Simulate saving settings
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  isSaving.value = false
-  saveSuccess.value = true
-  saveMessage.value = 'Pengaturan sistem berhasil disimpan.'
-
-  setTimeout(() => {
-    saveSuccess.value = false
-  }, 3500)
+  const res = await saveSettings()
+  if (res.success) {
+    saveSuccess.value = true
+    saveMessage.value = res.message
+    setTimeout(() => {
+      saveSuccess.value = false
+    }, 4000)
+  } else {
+    saveError.value = true
+    saveMessage.value = res.message
+  }
 }
 
 const handleRefreshUser = async () => {
   isRefreshing.value = true
   try {
-    await fetchUser()
+    await Promise.all([
+      fetchUser(),
+      fetchSettings()
+    ])
   } finally {
     isRefreshing.value = false
   }
@@ -62,6 +66,7 @@ onMounted(async () => {
       navigateTo('/login?redirect=/admin/setting')
       return
     }
+    await fetchSettings()
   } finally {
     isPageLoading.value = false
   }
@@ -77,13 +82,27 @@ onMounted(async () => {
         <!-- Page Header & Title Bar -->
         <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div class="flex items-center gap-2 mb-1.5">
+            <div class="flex flex-wrap items-center gap-2 mb-1.5">
               <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 uppercase tracking-wider">
                 Panel Admin
               </span>
               <span class="text-slate-300 dark:text-neutral-700">•</span>
               <span class="text-xs text-slate-500 dark:text-neutral-400 font-medium">
                 Pusat Kontrol & Konfigurasi
+              </span>
+              <span class="text-slate-300 dark:text-neutral-700">•</span>
+              <span
+                class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold flex items-center gap-1.5"
+                :class="dbStatus === 'connected'
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                  : 'bg-slate-100 text-slate-600 dark:bg-neutral-800 dark:text-neutral-400'"
+                title="Tersambung ke Appwrite TablesDB"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full"
+                  :class="dbStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"
+                />
+                TablesDB: {{ tableId }}
               </span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -99,13 +118,13 @@ onMounted(async () => {
             <button
               type="button"
               class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-xs font-semibold text-slate-700 dark:text-neutral-200 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-              :disabled="isRefreshing"
-              title="Sinkronkan data akun dari Appwrite"
+              :disabled="isRefreshing || isDbLoading"
+              title="Sinkronkan data akun dan database dari Appwrite"
               @click="handleRefreshUser"
             >
               <svg
                 class="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400"
-                :class="{ 'animate-spin': isRefreshing }"
+                :class="{ 'animate-spin': isRefreshing || isDbLoading }"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -117,12 +136,12 @@ onMounted(async () => {
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              <span>{{ isRefreshing ? 'Menyinkronkan...' : 'Sinkronkan Izin' }}</span>
+              <span>{{ isRefreshing || isDbLoading ? 'Menyinkronkan...' : 'Sinkronkan Data & Izin' }}</span>
             </button>
           </div>
         </div>
 
-        <!-- Notification Alert -->
+        <!-- Success Alert -->
         <Transition
           enter-active-class="transition duration-200 ease-out"
           enter-from-class="transform -translate-y-2 opacity-0"
@@ -155,6 +174,45 @@ onMounted(async () => {
               type="button"
               class="text-emerald-600 hover:text-emerald-800 cursor-pointer"
               @click="saveSuccess = false"
+            >
+              ✕
+            </button>
+          </div>
+        </Transition>
+
+        <!-- Error Alert -->
+        <Transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="transform -translate-y-2 opacity-0"
+          enter-to-class="transform translate-y-0 opacity-100"
+          leave-active-class="transition duration-150 ease-in"
+          leave-from-class="transform translate-y-0 opacity-100"
+          leave-to-class="transform -translate-y-2 opacity-0"
+        >
+          <div
+            v-if="saveError"
+            class="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm"
+          >
+            <div class="flex items-center gap-2.5">
+              <svg
+                class="w-5 h-5 text-rose-500 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <span>{{ saveMessage }}</span>
+            </div>
+            <button
+              type="button"
+              class="text-rose-600 hover:text-rose-800 cursor-pointer"
+              @click="saveError = false"
             >
               ✕
             </button>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const pricingPlans = [
+const { getWhatsappUrl } = useAppSettings()
+
+const pricingPlans = computed(() => [
   {
     name: 'Cek Plagiarisme iThenticate / Turnitin',
     tag: '100% No-Repository',
@@ -15,7 +17,7 @@ const pricingPlans = [
     ],
     highlight: false,
     ctaText: 'Cek Plagiarisme',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20plagiarisme%20Turnitin/iThenticate'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek plagiarisme Turnitin/iThenticate')
   },
   {
     name: 'AI Writer Detector Turnitin',
@@ -32,7 +34,7 @@ const pricingPlans = [
     ],
     highlight: false,
     ctaText: 'Cek AI Detector',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20AI%20Writer%20Detector'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek AI Writer Detector')
   },
   {
     name: 'Ambil Artikel Scopus',
@@ -49,7 +51,7 @@ const pricingPlans = [
     ],
     highlight: false,
     ctaText: 'Ambil Artikel',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20bantuan%20ambil%20artikel%20Scopus'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin bantuan ambil artikel Scopus')
   },
   {
     name: 'Parafrase Manual',
@@ -66,9 +68,9 @@ const pricingPlans = [
     ],
     highlight: true,
     ctaText: 'Konsultasi Parafrase',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi%20parafrase%20manual'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi parafrase manual')
   }
-]
+])
 </script>
 
 <template>
@@ -232,7 +234,7 @@ const pricingPlans = [
           </div>
         </div>
         <a
-          href="https://wa.me/6281234567890"
+          :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin tanya informasi layanan')"
           target="_blank"
           class="shrink-0 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-slate-900 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
         >

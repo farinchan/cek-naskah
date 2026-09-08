@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { getWhatsappUrl } = useAppSettings()
+
 useSeoMeta({
   title: 'Testimoni & Pengalaman Klien — Cek Naskah',
   description: 'Pengalaman nyata dan testimoni para dosen, peneliti, dan mahasiswa di Indonesia yang menggunakan layanan Cek Plagiarisme Turnitin, AI Detector, Scopus, dan Parafrase Manual di Cek Naskah.',
@@ -254,7 +256,7 @@ const testimonials = [
               Lihat Biaya Layanan
             </NuxtLink>
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi"
+              :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi')"
               target="_blank"
               class="px-6 py-3.5 bg-white text-primary-700 hover:bg-primary-50 font-bold text-sm rounded-xl transition-colors shadow-lg cursor-pointer"
             >

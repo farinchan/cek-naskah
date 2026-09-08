@@ -6,7 +6,9 @@ useSeoMeta({
   ogDescription: 'Tarif terjangkau untuk mahasiswa dan akademisi: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
 })
 
-const pricingPlans = [
+const { getWhatsappUrl } = useAppSettings()
+
+const pricingPlans = computed(() => [
   {
     name: 'Cek Plagiarisme iThenticate / Turnitin',
     tag: '100% No-Repository',
@@ -23,7 +25,7 @@ const pricingPlans = [
     ],
     highlight: false,
     ctaText: 'Pesan Cek Plagiarisme',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20plagiarisme%20Turnitin/iThenticate'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek plagiarisme Turnitin/iThenticate')
   },
   {
     name: 'AI Writer Detector Turnitin',
@@ -41,7 +43,7 @@ const pricingPlans = [
     ],
     highlight: false,
     ctaText: 'Pesan AI Detector',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20cek%20AI%20Writer%20Detector'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek AI Writer Detector')
   },
   {
     name: 'Ambil Artikel Scopus',
@@ -59,7 +61,7 @@ const pricingPlans = [
     ],
     highlight: false,
     ctaText: 'Pesan Artikel Scopus',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20bantuan%20ambil%20artikel%20Scopus'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin bantuan ambil artikel Scopus')
   },
   {
     name: 'Parafrase Manual',
@@ -77,11 +79,11 @@ const pricingPlans = [
     ],
     highlight: true,
     ctaText: 'Konsultasi Parafrase',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi%20layanan%20parafrase%20manual'
+    ctaLink: getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi layanan parafrase manual')
   }
-]
+])
 
-const bundlePlans = [
+const bundlePlans = computed(() => [
   {
     title: 'Paket Bundling Cek Turnitin + AI Detector',
     price: 'Rp 30.000',
@@ -93,7 +95,7 @@ const bundlePlans = [
       '2 Laporan PDF Resmi Terpisah',
       'Proses Cepat (5 – 25 Menit)'
     ],
-    link: 'https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20pesan%20Paket%20Bundling%20Turnitin%20%2B%20AI%20Detector'
+    link: getWhatsappUrl('Halo Admin, saya ingin pesan Paket Bundling Turnitin + AI Detector')
   },
   {
     title: 'Paket Riset Scopus (5 Artikel)',
@@ -106,9 +108,9 @@ const bundlePlans = [
       '5 File Sitasi Lengkap (Mendeley/Zotero)',
       'Bantuan Pencarian Berdasarkan Topik / DOI'
     ],
-    link: 'https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20ingin%20pesan%20Paket%20Riset%20Scopus%205%20Artikel'
+    link: getWhatsappUrl('Halo Admin, saya ingin pesan Paket Riset Scopus 5 Artikel')
   }
-]
+])
 </script>
 
 <template>
@@ -357,7 +359,7 @@ const bundlePlans = [
             </p>
           </div>
           <a
-            href="https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah,%20saya%20ingin%20konsultasi%20layanan"
+            :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin konsultasi layanan')"
             target="_blank"
             class="shrink-0 px-6 py-3.5 bg-white text-primary-700 hover:bg-primary-50 font-bold text-sm rounded-xl transition-colors shadow-lg cursor-pointer"
           >

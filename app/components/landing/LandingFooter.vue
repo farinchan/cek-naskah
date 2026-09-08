@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+const { rawPhone, supportEmail, getWhatsappUrl } = useAppSettings()
 
 const emailSubscribe = ref('')
 const subscribeSuccess = ref(false)
@@ -162,16 +162,16 @@ const handleSubscribe = () => {
             </h4>
             <p class="text-slate-600 dark:text-neutral-400 mb-2 text-sm">
               <a
-                href="https://wa.me/6281234567890"
+                :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin tanya informasi layanan')"
                 target="_blank"
                 class="hover:text-primary-500 transition-colors"
-              >+62 812-3456-7890</a>
+              >{{ rawPhone }}</a>
             </p>
             <p class="text-slate-600 dark:text-neutral-400 text-sm mb-2">
               <a
-                href="mailto:bantuan@ceknaskah.id"
+                :href="`mailto:${supportEmail}`"
                 class="hover:text-primary-500 transition-colors"
-              >bantuan@ceknaskah.id</a>
+              >{{ supportEmail }}</a>
             </p>
             <p class="text-slate-500 dark:text-neutral-500 text-xs">
               Garansi 100% No-Repository
