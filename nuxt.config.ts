@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
+    appwriteApiKey: process.env.APPWRITE_API_KEY || '',
     public: {
       appwriteEndpoint: process.env.APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1',
       appwriteProjectId: process.env.APPWRITE_PROJECT_ID || '6a9e987200268817ec4c',
