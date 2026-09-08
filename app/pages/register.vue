@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 
 const route = useRoute()
 const { user, loading, error, success, clearMessages, register, loginWithGoogle } = useAuth()
+const { settings, getWhatsappUrl } = useAppSettings()
 
 useSeoMeta({
   title: 'Daftar Akun — Cek Naskah',
@@ -26,12 +27,21 @@ onMounted(() => {
 })
 
 const handleGoogleRegister = () => {
+  if (!settings.value.allowNewRegistration) {
+    error.value = 'Pendaftaran pengguna baru sedang dinonaktifkan oleh administrator.'
+    return
+  }
   loginWithGoogle('/')
 }
 
 const handleRegister = async () => {
   fieldErrors.value = {}
   clearMessages()
+
+  if (!settings.value.allowNewRegistration) {
+    error.value = 'Pendaftaran pengguna baru sedang dinonaktifkan oleh administrator.'
+    return
+  }
 
   const parseResult = registerSchema.safeParse({
     name: name.value,
@@ -55,9 +65,10 @@ const handleRegister = async () => {
     formattedPhone
   )
   if (result.success) {
+    const destination = settings.value.requireEmailVerification ? '/profile' : '/'
     setTimeout(() => {
-      navigateTo('/')
-    }, 1200)
+      navigateTo(destination)
+    }, 1800)
   }
 }
 </script>
@@ -208,8 +219,53 @@ const handleRegister = async () => {
                   </NuxtLink>
                 </div>
                 <p class="text-xs text-slate-500 dark:text-neutral-400">
-                  Lengkapi formulir singkat di bawah ini untuk memulai.
+                  {{ settings.allowNewRegistration ? 'Lengkapi formulir singkat di bawah ini untuk memulai.' : 'Pendaftaran pengguna baru saat ini dinonaktifkan oleh administrator.' }}
                 </p>
+              </div>
+
+              <!-- Pendaftaran Ditutup Notice -->
+              <div
+                v-if="!settings.allowNewRegistration"
+                class="py-6 text-center space-y-4"
+              >
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <svg
+                    class="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+                    Pendaftaran Akun Baru Ditutup
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-600 dark:text-neutral-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
+                    Mohon maaf, saat ini pendaftaran akun baru sedang dinonaktifkan oleh administrator. Silakan masuk jika Anda sudah memiliki akun atau hubungi Layanan Pelanggan kami.
+                  </p>
+                </div>
+                <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                  <NuxtLink
+                    to="/login"
+                    class="w-full sm:w-auto px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm text-center"
+                  >
+                    Masuk ke Akun
+                  </NuxtLink>
+                  <a
+                    :href="getWhatsappUrl('Halo Admin Cek Naskah, saya ingin bertanya seputar pendaftaran akun baru')"
+                    target="_blank"
+                    class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-200 text-xs font-bold rounded-xl transition-colors text-center"
+                  >
+                    Hubungi CS WhatsApp
+                  </a>
+                </div>
               </div>
 
               <!-- Alerts -->
@@ -259,7 +315,7 @@ const handleRegister = async () => {
 
               <!-- Google OAuth Button -->
               <div
-                v-if="!user"
+                v-if="!user && settings.allowNewRegistration"
                 class="space-y-4 mb-5"
               >
                 <button
@@ -302,7 +358,7 @@ const handleRegister = async () => {
 
               <!-- Register Form -->
               <form
-                v-if="!user"
+                v-if="!user && settings.allowNewRegistration"
                 class="space-y-4"
                 @submit.prevent="handleRegister"
               >
@@ -620,7 +676,10 @@ const handleRegister = async () => {
                 </button>
               </form>
 
-              <div class="mt-6 pt-5 border-t border-slate-100 dark:border-neutral-800 text-center">
+              <div
+                v-if="settings.allowNewRegistration"
+                class="mt-6 pt-5 border-t border-slate-100 dark:border-neutral-800 text-center"
+              >
                 <p class="text-xs text-slate-500 dark:text-neutral-400">
                   Sudah memiliki akun?
                   <NuxtLink

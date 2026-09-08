@@ -1,6 +1,25 @@
 <script setup lang="ts">
-const { user, userAvatar, isAdmin, fetchUser, logout } = useAuth()
-const { rawPhone, supportEmail, getWhatsappUrl } = useAppSettings()
+const { user, userAvatar, isAdmin, fetchUser, logout, sendEmailVerification } = useAuth()
+const { rawPhone, supportEmail, getWhatsappUrl, settings } = useAppSettings()
+
+const isResendingVerif = ref(false)
+const verifBannerMsg = ref<string | null>(null)
+
+const handleResendVerifFromBanner = async () => {
+  if (isResendingVerif.value) return
+  isResendingVerif.value = true
+  verifBannerMsg.value = null
+  const res = await sendEmailVerification()
+  isResendingVerif.value = false
+  if (res.success) {
+    verifBannerMsg.value = 'Tautan verifikasi telah dikirim ke email Anda!'
+  } else {
+    verifBannerMsg.value = res.error || 'Gagal mengirim email verifikasi.'
+  }
+  setTimeout(() => {
+    verifBannerMsg.value = null
+  }, 6000)
+}
 
 const colorMode = useColorMode()
 const isDark = computed({
@@ -98,6 +117,39 @@ onUnmounted(() => {
     id="_header_social_links_h11_001"
     class="relative"
   >
+    <!-- Email Verification Alert Banner -->
+    <div
+      v-if="user && !user.emailVerification && settings.requireEmailVerification"
+      class="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 py-2.5 px-4 text-xs transition-colors"
+    >
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+          <span>
+            <strong>Verifikasi Email Diwajibkan:</strong>
+            {{ verifBannerMsg || `Alamat email Anda (${user.email}) belum diverifikasi. Harap verifikasi akun Anda untuk mengakses seluruh layanan naskah.` }}
+          </span>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            :disabled="isResendingVerif"
+            class="font-semibold underline hover:text-amber-700 dark:hover:text-amber-100 cursor-pointer disabled:opacity-50"
+            @click="handleResendVerifFromBanner"
+          >
+            {{ isResendingVerif ? 'Mengirim...' : 'Kirim Ulang Email' }}
+          </button>
+          <span>•</span>
+          <NuxtLink
+            to="/profile"
+            class="font-semibold underline hover:text-amber-700 dark:hover:text-amber-100"
+          >
+            Buka Profil →
+          </NuxtLink>
+        </div>
+      </div>
+    </div>
+
     <!-- Top Social Bar -->
     <div class="bg-slate-900 dark:bg-neutral-800">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -500,6 +552,7 @@ onUnmounted(() => {
                 Masuk
               </NuxtLink>
               <NuxtLink
+                v-if="settings.allowNewRegistration"
                 to="/register"
                 class="h-10 px-5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-xl transition-colors flex items-center shadow-sm shadow-primary-500/20"
               >
@@ -666,6 +719,7 @@ onUnmounted(() => {
               Masuk (Login)
             </NuxtLink>
             <NuxtLink
+              v-if="settings.allowNewRegistration"
               to="/register"
               class="block px-3 py-2 rounded-lg text-base font-medium text-primary-600 dark:text-primary-400 font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20"
               @click="isMobileMenuOpen = false"

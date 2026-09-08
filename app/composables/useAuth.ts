@@ -122,6 +122,12 @@ export const useAuth = () => {
     loading.value = true
     clearMessages()
     try {
+      const { settings } = useAppSettings()
+
+      if (!settings.value.allowNewRegistration) {
+        throw new Error('Pendaftaran pengguna baru sedang dinonaktifkan oleh administrator.')
+      }
+
       await account.create({
         userId: ID.unique(),
         email: emailVal,
@@ -160,7 +166,23 @@ export const useAuth = () => {
 
       const currentUser = await account.get<UserPreferences>()
       user.value = currentUser
-      success.value = 'Akun berhasil dibuat dan Anda telah masuk.'
+
+      if (settings.value.requireEmailVerification) {
+        try {
+          const origin = typeof window !== 'undefined'
+            ? window.location.origin
+            : 'http://localhost:3000'
+          await account.createEmailVerification({
+            url: `${origin}/profile`
+          })
+        } catch (verifErr) {
+          console.warn('Gagal mengirim verifikasi email otomatis:', verifErr)
+        }
+        success.value = 'Akun berhasil dibuat! Tautan verifikasi telah dikirimkan ke email Anda. Harap verifikasi email Anda.'
+      } else {
+        success.value = 'Akun berhasil dibuat dan Anda telah masuk.'
+      }
+
       return { success: true, user: currentUser }
     } catch (err: unknown) {
       const formatted = formatError(err)

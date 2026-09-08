@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 
 const route = useRoute()
 const { user, loading, error, success, clearMessages, fetchUser, login, logout, loginWithGoogle } = useAuth()
+const { settings } = useAppSettings()
 
 useSeoMeta({
   title: 'Masuk Akun — Cek Naskah',
@@ -43,8 +44,11 @@ const handleLogin = async () => {
 
   const result = await login(parseResult.data.email, parseResult.data.password)
   if (result.success) {
+    const destination = settings.value.requireEmailVerification && !result.user?.emailVerification
+      ? '/profile'
+      : '/'
     setTimeout(() => {
-      navigateTo('/')
+      navigateTo(destination)
     }, 1200)
   }
 }
@@ -225,6 +229,7 @@ const handleLogout = async () => {
                     Masuk Akun
                   </h2>
                   <NuxtLink
+                    v-if="settings.allowNewRegistration"
                     to="/register"
                     class="text-xs font-semibold text-primary-600 hover:text-primary-500 dark:text-primary-400 transition-colors"
                   >
@@ -506,7 +511,10 @@ const handleLogout = async () => {
               </form>
 
               <div class="mt-6 pt-5 border-t border-slate-100 dark:border-neutral-800 text-center">
-                <p class="text-xs text-slate-500 dark:text-neutral-400">
+                <p
+                  v-if="settings.allowNewRegistration"
+                  class="text-xs text-slate-500 dark:text-neutral-400"
+                >
                   Belum punya akun?
                   <NuxtLink
                     to="/register"
@@ -514,6 +522,12 @@ const handleLogout = async () => {
                   >
                     Daftar gratis
                   </NuxtLink>
+                </p>
+                <p
+                  v-else
+                  class="text-xs text-slate-400 dark:text-neutral-500"
+                >
+                  Pendaftaran akun baru saat ini dinonaktifkan.
                 </p>
               </div>
             </div>

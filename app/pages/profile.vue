@@ -30,7 +30,7 @@ const {
   logout
 } = useAuth()
 
-const { getWhatsappUrl } = useAppSettings()
+const { getWhatsappUrl, settings } = useAppSettings()
 
 const activeTab = ref<'account' | 'security' | 'sessions'>('account')
 
@@ -362,6 +362,11 @@ onMounted(async () => {
     } else {
       actionError.value = res.error || 'Gagal memverifikasi email. Tautan mungkin telah kedaluwarsa.'
     }
+  }
+
+  // If redirected due to email verification requirement
+  if (route.query.verify_required === '1' && !user.value?.emailVerification) {
+    actionError.value = 'Halaman atau fitur yang Anda tuju memerlukan verifikasi email aktif. Harap verifikasi email Anda.'
   }
 })
 
@@ -839,6 +844,46 @@ const handleLogout = async () => {
             @click="actionError = null"
           >
             ✕
+          </button>
+        </div>
+
+        <!-- Mandatory Email Verification Warning Card -->
+        <div
+          v-if="settings.requireEmailVerification && !user?.emailVerification"
+          class="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
+        >
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold">
+                Verifikasi Email Diwajibkan
+              </h4>
+              <p class="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">
+                Kebijakan platform mewajibkan verifikasi email aktif. Harap konfirmasi tautan verifikasi yang kami kirimkan ke alamat email Anda (<span class="font-semibold">{{ user?.email }}</span>).
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            :disabled="isSendingVerification || verificationSent"
+            class="shrink-0 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed whitespace-nowrap"
+            @click="handleSendVerification"
+          >
+            {{ isSendingVerification ? 'Mengirim...' : (verificationSent ? 'Tautan Terkirim' : 'Kirim Ulang Verifikasi') }}
           </button>
         </div>
 
