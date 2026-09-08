@@ -10,7 +10,8 @@ useSeoMeta({
   title: 'Pengguna & Akses — Panel Admin Cek Naskah',
   description: 'Manajemen pengguna, penugasan peran (RBAC), dan kontrol hak akses administrator Cek Naskah.',
   ogTitle: 'Pengguna & Akses — Panel Admin Cek Naskah',
-  ogDescription: 'Manajemen pengguna, penugasan peran (RBAC), dan kontrol hak akses administrator Cek Naskah.'
+  ogDescription: 'Manajemen pengguna, penugasan peran (RBAC), dan kontrol hak akses administrator Cek Naskah.',
+  robots: 'noindex, nofollow'
 })
 
 const { user: currentUser, fetchUser, isAdmin, userAvatar } = useAuth()

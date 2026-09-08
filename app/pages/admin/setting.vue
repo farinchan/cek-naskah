@@ -7,7 +7,8 @@ useSeoMeta({
   title: 'Pengaturan Admin — Cek Naskah',
   description: 'Panel pengaturan sistem dan manajemen hak akses administrator Cek Naskah.',
   ogTitle: 'Pengaturan Admin — Cek Naskah',
-  ogDescription: 'Panel pengaturan sistem dan manajemen hak akses administrator Cek Naskah.'
+  ogDescription: 'Panel pengaturan sistem dan manajemen hak akses administrator Cek Naskah.',
+  robots: 'noindex, nofollow'
 })
 
 const { user, fetchUser, isAdmin, userAvatar } = useAuth()

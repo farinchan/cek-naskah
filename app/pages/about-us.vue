@@ -2,11 +2,30 @@
 const { getWhatsappUrl } = useAppSettings()
 
 useSeoMeta({
-  title: 'About Us — Cek Naskah',
-  description: 'Mengenal Cek Naskah: Platform pemeriksaan naskah akademik terpercaya di Indonesia dengan layanan Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.',
-  ogTitle: 'About Us — Cek Naskah',
-  ogDescription: 'Solusi terpercaya pemeriksa naskah ilmiah: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+  title: 'Tentang Kami — Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia',
+  description: 'Mengenal Cek Naskah: Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia dengan garansi 100% No-Repository, standar EYD V, dan editor manusia lulusan pascasarjana.',
+  ogTitle: 'Tentang Kami — Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia',
+  ogDescription: 'Platform Cek Plagiasi & AI No. 1 di Indonesia: Uji Turnitin resmi akurat, AI Writer Detector, Scopus, dan Parafrase Manual.',
+  ogType: 'website',
+  ogUrl: 'https://cek-naskah.web.id/about-us',
+  ogImage: 'https://cek-naskah.web.id/logo.png',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Tentang Kami — Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia',
+  twitterDescription: 'Mengenal Cek Naskah: Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia untuk integritas karya ilmiah.'
 })
+
+useHead({
+  link: [
+    { rel: 'canonical', href: 'https://cek-naskah.web.id/about-us' }
+  ]
+})
+
+useSchemaOrg([
+  defineWebPage({
+    name: 'Tentang Kami — Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia',
+    description: 'Profil dan standar integritas akademik Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia.'
+  })
+])
 
 const values = [
   {

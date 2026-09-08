@@ -18,7 +18,7 @@ export const defaultSettings: AppSettings = {
   maintenanceMode: false,
   allowNewRegistration: true,
   requireEmailVerification: true,
-  supportEmail: 'bantuan@ceknaskah.id',
+  supportEmail: 'bantuan@cek-naskah.web.id',
   supportPhone: '+62 812-3456-7890'
 }
 

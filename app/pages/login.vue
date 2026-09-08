@@ -7,7 +7,8 @@ const { settings } = useAppSettings()
 
 useSeoMeta({
   title: 'Masuk Akun — Cek Naskah',
-  description: 'Masuk ke Cek Naskah untuk Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+  description: 'Masuk ke Cek Naskah untuk Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.',
+  robots: 'noindex, follow'
 })
 
 const email = ref('')

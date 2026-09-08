@@ -2,7 +2,10 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    '@nuxtjs/robots',
+    '@nuxtjs/sitemap',
+    'nuxt-schema-org'
   ],
 
   devtools: {
@@ -10,6 +13,13 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
+
+  site: {
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://cek-naskah.web.id',
+    name: 'Cek Naskah',
+    description: 'Platform Cek Plagiasi & AI No. 1 di Indonesia: Turnitin & iThenticate resmi 100% No-Repository, AI Writer Detector akurat, unduh jurnal Scopus, dan parafrase manual akademik.',
+    defaultLocale: 'id'
+  },
 
   runtimeConfig: {
     appwriteApiKey: process.env.APPWRITE_API_KEY || '',
@@ -39,5 +49,33 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  robots: {
+    disallow: [
+      '/admin',
+      '/admin/**',
+      '/api/**',
+      '/profile'
+    ],
+    allow: [
+      '/',
+      '/charge',
+      '/about-us',
+      '/testimony',
+      '/login',
+      '/register'
+    ]
+  },
+
+  sitemap: {
+    exclude: [
+      '/admin',
+      '/admin/**',
+      '/profile',
+      '/auth',
+      '/reset-password',
+      '/forgot-password'
+    ]
   }
 })

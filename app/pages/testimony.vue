@@ -2,11 +2,30 @@
 const { getWhatsappUrl } = useAppSettings()
 
 useSeoMeta({
-  title: 'Testimoni & Pengalaman Klien — Cek Naskah',
-  description: 'Pengalaman nyata dan testimoni para dosen, peneliti, dan mahasiswa di Indonesia yang menggunakan layanan Cek Plagiarisme Turnitin, AI Detector, Scopus, dan Parafrase Manual di Cek Naskah.',
-  ogTitle: 'Testimoni & Pengalaman Klien — Cek Naskah',
-  ogDescription: 'Ulasan dan bukti nyata integritas akademik: Cek Plagiarisme Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+  title: 'Testimoni Klien Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia — Cek Naskah',
+  description: 'Pengalaman nyata dan testimoni para dosen, peneliti, dan mahasiswa di Indonesia yang menggunakan Layanan Cek Plagiasi & AI No. 1 di Indonesia dengan garansi 100% No-Repository.',
+  ogTitle: 'Testimoni Klien Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia — Cek Naskah',
+  ogDescription: 'Ulasan dan kepuasan ribuan akademisi menggunakan Layanan Cek Plagiasi & AI No. 1 di Indonesia: Turnitin No-Repo, AI Writer Detector, Scopus, dan Parafrase.',
+  ogType: 'website',
+  ogUrl: 'https://cek-naskah.web.id/testimony',
+  ogImage: 'https://cek-naskah.web.id/logo.png',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Testimoni Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia — Cek Naskah',
+  twitterDescription: 'Testimoni ribuan civitas akademika di Indonesia yang mempercayakan naskahnya kepada Cek Naskah.'
 })
+
+useHead({
+  link: [
+    { rel: 'canonical', href: 'https://cek-naskah.web.id/testimony' }
+  ]
+})
+
+useSchemaOrg([
+  defineWebPage({
+    name: 'Testimoni Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia — Cek Naskah',
+    description: 'Ulasan dan bukti kepuasan pengguna layanan Cek Plagiasi & AI Turnitin / iThenticate No. 1 di Indonesia.'
+  })
+])
 
 const testimonials = [
   {

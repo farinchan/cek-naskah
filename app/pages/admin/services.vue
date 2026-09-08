@@ -9,7 +9,8 @@ useSeoMeta({
   title: 'Layanan & Tarif — Panel Admin Cek Naskah',
   description: 'Kelola katalog layanan pemeriksaan naskah, tarif resmi, paket bundling, dan pengaturan template pesan pemesanan.',
   ogTitle: 'Layanan & Tarif — Panel Admin Cek Naskah',
-  ogDescription: 'Kelola katalog layanan pemeriksaan naskah, tarif resmi, paket bundling, dan pengaturan template pesan pemesanan.'
+  ogDescription: 'Kelola katalog layanan pemeriksaan naskah, tarif resmi, paket bundling, dan pengaturan template pesan pemesanan.',
+  robots: 'noindex, nofollow'
 })
 
 const { user: currentUser, fetchUser, isAdmin, userAvatar } = useAuth()

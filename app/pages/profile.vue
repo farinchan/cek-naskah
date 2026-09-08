@@ -5,7 +5,8 @@ useSeoMeta({
   title: 'Profil Saya — Cek Naskah',
   description: 'Kelola informasi profil, nomor telepon, dan keamanan akun Cek Naskah Anda.',
   ogTitle: 'Profil Saya — Cek Naskah',
-  ogDescription: 'Kelola data pribadi, pengaturan keamanan, dan preferensi akun di Cek Naskah.'
+  ogDescription: 'Kelola data pribadi, pengaturan keamanan, dan preferensi akun di Cek Naskah.',
+  robots: 'noindex, nofollow'
 })
 
 const {

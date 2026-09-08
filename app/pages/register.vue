@@ -7,7 +7,8 @@ const { settings, getWhatsappUrl } = useAppSettings()
 
 useSeoMeta({
   title: 'Daftar Akun — Cek Naskah',
-  description: 'Daftar akun Cek Naskah untuk akses Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.'
+  description: 'Daftar akun Cek Naskah untuk akses Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.',
+  robots: 'noindex, follow'
 })
 
 const name = ref('')
