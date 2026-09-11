@@ -29,6 +29,19 @@ export interface SettingRow extends Models.Row {
 
 export type DbStatus = 'idle' | 'connected' | 'not_found' | 'permission_denied' | 'error'
 
+const CACHE_SETTINGS_KEY = 'cek_naskah_cached_settings'
+let inFlightSettingsPromise: Promise<AppSettings> | null = null
+
+const persistSettingsCache = (s: AppSettings) => {
+  if (import.meta.client) {
+    try {
+      localStorage.setItem(CACHE_SETTINGS_KEY, JSON.stringify(s))
+    } catch {
+      // Ignore storage errors
+    }
+  }
+}
+
 export const useAppSettings = () => {
   const config = useRuntimeConfig()
   const databaseId = (config.public?.appwriteDatabaseId as string) || APPWRITE_DATABASE_ID
@@ -36,6 +49,22 @@ export const useAppSettings = () => {
 
   const settings = useState<AppSettings>('app_settings', () => ({ ...defaultSettings }))
   const hasLoaded = useState<boolean>('app_settings_has_loaded', () => false)
+
+  // Immediate local cache hydration on client side to avoid default flicker
+  if (import.meta.client && !hasLoaded.value) {
+    try {
+      const cached = localStorage.getItem(CACHE_SETTINGS_KEY)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed && typeof parsed === 'object') {
+          settings.value = { ...defaultSettings, ...parsed }
+        }
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  }
+
   const loading = ref(false)
   const saving = ref(false)
   const error = ref<string | null>(null)
@@ -105,49 +134,60 @@ export const useAppSettings = () => {
   }
 
   const fetchSettings = async (force = false): Promise<AppSettings> => {
+    if (inFlightSettingsPromise) {
+      return inFlightSettingsPromise
+    }
+
     if (hasLoaded.value && !force) {
       return settings.value
     }
 
     loading.value = true
     error.value = null
-    try {
-      const res = await tablesDB.listRows<SettingRow>({
-        databaseId,
-        tableId
-      })
 
-      dbStatus.value = 'connected'
-      dbStatusMessage.value = `Tersambung ke Appwrite TablesDB (${databaseId}/${tableId})`
-      hasLoaded.value = true
+    inFlightSettingsPromise = (async () => {
+      try {
+        const res = await tablesDB.listRows<SettingRow>({
+          databaseId,
+          tableId
+        })
 
-      const loaded: Partial<AppSettings> = {}
-      for (const doc of res.rows) {
-        const k = doc.key as keyof AppSettings
-        const v = doc.value
-        if (
-          k === 'maintenanceMode'
-          || k === 'allowNewRegistration'
-          || k === 'requireEmailVerification'
-        ) {
-          loaded[k] = v === 'true'
-        } else if (k === 'supportEmail' || k === 'supportPhone') {
-          loaded[k] = String(v)
+        dbStatus.value = 'connected'
+        dbStatusMessage.value = `Tersambung ke Appwrite TablesDB (${databaseId}/${tableId})`
+        hasLoaded.value = true
+
+        const loaded: Partial<AppSettings> = {}
+        for (const doc of res.rows) {
+          const k = doc.key as keyof AppSettings
+          const v = doc.value
+          if (
+            k === 'maintenanceMode'
+            || k === 'allowNewRegistration'
+            || k === 'requireEmailVerification'
+          ) {
+            loaded[k] = v === 'true'
+          } else if (k === 'supportEmail' || k === 'supportPhone') {
+            loaded[k] = String(v)
+          }
         }
-      }
 
-      settings.value = {
-        ...defaultSettings,
-        ...loaded
+        settings.value = {
+          ...defaultSettings,
+          ...loaded
+        }
+        persistSettingsCache(settings.value)
+        return settings.value
+      } catch (err: unknown) {
+        const msg = handleDbError(err)
+        error.value = msg
+        return settings.value
+      } finally {
+        loading.value = false
+        inFlightSettingsPromise = null
       }
-      return settings.value
-    } catch (err: unknown) {
-      const msg = handleDbError(err)
-      error.value = msg
-      return settings.value
-    } finally {
-      loading.value = false
-    }
+    })()
+
+    return inFlightSettingsPromise
   }
 
   const saveSettings = async (newSettings?: Partial<AppSettings>): Promise<{ success: boolean, message: string }> => {
@@ -201,6 +241,7 @@ export const useAppSettings = () => {
       }
 
       hasLoaded.value = true
+      persistSettingsCache(settings.value)
       dbStatus.value = 'connected'
       dbStatusMessage.value = `Pengaturan tersimpan ke Appwrite TablesDB (${databaseId}/${tableId})`
       return {

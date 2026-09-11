@@ -1,7 +1,14 @@
 <script setup lang="ts">
-const { getWhatsappUrl } = useAppSettings()
-const { activeServices } = useServices()
+const { getWhatsappUrl, fetchSettings } = useAppSettings()
+const { activeServices, fetchServices } = useServices()
 const { formatPriceToPoints } = usePoints()
+
+onMounted(async () => {
+  await Promise.allSettled([
+    fetchServices(),
+    fetchSettings()
+  ])
+})
 
 const pricingPlans = computed(() => {
   return activeServices.value.map(s => ({

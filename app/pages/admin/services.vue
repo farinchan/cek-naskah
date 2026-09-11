@@ -320,7 +320,7 @@ onMounted(async () => {
       navigateTo('/login?redirect=/admin/services')
       return
     }
-    await fetchServices()
+    await fetchServices(true)
   } finally {
     isPageLoading.value = false
   }

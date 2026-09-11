@@ -1,7 +1,7 @@
 <script setup lang="ts">
 useSeoMeta({
   title: 'Tarif Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia — Cek Naskah',
-  description: 'Daftar tarif resmi Cek Plagiasi & AI No. 1 di Indonesia: Turnitin No-Repo (Rp 15.000), AI Writer Detector (Rp 20.000), Ambil Artikel Scopus (Rp 10.000), dan Parafrase Manual.',
+  description: 'Daftar tarif resmi Cek Plagiasi & AI No. 1 di Indonesia: Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual bergaransi 100% No-Repository.',
   ogTitle: 'Tarif Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia — Cek Naskah',
   ogDescription: 'Tarif hemat dan transparan Cek Plagiasi & AI No. 1 di Indonesia dengan garansi 100% No-Repository untuk mahasiswa dan akademisi.',
   ogType: 'website',
@@ -25,9 +25,16 @@ useSchemaOrg([
   })
 ])
 
-const { getWhatsappUrl } = useAppSettings()
-const { activeServices, activeBundles } = useServices()
+const { getWhatsappUrl, fetchSettings } = useAppSettings()
+const { activeServices, activeBundles, fetchServices } = useServices()
 const { formatPriceToPoints, openTopupModal, user, userPoints } = usePoints()
+
+onMounted(async () => {
+  await Promise.allSettled([
+    fetchServices(),
+    fetchSettings()
+  ])
+})
 
 const pricingPlans = computed(() => {
   return activeServices.value.map(s => ({

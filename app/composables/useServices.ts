@@ -180,6 +180,22 @@ interface ServiceRow extends Models.Row {
   type?: string
 }
 
+const CACHE_SERVICES_KEY = 'cek_naskah_cached_services'
+const CACHE_BUNDLES_KEY = 'cek_naskah_cached_bundles'
+
+let inFlightServicesPromise: Promise<{ services: ServicePlan[], bundles: BundlePlan[] }> | null = null
+
+const persistServicesCache = (sList: ServicePlan[], bList: BundlePlan[]) => {
+  if (import.meta.client) {
+    try {
+      localStorage.setItem(CACHE_SERVICES_KEY, JSON.stringify(sList))
+      localStorage.setItem(CACHE_BUNDLES_KEY, JSON.stringify(bList))
+    } catch {
+      // Ignore storage quota / private browsing errors
+    }
+  }
+}
+
 export const useServices = () => {
   const config = useRuntimeConfig()
   const databaseId = (config.public?.appwriteDatabaseId as string) || APPWRITE_DATABASE_ID
@@ -188,6 +204,28 @@ export const useServices = () => {
   const services = useState<ServicePlan[]>('app_pricing_services', () => [...defaultServicePlans])
   const bundles = useState<BundlePlan[]>('app_pricing_bundles', () => [...defaultBundlePlans])
   const hasLoaded = useState<boolean>('app_services_has_loaded', () => false)
+
+  // Immediate local cache hydration on client side to avoid default flicker
+  if (import.meta.client && !hasLoaded.value) {
+    try {
+      const cachedS = localStorage.getItem(CACHE_SERVICES_KEY)
+      const cachedB = localStorage.getItem(CACHE_BUNDLES_KEY)
+      if (cachedS) {
+        const parsedS = JSON.parse(cachedS)
+        if (Array.isArray(parsedS) && parsedS.length > 0) {
+          services.value = parsedS
+        }
+      }
+      if (cachedB) {
+        const parsedB = JSON.parse(cachedB)
+        if (Array.isArray(parsedB) && parsedB.length > 0) {
+          bundles.value = parsedB
+        }
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  }
 
   const loading = ref(false)
   const saving = ref(false)
@@ -249,6 +287,10 @@ export const useServices = () => {
   }
 
   const fetchServices = async (force = false): Promise<{ services: ServicePlan[], bundles: BundlePlan[] }> => {
+    if (inFlightServicesPromise) {
+      return inFlightServicesPromise
+    }
+
     if (hasLoaded.value && !force) {
       return {
         services: services.value,
@@ -258,75 +300,82 @@ export const useServices = () => {
 
     loading.value = true
     error.value = null
-    try {
-      const res = await tablesDB.listRows<ServiceRow>({
-        databaseId,
-        tableId
-      })
 
-      const rows = res.rows || []
-      if (rows.length > 0) {
-        const parsedServices: ServicePlan[] = []
-        const parsedBundles: BundlePlan[] = []
+    inFlightServicesPromise = (async () => {
+      try {
+        const res = await tablesDB.listRows<ServiceRow>({
+          databaseId,
+          tableId
+        })
 
-        for (const r of rows) {
-          const isBundle = r.type === 'bundle'
-          const features = parseFeatures(r.features)
+        const rows = res.rows || []
+        if (rows.length > 0) {
+          const parsedServices: ServicePlan[] = []
+          const parsedBundles: BundlePlan[] = []
 
-          if (isBundle) {
-            parsedBundles.push({
-              id: r.$id,
-              title: r.name,
-              price: r.price,
-              saving: r.tag || 'Hemat',
-              desc: r.description || '',
-              items: features,
-              active: r.active ?? true,
-              visible: r.visible ?? true,
-              ctaLink: r.ctaLink || '',
-              order: r.order ?? 1
-            })
-          } else {
-            parsedServices.push({
-              id: r.$id,
-              name: r.name,
-              tag: r.tag || '',
-              price: r.price,
-              unit: r.unit || '/ naskah',
-              badgeClass: r.badgeClass || '',
-              description: r.description || '',
-              features,
-              highlight: Boolean(r.highlight),
-              active: r.active ?? true,
-              visible: r.visible ?? true,
-              ctaText: r.ctaText || 'Pesan Layanan',
-              ctaLink: r.ctaLink || '',
-              order: r.order ?? 1
-            })
+          for (const r of rows) {
+            const isBundle = r.type === 'bundle'
+            const features = parseFeatures(r.features)
+
+            if (isBundle) {
+              parsedBundles.push({
+                id: r.$id,
+                title: r.name,
+                price: r.price,
+                saving: r.tag || 'Hemat',
+                desc: r.description || '',
+                items: features,
+                active: r.active ?? true,
+                visible: r.visible ?? true,
+                ctaLink: r.ctaLink || '',
+                order: r.order ?? 1
+              })
+            } else {
+              parsedServices.push({
+                id: r.$id,
+                name: r.name,
+                tag: r.tag || '',
+                price: r.price,
+                unit: r.unit || '/ naskah',
+                badgeClass: r.badgeClass || '',
+                description: r.description || '',
+                features,
+                highlight: Boolean(r.highlight),
+                active: r.active ?? true,
+                visible: r.visible ?? true,
+                ctaText: r.ctaText || 'Pesan Layanan',
+                ctaLink: r.ctaLink || '',
+                order: r.order ?? 1
+              })
+            }
           }
+
+          services.value = parsedServices.sort((a, b) => (a.order || 0) - (b.order || 0))
+          bundles.value = parsedBundles.sort((a, b) => (a.order || 0) - (b.order || 0))
+          persistServicesCache(services.value, bundles.value)
         }
 
-        services.value = parsedServices.sort((a, b) => (a.order || 0) - (b.order || 0))
-        bundles.value = parsedBundles.sort((a, b) => (a.order || 0) - (b.order || 0))
+        hasLoaded.value = true
+        return {
+          services: services.value,
+          bundles: bundles.value
+        }
+      } catch (err: unknown) {
+        const errMsg = err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : String(err)
+        error.value = errMsg || `Gagal memuat layanan dari tabel '${tableId}'.`
+        return {
+          services: services.value,
+          bundles: bundles.value
+        }
+      } finally {
+        loading.value = false
+        inFlightServicesPromise = null
       }
+    })()
 
-      hasLoaded.value = true
-      return {
-        services: services.value,
-        bundles: bundles.value
-      }
-    } catch (err: unknown) {
-      const errMsg = err && typeof err === 'object' && 'message' in err
-        ? String((err as { message: unknown }).message)
-        : String(err)
-      error.value = errMsg || `Gagal memuat layanan dari tabel '${tableId}'.`
-      return {
-        services: services.value,
-        bundles: bundles.value
-      }
-    } finally {
-      loading.value = false
-    }
+    return inFlightServicesPromise
   }
 
   // --- CRUD: Services ---
@@ -362,6 +411,7 @@ export const useServices = () => {
       })
 
       services.value = [...services.value, newService].sort((a, b) => (a.order || 0) - (b.order || 0))
+      persistServicesCache(services.value, bundles.value)
       success.value = `Layanan "${item.name}" berhasil ditambahkan ke tabel '${tableId}'.`
       return true
     } catch (err: unknown) {
@@ -413,6 +463,7 @@ export const useServices = () => {
       const next = [...services.value]
       next[idx] = updated
       services.value = next.sort((a, b) => (a.order || 0) - (b.order || 0))
+      persistServicesCache(services.value, bundles.value)
       success.value = `Layanan "${updated.name}" berhasil diperbarui di tabel '${tableId}'.`
       return true
     } catch (err: unknown) {
@@ -437,6 +488,7 @@ export const useServices = () => {
         rowId: id
       })
       services.value = services.value.filter(s => s.id !== id)
+      persistServicesCache(services.value, bundles.value)
       success.value = `Layanan "${target?.name || id}" berhasil dihapus dari tabel '${tableId}'.`
       return true
     } catch (err: unknown) {
@@ -498,6 +550,7 @@ export const useServices = () => {
       })
 
       bundles.value = [...bundles.value, newBundle].sort((a, b) => (a.order || 0) - (b.order || 0))
+      persistServicesCache(services.value, bundles.value)
       success.value = `Paket bundling "${item.title}" berhasil ditambahkan ke tabel '${tableId}'.`
       return true
     } catch (err: unknown) {
@@ -545,6 +598,7 @@ export const useServices = () => {
       const next = [...bundles.value]
       next[idx] = updated
       bundles.value = next.sort((a, b) => (a.order || 0) - (b.order || 0))
+      persistServicesCache(services.value, bundles.value)
       success.value = `Paket bundling "${updated.title}" berhasil diperbarui di tabel '${tableId}'.`
       return true
     } catch (err: unknown) {
@@ -569,6 +623,7 @@ export const useServices = () => {
         rowId: id
       })
       bundles.value = bundles.value.filter(b => b.id !== id)
+      persistServicesCache(services.value, bundles.value)
       success.value = `Paket bundling "${target?.title || id}" berhasil dihapus dari tabel '${tableId}'.`
       return true
     } catch (err: unknown) {
@@ -656,6 +711,7 @@ export const useServices = () => {
 
       services.value = [...defaultServicePlans]
       bundles.value = [...defaultBundlePlans]
+      persistServicesCache(services.value, bundles.value)
       hasLoaded.value = true
       success.value = 'Katalog layanan dan bundling berhasil direset ke pengaturan standar di tabel services.'
       return true

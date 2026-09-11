@@ -67,7 +67,7 @@ onMounted(async () => {
       navigateTo('/login?redirect=/admin/setting')
       return
     }
-    await fetchSettings()
+    await fetchSettings(true)
   } finally {
     isPageLoading.value = false
   }
