@@ -28,6 +28,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     appwriteApiKey: process.env.APPWRITE_API_KEY || '',
+    sumopodApiKey: process.env.SUMOPOD_API_KEY || '',
+    sumopodPayEndpoint: process.env.SUMOPOD_PAY_ENDPOINT || 'https://api-pay-sandbox.sumopod.com/api/v1/payments',
+    sumopodWebhookSecret: process.env.SUMOPOD_WEBHOOK_SECRET || '',
+    sumopodWebhookToken: process.env.SUMOPOD_WEBHOOK_TOKEN || '',
     public: {
       appwriteEndpoint: process.env.APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1',
       appwriteProjectId: process.env.APPWRITE_PROJECT_ID || '6a9e987200268817ec4c',

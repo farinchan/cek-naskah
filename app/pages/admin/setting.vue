@@ -23,11 +23,33 @@ const {
 } = useAppSettings()
 
 const isPageLoading = ref(true)
-const activeTab = ref<'general' | 'contacts'>('general')
+const activeTab = ref<'general' | 'contacts' | 'payment'>('general')
 const isRefreshing = ref(false)
 const saveSuccess = ref(false)
 const saveError = ref(false)
 const saveMessage = ref('')
+const webhookCopied = ref(false)
+
+const webhookUrl = computed(() => {
+  if (import.meta.client) {
+    return `${window.location.origin}/api/webhooks/sumopod`
+  }
+  return 'https://cek-naskah.web.id/api/webhooks/sumopod'
+})
+
+const copyWebhookUrl = async () => {
+  if (import.meta.client && navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(webhookUrl.value)
+      webhookCopied.value = true
+      setTimeout(() => {
+        webhookCopied.value = false
+      }, 3000)
+    } catch {
+      // Ignore clipboard error
+    }
+  }
+}
 
 const handleSaveSettings = async () => {
   saveSuccess.value = false
@@ -649,6 +671,21 @@ onMounted(async () => {
                   </svg>
                   <span>Kontak & CS</span>
                 </button>
+
+                <button
+                  type="button"
+                  class="px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2"
+                  :class="activeTab === 'payment'
+                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'"
+                  @click="activeTab = 'payment'"
+                >
+                  <UIcon
+                    name="i-lucide-credit-card"
+                    class="w-4 h-4"
+                  />
+                  <span>Payment Gateway (Sumopod)</span>
+                </button>
               </div>
 
               <!-- FORM TAB 1: UMUM & PLATFORM (HANYA STATUS OPERASIONAL) -->
@@ -847,6 +884,172 @@ onMounted(async () => {
                     </svg>
                     <span>{{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}</span>
                   </button>
+                </div>
+              </div>
+
+              <!-- FORM TAB 3: PAYMENT GATEWAY (SUMOPOD PAY) -->
+              <div
+                v-else-if="activeTab === 'payment'"
+                class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden"
+              >
+                <div class="p-6 sm:p-8 border-b border-slate-100 dark:border-neutral-800/80">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Integrasi Sumopod Pay</span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Siap Digunakan
+                        </span>
+                      </h2>
+                      <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">
+                        Konfigurasi webhook dan rincian alur pembayaran otomatis QRIS untuk top up saldo poin pengguna.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-6 sm:p-8 space-y-6">
+                  <!-- Webhook URL Card -->
+                  <div class="p-5 rounded-2xl bg-slate-50 dark:bg-neutral-800/50 border border-slate-200/80 dark:border-neutral-700/80 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <UIcon
+                            name="i-lucide-webhook"
+                            class="w-4 h-4 text-primary-600 dark:text-primary-400"
+                          />
+                          <span>Webhook Endpoint URL</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">
+                          Salin URL ini dan daftarkan di dashboard Sumopod (<strong>Dashboard &gt; Webhooks &gt; Add Endpoint</strong>).
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-150"
+                        :class="webhookCopied
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm shadow-primary-500/20'"
+                        @click="copyWebhookUrl"
+                      >
+                        <UIcon
+                          :name="webhookCopied ? 'i-lucide-check' : 'i-lucide-copy'"
+                          class="w-3.5 h-3.5"
+                        />
+                        <span>{{ webhookCopied ? 'Tersalin!' : 'Salin Webhook URL' }}</span>
+                      </button>
+                    </div>
+
+                    <div class="relative">
+                      <input
+                        :value="webhookUrl"
+                        type="text"
+                        readonly
+                        class="w-full px-4 py-2.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl text-slate-800 dark:text-neutral-200 text-xs font-mono select-all focus:outline-none focus:border-primary-500"
+                        @click="($event.target as HTMLInputElement).select()"
+                      >
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-neutral-400">
+                      <span class="font-medium text-slate-700 dark:text-neutral-300">Event yang didengarkan:</span>
+                      <span class="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-semibold">payment.completed</span>
+                      <span class="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-mono text-[10px] font-semibold">payment.failed</span>
+                      <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-mono text-[10px] font-semibold">payment.expired</span>
+                      <span class="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-mono text-[10px] font-semibold">payment.test</span>
+                    </div>
+                  </div>
+
+                  <!-- Environment Variables Status -->
+                  <div class="space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">
+                      Konfigurasi Environment Server (.env)
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-850/50">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-xs font-bold text-slate-800 dark:text-neutral-200 font-mono">SUMOPOD_API_KEY</span>
+                          <span class="text-[10px] px-2 py-0.5 rounded font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Terkonfigurasi</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-neutral-400">
+                          Kunci otentikasi API yang dikirim pada header <code>X-Api-Key</code> saat membuat pembayaran.
+                        </p>
+                      </div>
+
+                      <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-850/50">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-xs font-bold text-slate-800 dark:text-neutral-200 font-mono">SUMOPOD_PAY_ENDPOINT</span>
+                          <span class="text-[10px] px-2 py-0.5 rounded font-semibold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">Sandbox / Prod</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-neutral-400 truncate">
+                          <code>https://api-pay-sandbox.sumopod.com/api/v1/payments</code>
+                        </p>
+                      </div>
+
+                      <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-850/50">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-xs font-bold text-slate-800 dark:text-neutral-200 font-mono">SUMOPOD_WEBHOOK_SECRET</span>
+                          <span class="text-[10px] px-2 py-0.5 rounded font-semibold bg-slate-200 text-slate-700 dark:bg-neutral-700 dark:text-neutral-300">whsec_...</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-neutral-400">
+                          Verifikasi signature Svix HMAC SHA-256 (header <code>svix-id</code>, <code>svix-timestamp</code>, <code>svix-signature</code>).
+                        </p>
+                      </div>
+
+                      <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-850/50">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-xs font-bold text-slate-800 dark:text-neutral-200 font-mono">SUMOPOD_WEBHOOK_TOKEN</span>
+                          <span class="text-[10px] px-2 py-0.5 rounded font-semibold bg-slate-200 text-slate-700 dark:bg-neutral-700 dark:text-neutral-300">whtok_...</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-neutral-400">
+                          Alternatif mudah: Verifikasi token langsung dari header <code>x-webhook-token</code> tanpa kalkulasi HMAC.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Step by step flow -->
+                  <div class="p-5 rounded-2xl bg-primary-50/40 dark:bg-primary-950/20 border border-primary-100 dark:border-primary-900/40 space-y-3">
+                    <h4 class="text-xs font-bold text-primary-900 dark:text-primary-200 flex items-center gap-2">
+                      <UIcon
+                        name="i-lucide-info"
+                        class="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0"
+                      />
+                      <span>Mekanisme Idempoten & Top Up Otomatis:</span>
+                    </h4>
+                    <ul class="text-xs text-slate-600 dark:text-neutral-300 space-y-2 list-disc pl-4">
+                      <li>
+                        Format Order ID yang dihasilkan adalah <code>CN_&lt;timestamp&gt;_&lt;userId&gt;</code> sehingga webhook dapat mengidentifikasi pengguna target secara instan.
+                      </li>
+                      <li>
+                        Setiap event <code>payment.completed</code> yang diterima akan diverifikasi riwayatnya terlebih dahulu di profil pengguna (mencegah penambahan poin ganda jika Sumopod me-retry webhook).
+                      </li>
+                      <li>
+                        Setelah transaksi sukses, saldo poin pengguna langsung bertambah otomatis dan riwayat transaksi dicatat.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-6 sm:p-8 bg-slate-50/60 dark:bg-neutral-800/40 border-t border-slate-100 dark:border-neutral-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <p class="text-xs text-slate-400 dark:text-neutral-500">
+                    Kunjungi dashboard Sumopod untuk melihat log transaksi dan status penarikan dana.
+                  </p>
+                  <a
+                    href="https://sumopod.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-neutral-800 dark:hover:bg-neutral-700 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <span>Buka Sumopod Dashboard</span>
+                    <UIcon
+                      name="i-lucide-external-link"
+                      class="w-3.5 h-3.5"
+                    />
+                  </a>
                 </div>
               </div>
             </div>

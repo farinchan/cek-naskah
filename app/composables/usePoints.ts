@@ -134,6 +134,48 @@ export const usePoints = () => {
     }
   }
 
+  const isPaying = ref(false)
+  const paymentError = ref<string | null>(null)
+
+  const createTopupPayment = async (amount: number, paymentMethodTypeCode = 'QRIS') => {
+    isPaying.value = true
+    paymentError.value = null
+    try {
+      const { jwt } = await account.createJWT()
+      const res = await $fetch<{
+        success: boolean
+        payment_link_url: string
+        order_id: string
+        amount: number
+        status: string
+      }>('/api/payments/create', {
+        method: 'POST',
+        headers: {
+          'x-appwrite-jwt': jwt
+        },
+        body: {
+          amount,
+          paymentMethodTypeCode
+        }
+      })
+
+      return res
+    } catch (err: unknown) {
+      const errorData = err && typeof err === 'object' && 'data' in err
+        ? (err as { data: unknown }).data
+        : null
+      const errorMsg = (errorData && typeof errorData === 'object' && 'statusMessage' in errorData)
+        ? String((errorData as { statusMessage: unknown }).statusMessage)
+        : (err && typeof err === 'object' && 'message' in err)
+            ? String((err as { message: unknown }).message)
+            : 'Gagal membuat sesi pembayaran.'
+      paymentError.value = errorMsg
+      throw new Error(errorMsg, { cause: err })
+    } finally {
+      isPaying.value = false
+    }
+  }
+
   return {
     POINT_RATE,
     user,
@@ -151,6 +193,9 @@ export const usePoints = () => {
     formatTransactionDate,
     historyLoading,
     historyList,
-    fetchHistory
+    fetchHistory,
+    isPaying,
+    paymentError,
+    createTopupPayment
   }
 }

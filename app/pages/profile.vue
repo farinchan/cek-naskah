@@ -394,6 +394,24 @@ onMounted(async () => {
   if (route.query.verify_required === '1' && !user.value?.emailVerification) {
     actionError.value = 'Halaman atau fitur yang Anda tuju memerlukan verifikasi email aktif. Harap verifikasi email Anda.'
   }
+
+  // Handle return from Payment Gateway (Sumopod Pay)
+  if (route.query.tab === 'points') {
+    activeTab.value = 'points'
+    fetchHistory()
+  }
+
+  if (route.query.payment === 'success') {
+    activeTab.value = 'points'
+    actionSuccess.value = 'Pembayaran berhasil! Saldo poin Anda sedang disinkronkan secara otomatis.'
+    await Promise.allSettled([
+      fetchUser(),
+      fetchHistory()
+    ])
+  } else if (route.query.payment === 'cancel') {
+    activeTab.value = 'points'
+    actionError.value = 'Pembayaran dibatalkan. Anda dapat mengulangi transaksi kapan saja.'
+  }
 })
 
 // Format created date
