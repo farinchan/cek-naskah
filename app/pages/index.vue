@@ -1,8 +1,8 @@
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Cek Naskah — Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia',
+  title: 'Platform Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia',
   description: 'Platform Cek Plagiasi & AI No. 1 di Indonesia dengan garansi 100% No-Repository. Uji Turnitin & iThenticate resmi akurat, skor AI Writer Detector Turnitin, artikel Scopus, dan parafrase manual profesional.',
-  ogTitle: 'Cek Naskah — Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia',
+  ogTitle: 'Platform Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia',
   ogDescription: 'Platform Cek Plagiasi & AI No. 1 di Indonesia dengan garansi 100% No-Repository. Uji Turnitin & iThenticate resmi akurat, skor AI Writer Detector Turnitin, artikel Scopus, dan parafrase manual profesional.',
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id',
