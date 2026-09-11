@@ -89,20 +89,12 @@
           <!-- Product Card 1: Cek Plagiarisme iThenticate/Turnitin -->
           <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
-                <svg
-                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div class="w-11 h-11 rounded-xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
+                <img
+                  src="/plagiarism-check.png"
+                  alt="Cek Plagiarisme iThenticate Turnitin"
+                  class="w-full h-full object-contain"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
               </div>
               <div>
                 <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
@@ -118,20 +110,12 @@
           <!-- Product Card 2: AI Writer Detector Turnitin -->
           <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
-                <svg
-                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div class="w-11 h-11 rounded-xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
+                <img
+                  src="/ai-check.png"
+                  alt="AI Writer Detector Turnitin"
+                  class="w-full h-full object-contain"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
               </div>
               <div>
                 <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
@@ -147,20 +131,12 @@
           <!-- Product Card 3: Ambil Artikel Scopus -->
           <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
             <div class="flex items-start gap-4">
-              <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
-                <svg
-                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div class="w-11 h-11 rounded-xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
+                <img
+                  src="/scopus.png"
+                  alt="Ambil Artikel Scopus"
+                  class="w-full h-full object-contain"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
               </div>
               <div>
                 <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
