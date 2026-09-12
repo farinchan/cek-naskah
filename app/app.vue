@@ -1,4 +1,12 @@
 <script setup lang="ts">
+const config = useRuntimeConfig()
+const googleSiteVerification = computed(() => {
+  return (config.public.googleSiteVerification as string) || ''
+})
+const googleAnalyticsId = computed(() => {
+  return (config.public.googleAnalyticsId as string) || ''
+})
+
 useHead({
   titleTemplate: (titleChunk) => {
     return titleChunk && !titleChunk.includes('Cek Naskah')
@@ -23,15 +31,38 @@ useHead({
     {
       name: 'keywords',
       content: 'cek plagiasi dan ai, cek plagiasi, cek plagiarisme dan ai, cek ai turnitin, turnitin no 1 di indonesia, ithenticate no 1 di indonesia, cek turnitin no 1 di indonesia, cek plagiasi no 1 di indonesia, turnitin no repository, ithenticate resmi, ai writer detector, cek naskah, cek skripsi, cek tesis, cek disertasi, download jurnal scopus, ambil artikel scopus, parafrase manual akademik, publikasi jurnal internasional, eyd v'
+    },
+    {
+      name: 'google-site-verification',
+      content: googleSiteVerification.value || 'KFijTr5D_57ufoIk3Mq-Xw0w8q2k9N3a0r8begmrUvg'
     }
   ],
   link: [
     { rel: 'icon', type: 'image/png', href: '/logo.png' },
     { rel: 'apple-touch-icon', href: '/logo.png' }
+  ],
+  script: [
+    ...(googleAnalyticsId.value
+      ? [
+          {
+            src: `https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId.value}`,
+            async: true
+          },
+          {
+            innerHTML: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${googleAnalyticsId.value}');
+            `
+          }
+        ]
+      : [])
   ]
 })
 
 useSeoMeta({
+  googleSiteVerification: googleSiteVerification.value || 'KFijTr5D_57ufoIk3Mq-Xw0w8q2k9N3a0r8begmrUvg',
   title: 'Cek Naskah — Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia',
   description: 'Platform Cek Plagiasi & AI No. 1 di Indonesia dengan garansi 100% No-Repository. Uji Turnitin & iThenticate resmi akurat, skor AI Writer Detector Turnitin, artikel Scopus, dan parafrase manual terpercaya.',
   ogTitle: 'Cek Naskah — Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia',

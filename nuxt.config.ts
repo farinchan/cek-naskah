@@ -33,6 +33,8 @@ export default defineNuxtConfig({
     sumopodWebhookSecret: process.env.SUMOPOD_WEBHOOK_SECRET || '',
     sumopodWebhookToken: process.env.SUMOPOD_WEBHOOK_TOKEN || '',
     public: {
+      googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
+      googleAnalyticsId: process.env.GOOGLE_ANALYTICS_ID || '',
       appwriteEndpoint: process.env.APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1',
       appwriteProjectId: process.env.APPWRITE_PROJECT_ID || '6a9e987200268817ec4c',
       appwriteDatabaseId: process.env.APPWRITE_DATABASE_ID || '6a9f5bfb00026954d579',
