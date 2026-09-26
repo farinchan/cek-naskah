@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 
 const route = useRoute()
-const { user, loading, error, success, clearMessages, fetchUser, login, logout, loginWithGoogle } = useAuth()
+const { user, loading, error, success, clearMessages, fetchUser, login, logout, loginWithGoogle, handleOAuthCallback } = useAuth()
 const { settings } = useAppSettings()
 
 useSeoMeta({
@@ -20,13 +20,28 @@ const fieldErrors = ref<Record<string, string>>({})
 onMounted(async () => {
   clearMessages()
   if (route.query.error === 'google_auth_failed') {
-    error.value = 'Proses autentikasi dengan Google dibatalkan atau gagal. Silakan coba lagi.'
+    const customMsg = route.query.message as string | undefined
+    error.value = customMsg || 'Proses autentikasi dengan Google dibatalkan atau gagal. Silakan coba lagi.'
+  } else if (route.query.error === 'registration_disabled') {
+    const customMsg = route.query.message as string | undefined
+    error.value = customMsg || 'Pendaftaran akun baru sedang dinonaktifkan oleh administrator.'
   }
+
+  // Fallback: handle token in login URL if redirected directly
+  if (route.query.userId && route.query.secret) {
+    const result = await handleOAuthCallback(String(route.query.userId), String(route.query.secret))
+    if (result.success) {
+      navigateTo('/')
+      return
+    }
+  }
+
   await fetchUser()
 })
 
 const handleGoogleLogin = () => {
-  loginWithGoogle('/')
+  const redirect = (route.query.redirect as string) || '/'
+  loginWithGoogle(redirect)
 }
 
 const handleLogin = async () => {

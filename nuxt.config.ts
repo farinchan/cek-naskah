@@ -63,6 +63,8 @@ export default defineNuxtConfig({
       '/admin',
       '/admin/**',
       '/api/**',
+      '/auth',
+      '/auth/**',
       '/profile'
     ],
     allow: [
@@ -81,6 +83,7 @@ export default defineNuxtConfig({
       '/admin/**',
       '/profile',
       '/auth',
+      '/auth/**',
       '/reset-password',
       '/forgot-password'
     ]

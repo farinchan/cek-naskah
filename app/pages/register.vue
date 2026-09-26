@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 
 const route = useRoute()
-const { user, loading, error, success, clearMessages, register, loginWithGoogle } = useAuth()
+const { user, loading, error, success, clearMessages, register, loginWithGoogle, fetchUser, handleOAuthCallback } = useAuth()
 const { settings, getWhatsappUrl } = useAppSettings()
 
 useSeoMeta({
@@ -20,11 +20,23 @@ const showPassword = ref(false)
 const agreeTerms = ref(true)
 const fieldErrors = ref<Record<string, string>>({})
 
-onMounted(() => {
+onMounted(async () => {
   clearMessages()
   if (route.query.error === 'google_auth_failed') {
-    error.value = 'Proses pendaftaran dengan Google dibatalkan atau gagal. Silakan coba lagi.'
+    const customMsg = route.query.message as string | undefined
+    error.value = customMsg || 'Proses pendaftaran dengan Google dibatalkan atau gagal. Silakan coba lagi.'
   }
+
+  // Fallback: handle token in register URL if redirected directly
+  if (route.query.userId && route.query.secret) {
+    const result = await handleOAuthCallback(String(route.query.userId), String(route.query.secret))
+    if (result.success) {
+      navigateTo('/')
+      return
+    }
+  }
+
+  await fetchUser()
 })
 
 const handleGoogleRegister = () => {
@@ -32,7 +44,8 @@ const handleGoogleRegister = () => {
     error.value = 'Pendaftaran pengguna baru sedang dinonaktifkan oleh administrator.'
     return
   }
-  loginWithGoogle('/')
+  const redirect = (route.query.redirect as string) || '/'
+  loginWithGoogle(redirect)
 }
 
 const handleRegister = async () => {

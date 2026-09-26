@@ -99,6 +99,23 @@ useSchemaOrg([
     inLanguage: 'id-ID'
   })
 ])
+
+const { fetchUser, handleOAuthCallback } = useAuth()
+const route = useRoute()
+
+onMounted(async () => {
+  if (route.query.userId && route.query.secret && route.path !== '/auth/callback') {
+    const result = await handleOAuthCallback(String(route.query.userId), String(route.query.secret))
+    if (result.success) {
+      const query = { ...route.query }
+      delete query.userId
+      delete query.secret
+      navigateTo({ path: route.path, query }, { replace: true })
+    }
+  } else {
+    await fetchUser()
+  }
+})
 </script>
 
 <template>

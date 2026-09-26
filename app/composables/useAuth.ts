@@ -268,7 +268,7 @@ export const useAuth = () => {
     }
   }
 
-  // Google OAuth (Login / Register)
+  // Google OAuth (Login / Register via OAuth2 Token to support cross-domain & 3rd-party cookie fallback)
   const loginWithGoogle = (redirectPath = '/') => {
     loading.value = true
     clearMessages()
@@ -277,10 +277,19 @@ export const useAuth = () => {
         ? window.location.origin
         : 'http://localhost:3000'
 
-      const successUrl = `${origin}${redirectPath}`
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('oauth_redirect_path', redirectPath)
+          sessionStorage.setItem('oauth_redirect_path', redirectPath)
+        } catch {
+          // Ignore storage restrictions
+        }
+      }
+
+      const successUrl = `${origin}/auth/callback`
       const failureUrl = `${origin}/login?error=google_auth_failed`
 
-      account.createOAuth2Session({
+      account.createOAuth2Token({
         provider: OAuthProvider.Google,
         success: successUrl,
         failure: failureUrl
@@ -288,6 +297,30 @@ export const useAuth = () => {
     } catch (err: unknown) {
       const formatted = formatError(err)
       error.value = formatted
+      loading.value = false
+    }
+  }
+
+  // Complete OAuth login using userId and secret from Appwrite OAuth2 token redirect
+  const handleOAuthCallback = async (userId: string, secret: string) => {
+    loading.value = true
+    clearMessages()
+    try {
+      // Create session using token - this triggers Appwrite's client to store X-Fallback-Cookies in localStorage
+      await account.createSession({
+        userId,
+        secret
+      })
+
+      const currentUser = await account.get<UserPreferences>()
+      user.value = currentUser
+      success.value = 'Berhasil masuk dengan akun Google.'
+      return { success: true, user: currentUser }
+    } catch (err: unknown) {
+      const formatted = formatError(err)
+      error.value = formatted
+      return { success: false, error: formatted }
+    } finally {
       loading.value = false
     }
   }
@@ -637,6 +670,7 @@ export const useAuth = () => {
     login,
     register,
     loginWithGoogle,
+    handleOAuthCallback,
     forgotPassword,
     resetPassword,
     logout,

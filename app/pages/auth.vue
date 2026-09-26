@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { Models } from 'appwrite'
-import { account, ID, OAuthProvider } from '~/utils/appwrite.js'
+import { account, ID } from '~/utils/appwrite.js'
 
 useSeoMeta({
   title: 'Autentikasi Cepat — Cek Naskah',
@@ -24,6 +24,8 @@ const clearMessages = () => {
   fieldErrors.value = {}
 }
 
+const { loginWithGoogle, handleOAuthCallback } = useAuth()
+
 const checkCurrentUser = async () => {
   try {
     loggedInUser.value = await account.get()
@@ -34,25 +36,22 @@ const checkCurrentUser = async () => {
 
 const loginGoogle = () => {
   clearMessages()
-  try {
-    const origin = typeof window !== 'undefined'
-      ? window.location.origin
-      : 'http://localhost:3000'
-    account.createOAuth2Session({
-      provider: OAuthProvider.Google,
-      success: `${origin}/auth`,
-      failure: `${origin}/auth?error=google_auth_failed`
-    })
-  } catch (err: unknown) {
-    errorMessage.value = err instanceof Error ? err.message : String(err)
-  }
+  loginWithGoogle('/auth')
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (route.query.error === 'google_auth_failed') {
-    errorMessage.value = 'Proses autentikasi dengan Google dibatalkan atau gagal.'
+    errorMessage.value = (route.query.message as string) || 'Proses autentikasi dengan Google dibatalkan atau gagal.'
   }
-  checkCurrentUser()
+  if (route.query.userId && route.query.secret) {
+    loading.value = true
+    const result = await handleOAuthCallback(String(route.query.userId), String(route.query.secret))
+    loading.value = false
+    if (!result.success) {
+      errorMessage.value = result.error || 'Autentikasi gagal.'
+    }
+  }
+  await checkCurrentUser()
 })
 
 const login = async (emailVal: string, passwordVal: string) => {
