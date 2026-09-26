@@ -325,6 +325,39 @@ export const useAuth = () => {
     }
   }
 
+  // Selesaikan pendaftaran akun OAuth (Google) dengan menambahkan nomor telepon
+  const completeOAuthRegistration = async (payload: { phone: string, name?: string, pekerjaan?: string, afiliasi?: string }) => {
+    loading.value = true
+    clearMessages()
+    try {
+      const jwtRes = await account.createJWT()
+      await $fetch('/api/auth/complete-phone', {
+        method: 'POST',
+        headers: {
+          'x-appwrite-jwt': jwtRes.jwt
+        },
+        body: payload
+      })
+
+      const currentUser = await fetchUser()
+      success.value = 'Pendaftaran berhasil diselesaikan!'
+      return { success: true, user: currentUser }
+    } catch (err: unknown) {
+      let msg = 'Gagal menyimpan nomor telepon.'
+      if (err && typeof err === 'object' && 'data' in err && (err as { data?: { statusMessage?: string } }).data?.statusMessage) {
+        msg = (err as { data: { statusMessage: string } }).data.statusMessage
+      } else if (err && typeof err === 'object' && 'statusMessage' in err) {
+        msg = String((err as { statusMessage: string }).statusMessage)
+      } else if (err instanceof Error) {
+        msg = err.message
+      }
+      error.value = msg
+      return { success: false, error: msg }
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Update Profile Name
   const updateName = async (nameVal: string) => {
     loading.value = true
@@ -671,6 +704,7 @@ export const useAuth = () => {
     register,
     loginWithGoogle,
     handleOAuthCallback,
+    completeOAuthRegistration,
     forgotPassword,
     resetPassword,
     logout,

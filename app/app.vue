@@ -107,10 +107,15 @@ onMounted(async () => {
   if (route.query.userId && route.query.secret && route.path !== '/auth/callback') {
     const result = await handleOAuthCallback(String(route.query.userId), String(route.query.secret))
     if (result.success) {
-      const query = { ...route.query }
-      delete query.userId
-      delete query.secret
-      navigateTo({ path: route.path, query }, { replace: true })
+      const existingPhone = result.user?.phone || (result.user?.prefs?.phone as string)
+      if (!existingPhone || existingPhone.trim().length <= 4) {
+        navigateTo('/auth/complete-phone', { replace: true })
+      } else {
+        const query = { ...route.query }
+        delete query.userId
+        delete query.secret
+        navigateTo({ path: route.path, query }, { replace: true })
+      }
     }
   } else {
     await fetchUser()

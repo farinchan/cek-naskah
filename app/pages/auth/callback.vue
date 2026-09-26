@@ -50,6 +50,13 @@ onMounted(async () => {
         return
       }
 
+      // Check if user has phone number configured (OAuth Google does not provide phone)
+      const existingPhone = result.user.phone || (result.user.prefs?.phone as string)
+      if (!existingPhone || existingPhone.trim().length <= 4) {
+        await navigateTo('/auth/complete-phone', { replace: true })
+        return
+      }
+
       // Retrieve intended destination
       let destination = '/'
       if (typeof window !== 'undefined') {

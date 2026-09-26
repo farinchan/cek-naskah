@@ -31,7 +31,12 @@ onMounted(async () => {
   if (route.query.userId && route.query.secret) {
     const result = await handleOAuthCallback(String(route.query.userId), String(route.query.secret))
     if (result.success) {
-      navigateTo('/')
+      const existingPhone = result.user?.phone || (result.user?.prefs?.phone as string)
+      if (!existingPhone || existingPhone.trim().length <= 4) {
+        navigateTo('/auth/complete-phone', { replace: true })
+      } else {
+        navigateTo('/')
+      }
       return
     }
   }

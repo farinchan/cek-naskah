@@ -208,6 +208,22 @@ export function useAdminAppwrite() {
       })
     },
 
+    async updateUserPhone(userId: string, phone: string) {
+      return await $fetch<AppwriteAdminUser>(`${endpoint}/users/${userId}/phone`, {
+        method: 'PATCH',
+        headers,
+        body: { number: phone }
+      })
+    },
+
+    async updateUserName(userId: string, name: string) {
+      return await $fetch<AppwriteAdminUser>(`${endpoint}/users/${userId}/name`, {
+        method: 'PATCH',
+        headers,
+        body: { name }
+      })
+    },
+
     async updatePrefs(userId: string, prefs: Record<string, unknown>) {
       return await $fetch<Record<string, unknown>>(`${endpoint}/users/${userId}/prefs`, {
         method: 'PATCH',
