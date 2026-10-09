@@ -62,7 +62,7 @@ export interface ManuscriptSubmissionPayload {
   serviceName?: string
   price?: string
   file: File
-  excludeOptions: ExcludeOptions
+  excludeOptions?: ExcludeOptions | Record<string, unknown>
   userNotes?: string
 }
 

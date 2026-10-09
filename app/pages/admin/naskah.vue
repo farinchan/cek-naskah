@@ -143,6 +143,22 @@ const parseOptions = (raw?: string): ExcludeOptions => {
   }
 }
 
+interface CustomServiceOptions {
+  language?: string
+  languageLabel?: string
+  languageNative?: string
+  [key: string]: unknown
+}
+
+const parseRawOptions = (raw?: string): CustomServiceOptions => {
+  if (!raw) return {}
+  try {
+    return JSON.parse(raw) as CustomServiceOptions
+  } catch {
+    return {}
+  }
+}
+
 const formatWaLink = (phone?: string): string => {
   if (!phone) return ''
   const clean = phone.replace(/[^0-9]/g, '')
@@ -582,7 +598,7 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                 Layanan
               </th>
               <th class="py-3.5 px-4">
-                Exclude Parameters
+                Parameter / Exclude
               </th>
               <th class="py-3.5 px-4">
                 Status
@@ -659,9 +675,44 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                 </div>
               </td>
 
-              <!-- 4. Exclude Parameters -->
+              <!-- 4. Exclude / Parameter Layanan -->
               <td class="py-4 px-4 max-w-[180px]">
-                <div class="flex flex-wrap gap-1">
+                <!-- Turnitin AI: Tampilkan Bahasa -->
+                <div
+                  v-if="item.serviceId === 'turnitin-ai'"
+                  class="flex flex-wrap gap-1"
+                >
+                  <span
+                    v-if="parseRawOptions(item.excludeOptions).language === 'en'"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40"
+                  >
+                    🇬🇧 English
+                  </span>
+                  <span
+                    v-else-if="parseRawOptions(item.excludeOptions).language === 'es'"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40"
+                  >
+                    🇪🇸 Español
+                  </span>
+                  <span
+                    v-else-if="parseRawOptions(item.excludeOptions).language === 'ja'"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40"
+                  >
+                    🇯🇵 日本語
+                  </span>
+                  <span
+                    v-else
+                    class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
+                  >
+                    AI Detector
+                  </span>
+                </div>
+
+                <!-- Turnitin Similarity & iThenticate: Tampilkan Exclude Parameters -->
+                <div
+                  v-else
+                  class="flex flex-wrap gap-1"
+                >
                   <span
                     v-if="parseOptions(item.excludeOptions).abstract"
                     class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
@@ -850,20 +901,37 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
       >
         <div class="space-y-3">
           <div class="flex items-start justify-between gap-2">
-            <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold"
-              :class="getStatusBadge(item.status).badgeClass"
-            >
-              <UIcon
-                :name="getStatusBadge(item.status).icon"
-                class="w-3.5 h-3.5"
-              />
-              <span>{{ getStatusBadge(item.status).label }}</span>
-            </span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold"
+                :class="getStatusBadge(item.status).badgeClass"
+              >
+                <UIcon
+                  :name="getStatusBadge(item.status).icon"
+                  class="w-3.5 h-3.5"
+                />
+                <span>{{ getStatusBadge(item.status).label }}</span>
+              </span>
+
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-950/60 dark:text-primary-300">
+                {{ item.serviceName || item.serviceId }}
+              </span>
+
+              <!-- Turnitin AI Language Badge -->
+              <span
+                v-if="item.serviceId === 'turnitin-ai' && parseRawOptions(item.excludeOptions).language"
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40"
+              >
+                <span v-if="parseRawOptions(item.excludeOptions).language === 'en'">🇬🇧 English</span>
+                <span v-else-if="parseRawOptions(item.excludeOptions).language === 'es'">🇪🇸 Spanish</span>
+                <span v-else-if="parseRawOptions(item.excludeOptions).language === 'ja'">🇯🇵 Japanese</span>
+                <span v-else>{{ parseRawOptions(item.excludeOptions).language }}</span>
+              </span>
+            </div>
 
             <span
               v-if="item.similarityScore"
-              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-primary-100 text-primary-800 dark:bg-primary-950/60 dark:text-primary-300"
+              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-primary-100 text-primary-800 dark:bg-primary-950/60 dark:text-primary-300 shrink-0"
             >
               {{ item.similarityScore }}
             </span>
@@ -1003,12 +1071,12 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
           <!-- Similarity Score Input -->
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-700 dark:text-neutral-300">
-              Skor Similarity Index:
+              {{ targetManuscript.serviceId === 'turnitin-ai' ? 'Skor AI Writing Detector:' : 'Skor Similarity Index:' }}
             </label>
             <input
               v-model="adminSimilarityScore"
               type="text"
-              placeholder="Contoh: 12% atau 8%"
+              :placeholder="targetManuscript.serviceId === 'turnitin-ai' ? 'Contoh: 0% atau 14%' : 'Contoh: 12% atau 8%'"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-semibold"
             >
           </div>
@@ -1038,7 +1106,9 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
             <textarea
               v-model="adminNotes"
               rows="2"
-              placeholder="Misal: Pemeriksaan iThenticate selesai dengan exclude abstract dan bibliography sesuai instruksi."
+              :placeholder="targetManuscript.serviceId === 'turnitin-ai'
+                ? 'Misal: Analisis Turnitin AI selesai dengan skor 0% AI generated (Aman).'
+                : 'Misal: Pemeriksaan selesai dengan exclude abstract dan bibliography sesuai instruksi.'"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs resize-none"
             />
           </div>
@@ -1134,7 +1204,9 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
               v-if="selectedManuscript.similarityScore"
               class="flex justify-between py-1 border-b border-slate-100 dark:border-neutral-800/80"
             >
-              <span class="text-slate-500 font-bold">Skor Similarity:</span>
+              <span class="text-slate-500 font-bold">
+                {{ selectedManuscript.serviceId === 'turnitin-ai' ? 'Skor AI Writing:' : 'Skor Similarity:' }}
+              </span>
               <span class="font-extrabold text-primary-600 dark:text-primary-400 text-sm">{{ selectedManuscript.similarityScore }}</span>
             </div>
             <div
@@ -1145,10 +1217,37 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
               <span class="font-semibold text-slate-900 dark:text-white">{{ selectedManuscript.adminUploaderName }} ({{ selectedManuscript.adminUploaderEmail }})</span>
             </div>
 
-            <!-- Exclude Breakdown -->
+            <!-- Service Parameters / Exclude Breakdown -->
             <div class="py-2 space-y-1">
-              <span class="text-slate-500 font-semibold">Parameter Exclude:</span>
-              <div class="rounded-xl bg-slate-50 dark:bg-neutral-950 p-3 space-y-1 text-[11px]">
+              <span class="text-slate-500 font-semibold">
+                {{ selectedManuscript.serviceId === 'turnitin-ai' ? 'Parameter Turnitin AI:' : 'Parameter Exclude:' }}
+              </span>
+
+              <!-- Turnitin AI Parameter Info -->
+              <div
+                v-if="selectedManuscript.serviceId === 'turnitin-ai'"
+                class="rounded-xl bg-slate-50 dark:bg-neutral-950 p-3 space-y-2 text-[11px]"
+              >
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500">Bahasa Naskah:</span>
+                  <span class="font-bold text-slate-900 dark:text-white">
+                    {{ parseRawOptions(selectedManuscript.excludeOptions).languageLabel || parseRawOptions(selectedManuscript.excludeOptions).language || 'Bahasa Inggris (English)' }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-500">Standar Model:</span>
+                  <span class="font-bold text-slate-900 dark:text-white">Turnitin Official AI Writing Engine</span>
+                </div>
+                <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60 dark:border-neutral-800">
+                  Layanan Turnitin AI menganalisis probabilitas penulisan AI (ChatGPT, Claude, Gemini) untuk naskah berbahasa Inggris, Spanyol, atau Jepang tanpa filter exclude.
+                </p>
+              </div>
+
+              <!-- Similarity Exclude Breakdown -->
+              <div
+                v-else
+                class="rounded-xl bg-slate-50 dark:bg-neutral-950 p-3 space-y-1 text-[11px]"
+              >
                 <div class="flex justify-between">
                   <span>Abstract:</span>
                   <span class="font-bold">{{ parseOptions(selectedManuscript.excludeOptions).abstract ? 'Ya' : 'Tidak' }}</span>
