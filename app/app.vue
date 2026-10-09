@@ -125,7 +125,9 @@ onMounted(async () => {
 
 <template>
   <UApp>
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
     <PointTopupModal />
   </UApp>
 </template>

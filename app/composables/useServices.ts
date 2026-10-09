@@ -37,10 +37,32 @@ export interface BundlePlan {
 
 export const defaultServicePlans: ServicePlan[] = [
   {
-    id: 'turnitin-plagiarism',
-    name: 'Cek Plagiarisme iThenticate / Turnitin',
+    id: 'turnitin-similarity',
+    name: 'Cek Plagiarisme Turnitin',
     tag: '100% No-Repository',
-    price: 'Rp 15.000',
+    price: 'Rp 8.000',
+    unit: '/ naskah',
+    badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+    description: 'Pemeriksaan similarity index resmi standar kampus (skripsi, tesis, tugas akhir) dengan akun Turnitin No-Repository resmi tanpa naskah tersimpan ke database.',
+    features: [
+      'Garansi 100% No-Repository (Aman)',
+      'Laporan PDF Resmi Full Color & Original',
+      'Rincian Lengkap Sumber Kemiripan Teks',
+      'Waktu Proses Cepat (5 – 20 Menit)',
+      'Dukungan File .docx, .pdf, .txt'
+    ],
+    highlight: false,
+    active: true,
+    visible: true,
+    ctaText: 'Pesan Cek Turnitin',
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20cek%20plagiarisme%20Turnitin',
+    order: 1
+  },
+  {
+    id: 'turnitin-plagiarism',
+    name: 'Cek Plagiarisme iThenticate',
+    tag: 'Standar Jurnal & Doktoral',
+    price: 'Rp 8.000',
     unit: '/ naskah',
     badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
     description: 'Pemeriksaan similarity index resmi standar kampus dan jurnal internasional tanpa naskah tersimpan di database.',
@@ -48,21 +70,21 @@ export const defaultServicePlans: ServicePlan[] = [
       'Garansi 100% No-Repository (Aman)',
       'Laporan PDF Resmi Full Color & Original',
       'Rincian Seluruh Sumber Kemiripan Teks',
-      'Waktu Proses Cepat (5 – 25 Menit)',
+      'Waktu Proses Cepat (10 – 30 Menit)',
       'Dukungan File .docx, .pdf, .txt'
     ],
     highlight: false,
     active: true,
     visible: true,
-    ctaText: 'Pesan Cek Plagiarisme',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20cek%20plagiarisme%20Turnitin%2FiThenticate',
-    order: 1
+    ctaText: 'Pesan Cek iThenticate',
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20cek%20plagiarisme%20iThenticate',
+    order: 2
   },
   {
     id: 'turnitin-ai',
     name: 'AI Writer Detector Turnitin',
     tag: 'Standar Turnitin AI',
-    price: 'Rp 20.000',
+    price: 'Rp 10.000',
     unit: '/ naskah',
     badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
     description: 'Deteksi akurat persentase teks yang diidentifikasi sebagai hasil generate AI (ChatGPT, Claude, Gemini).',
@@ -77,14 +99,14 @@ export const defaultServicePlans: ServicePlan[] = [
     active: true,
     visible: true,
     ctaText: 'Pesan AI Detector',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20cek%20AI%20Writer%20Detector',
-    order: 2
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20cek%20AI%20Writer%20Detector',
+    order: 3
   },
   {
     id: 'scopus-article',
     name: 'Ambil Artikel Scopus',
     tag: 'Scopus Q1 - Q4',
-    price: 'Rp 10.000',
+    price: 'Rp 1.000',
     unit: '/ artikel',
     badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
     description: 'Bantuan download artikel jurnal internasional bereputasi yang terkunci paywall lengkap dengan file sitasi.',
@@ -99,8 +121,8 @@ export const defaultServicePlans: ServicePlan[] = [
     active: true,
     visible: true,
     ctaText: 'Pesan Artikel Scopus',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20bantuan%20ambil%20artikel%20Scopus',
-    order: 3
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20bantuan%20ambil%20artikel%20Scopus',
+    order: 4
   },
   {
     id: 'manual-paraphrase',
@@ -121,8 +143,8 @@ export const defaultServicePlans: ServicePlan[] = [
     active: true,
     visible: true,
     ctaText: 'Konsultasi Parafrase',
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20konsultasi%20layanan%20parafrase%20manual',
-    order: 4
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%20Cek%20Naskah%2C%20saya%20ingin%20konsultasi%20layanan%20parafrase%20manual',
+    order: 5
   }
 ]
 
@@ -132,17 +154,34 @@ export const defaultBundlePlans: BundlePlan[] = [
     title: 'Paket Bundling Cek Turnitin + AI Detector',
     price: 'Rp 30.000',
     saving: 'Hemat Rp 5.000',
-    desc: 'Pilihan terfavorit mahasiswa akhir dan dosen untuk memastikan naskah bebas dari kesamaan teks sekaligus bebas dari skor AI tinggi.',
+    desc: 'Pilihan terfavorit mahasiswa akhir dan dosen untuk memastikan naskah bebas dari kesamaan teks Turnitin sekaligus bebas dari skor AI tinggi.',
     items: [
       '1x Cek Similarity Turnitin No-Repository',
       '1x Uji AI Writer Detector Turnitin',
       '2 Laporan PDF Resmi Terpisah',
-      'Proses Cepat (5 – 25 Menit)'
+      'Proses Cepat (5 – 20 Menit)'
     ],
     active: true,
     visible: true,
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%2C%20saya%20ingin%20pesan%20Paket%20Bundling%20Turnitin%20%2B%20AI%20Detector',
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%2C%20saya%20ingin%20pesan%20Paket%20Bundling%20Turnitin%20%2B%20AI%20Detector',
     order: 1
+  },
+  {
+    id: 'bundle-ithenticate-ai',
+    title: 'Paket Bundling iThenticate + AI Detector',
+    price: 'Rp 15.000',
+    saving: 'Hemat',
+    desc: 'Paket komprehensif untuk persiapan submit jurnal internasional: Pemeriksaan iThenticate standar penerbit dan audit AI Writer Turnitin.',
+    items: [
+      '1x Cek Similarity iThenticate No-Repository',
+      '1x Uji AI Writer Detector Turnitin',
+      '2 Laporan PDF Resmi Standar Jurnal',
+      'Proses Cepat (10 – 30 Menit)'
+    ],
+    active: true,
+    visible: true,
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%2C%20saya%20ingin%20pesan%20Paket%20Bundling%20iThenticate%20%2B%20AI%20Detector',
+    order: 2
   },
   {
     id: 'bundle-scopus-5',
@@ -158,8 +197,8 @@ export const defaultBundlePlans: BundlePlan[] = [
     ],
     active: true,
     visible: true,
-    ctaLink: 'https://wa.me/6281234567890?text=Halo%20Admin%2C%20saya%20ingin%20pesan%20Paket%20Riset%20Scopus%205%20Artikel',
-    order: 2
+    ctaLink: 'https://wa.me/6282170655194?text=Halo%20Admin%2C%20saya%20ingin%20pesan%20Paket%20Riset%20Scopus%205%20Artikel',
+    order: 3
   }
 ]
 
@@ -180,8 +219,8 @@ interface ServiceRow extends Models.Row {
   type?: string
 }
 
-const CACHE_SERVICES_KEY = 'cek_naskah_cached_services'
-const CACHE_BUNDLES_KEY = 'cek_naskah_cached_bundles'
+const CACHE_SERVICES_KEY = 'cek_naskah_cached_services_v4'
+const CACHE_BUNDLES_KEY = 'cek_naskah_cached_bundles_v4'
 
 let inFlightServicesPromise: Promise<{ services: ServicePlan[], bundles: BundlePlan[] }> | null = null
 
@@ -208,11 +247,19 @@ export const useServices = () => {
   // Immediate local cache hydration on client side to avoid default flicker
   if (import.meta.client && !hasLoaded.value) {
     try {
+      // Clean up legacy cache keys if present
+      localStorage.removeItem('cek_naskah_cached_services')
+      localStorage.removeItem('cek_naskah_cached_bundles')
+      localStorage.removeItem('cek_naskah_cached_services_v2')
+      localStorage.removeItem('cek_naskah_cached_bundles_v2')
+      localStorage.removeItem('cek_naskah_cached_services_v3')
+      localStorage.removeItem('cek_naskah_cached_bundles_v3')
+
       const cachedS = localStorage.getItem(CACHE_SERVICES_KEY)
       const cachedB = localStorage.getItem(CACHE_BUNDLES_KEY)
       if (cachedS) {
         const parsedS = JSON.parse(cachedS)
-        if (Array.isArray(parsedS) && parsedS.length > 0) {
+        if (Array.isArray(parsedS) && parsedS.length >= 5) {
           services.value = parsedS
         }
       }

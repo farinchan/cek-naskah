@@ -64,7 +64,7 @@ const bundlePlans = computed(() => {
             Biaya Layanan <span class="text-primary-600 dark:text-primary-400">Cek Naskah</span> Akademik
           </h1>
           <p class="text-base sm:text-lg text-slate-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-            Daftar tarif resmi 4 produk unggulan kami: Cek Plagiarisme iThenticate/Turnitin No-Repo, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.
+            Daftar tarif resmi layanan unggulan kami: Cek Plagiarisme Turnitin, Cek Plagiarisme iThenticate, AI Writer Detector, Ambil Artikel Scopus, dan Parafrase Manual.
           </p>
 
           <!-- Point Currency Info Banner -->
@@ -92,10 +92,10 @@ const bundlePlans = computed(() => {
         </div>
       </section>
 
-      <!-- 4 Core Products Pricing -->
+      <!-- Core Products Pricing -->
       <section class="py-16 sm:py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 sm:gap-6">
             <div
               v-for="(plan, idx) in pricingPlans"
               :key="idx"
@@ -255,7 +255,7 @@ const bundlePlans = computed(() => {
             </p>
           </div>
 
-          <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             <div
               v-for="(bundle, bIdx) in bundlePlans"
               :key="bIdx"

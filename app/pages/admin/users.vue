@@ -3,7 +3,8 @@ import type { AdminUserItem } from '~/composables/useAdminUsers'
 import type { PointTransaction } from '~/composables/usePoints'
 
 definePageMeta({
-  middleware: 'admin'
+  middleware: 'admin',
+  layout: 'admin'
 })
 
 useSeoMeta({
@@ -14,7 +15,7 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
-const { user: currentUser, fetchUser, isAdmin, userAvatar } = useAuth()
+const { user: currentUser, fetchUser } = useAuth()
 const { formatTransactionType, formatTransactionDate } = usePoints()
 const {
   users,
@@ -237,62 +238,162 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white dark:bg-neutral-950 text-slate-900 dark:text-white selection:bg-primary-500 selection:text-white transition-colors duration-200 flex flex-col justify-between">
-    <LandingHeader />
+  <div class="space-y-6">
+    <!-- Page Header & Title Bar -->
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+          <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 uppercase tracking-wider">
+            Panel Admin
+          </span>
+          <span class="text-slate-300 dark:text-neutral-700">•</span>
+          <span class="text-xs text-slate-500 dark:text-neutral-400 font-medium">
+            Manajemen Pengguna & Akses (RBAC)
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Pengguna & Hak Akses
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-1">
+          Kelola direktori pengguna, tetapkan peran administrator/editor, verifikasi akun, dan kontrol status akses platform.
+        </p>
+      </div>
 
-    <main class="flex-1 py-8 sm:py-12 bg-slate-50/70 dark:bg-neutral-900/30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Page Header & Title Bar -->
-        <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div class="flex flex-wrap items-center gap-2 mb-1.5">
-              <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 uppercase tracking-wider">
-                Panel Admin
-              </span>
-              <span class="text-slate-300 dark:text-neutral-700">•</span>
-              <span class="text-xs text-slate-500 dark:text-neutral-400 font-medium">
-                Manajemen Pengguna & Akses (RBAC)
-              </span>
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Pengguna & Hak Akses
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-1">
-              Kelola direktori pengguna, tetapkan peran administrator/editor, verifikasi akun, dan kontrol status akses platform.
-            </p>
-          </div>
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button
+          type="button"
+          class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-xs font-semibold text-slate-700 dark:text-neutral-200 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+          :disabled="isUsersLoading || actionLoading"
+          title="Sinkronkan data dari Appwrite Auth"
+          @click="fetchUsers(searchQuery)"
+        >
+          <svg
+            class="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400"
+            :class="{ 'animate-spin': isUsersLoading }"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          <span>{{ isUsersLoading ? 'Memuat...' : 'Sinkronkan' }}</span>
+        </button>
 
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-50 dark:hover:bg-neutral-700 text-xs font-semibold text-slate-700 dark:text-neutral-200 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-              :disabled="isUsersLoading || actionLoading"
-              title="Sinkronkan data dari Appwrite Auth"
-              @click="fetchUsers(searchQuery)"
-            >
-              <svg
-                class="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400"
-                :class="{ 'animate-spin': isUsersLoading }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              <span>{{ isUsersLoading ? 'Memuat...' : 'Sinkronkan' }}</span>
-            </button>
+        <button
+          type="button"
+          class="px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-primary-500/25 cursor-pointer"
+          @click="openAddUserModal"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+            />
+          </svg>
+          <span>Tambah Pengguna</span>
+        </button>
+      </div>
+    </div>
 
-            <button
-              type="button"
-              class="px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-primary-500/25 cursor-pointer"
-              @click="openAddUserModal"
-            >
+    <!-- Alerts -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="transform -translate-y-2 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform -translate-y-2 opacity-0"
+    >
+      <div
+        v-if="actionSuccess"
+        class="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm"
+      >
+        <div class="flex items-center gap-2.5">
+          <svg
+            class="w-5 h-5 text-emerald-500 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span>{{ actionSuccess }}</span>
+        </div>
+        <button
+          type="button"
+          class="text-emerald-600 hover:text-emerald-800 cursor-pointer"
+          @click="clearFeedback"
+        >
+          ✕
+        </button>
+      </div>
+    </Transition>
+
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="transform -translate-y-2 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform -translate-y-2 opacity-0"
+    >
+      <div
+        v-if="actionError"
+        class="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm"
+      >
+        <div class="flex items-center gap-2.5">
+          <svg
+            class="w-5 h-5 text-rose-500 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <span>{{ actionError }}</span>
+        </div>
+        <button
+          type="button"
+          class="text-rose-600 hover:text-rose-800 cursor-pointer"
+          @click="clearFeedback"
+        >
+          ✕
+        </button>
+      </div>
+    </Transition>
+
+    <!-- KONTEN UTAMA: METRICS, DAFTAR PENGGUNA & FILTER -->
+    <section class="w-full min-w-0 space-y-6">
+      <!-- Metric KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- KPI 1: Total Pengguna -->
+        <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Total Pengguna</span>
+            <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center">
               <svg
                 class="w-4 h-4"
                 fill="none"
@@ -303,382 +404,350 @@ onMounted(async () => {
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span>Tambah Pengguna</span>
+            </div>
+          </div>
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+            {{ metrics.total || total }}
+          </div>
+          <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+            Terdaftar di Auth
+          </p>
+        </div>
+
+        <!-- KPI 2: Pengguna Terverifikasi -->
+        <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Email Terverifikasi</span>
+            <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+            {{ metrics.verified }}
+          </div>
+          <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+            {{ metrics.unverified }} belum verifikasi
+          </p>
+        </div>
+
+        <!-- KPI 3: Tim Pengelola (Admin & Editor) -->
+        <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Admin & Editor</span>
+            <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+            {{ metrics.admins + metrics.editors }}
+          </div>
+          <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+            {{ metrics.admins }} Admin • {{ metrics.editors }} Editor
+          </p>
+        </div>
+
+        <!-- KPI 4: Akun Aktif -->
+        <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Akun Aktif</span>
+            <div class="w-8 h-8 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+            {{ metrics.active }}
+          </div>
+          <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+            {{ metrics.disabled }} dinonaktifkan
+          </p>
+        </div>
+
+        <!-- KPI 5: Total Poin Beredar -->
+        <div class="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Total Poin Beredar</span>
+            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+              🪙
+            </div>
+          </div>
+          <div class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">
+            {{ (metrics.totalPoints || users.reduce((acc, u) => acc + (Number(u.prefs?.points) || 0), 0)).toLocaleString('id-ID') }}
+          </div>
+          <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
+            Saldo poin semua akun
+          </p>
+        </div>
+      </div>
+
+      <!-- Search & Filters Container -->
+      <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm p-4 sm:p-5">
+        <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+          <!-- Search Input -->
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari berdasarkan nama, email, atau ID pengguna..."
+              class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+            >
+            <button
+              v-if="searchQuery"
+              type="button"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 cursor-pointer text-xs"
+              @click="searchQuery = ''"
+            >
+              ✕
             </button>
+          </div>
+
+          <!-- Dropdown Filters -->
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+            <!-- Role Filter -->
+            <select
+              v-model="roleFilter"
+              class="px-3 py-2 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            >
+              <option value="all">
+                Semua Peran
+              </option>
+              <option value="admin">
+                Administrator
+              </option>
+              <option value="editor">
+                Editor / Reviewer
+              </option>
+              <option value="user">
+                Pengguna Biasa
+              </option>
+            </select>
+
+            <!-- Verification Filter -->
+            <select
+              v-model="verificationFilter"
+              class="px-3 py-2 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            >
+              <option value="all">
+                Semua Verifikasi
+              </option>
+              <option value="verified">
+                Terverifikasi
+              </option>
+              <option value="unverified">
+                Belum Verifikasi
+              </option>
+            </select>
+
+            <!-- Status Filter -->
+            <select
+              v-model="statusFilter"
+              class="px-3 py-2 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            >
+              <option value="all">
+                Semua Status
+              </option>
+              <option value="active">
+                Aktif
+              </option>
+              <option value="disabled">
+                Nonaktif
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Card -->
+      <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+              Daftar Akun Pengguna
+            </h3>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300">
+              {{ filteredUsers.length }} dari {{ users.length }}
+            </span>
+          </div>
+          <span class="text-xs text-slate-400 dark:text-neutral-500">
+            Data langsung dari Appwrite Server
+          </span>
+        </div>
+
+        <!-- Loading State -->
+        <div
+          v-if="isUsersLoading"
+          class="py-16 text-center space-y-3"
+        >
+          <div class="w-8 h-8 mx-auto border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+          <p class="text-xs text-slate-400 dark:text-neutral-500">
+            Memuat data pengguna...
+          </p>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          v-else-if="filteredUsers.length === 0"
+          class="py-16 text-center space-y-3"
+        >
+          <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-neutral-800 text-slate-400 flex items-center justify-center">
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+              Tidak ada pengguna ditemukan
+            </h4>
+            <p class="text-xs text-slate-400 dark:text-neutral-500 mt-0.5">
+              Coba sesuaikan kata kunci pencarian atau filter yang dipilih.
+            </p>
           </div>
         </div>
 
-        <!-- Alerts -->
-        <Transition
-          enter-active-class="transition duration-200 ease-out"
-          enter-from-class="transform -translate-y-2 opacity-0"
-          enter-to-class="transform translate-y-0 opacity-100"
-          leave-active-class="transition duration-150 ease-in"
-          leave-from-class="transform translate-y-0 opacity-100"
-          leave-to-class="transform -translate-y-2 opacity-0"
+        <!-- Users Table -->
+        <div
+          v-else
+          class="overflow-x-auto"
         >
-          <div
-            v-if="actionSuccess"
-            class="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm"
-          >
-            <div class="flex items-center gap-2.5">
-              <svg
-                class="w-5 h-5 text-emerald-500 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50/80 dark:bg-neutral-800/40 text-slate-400 dark:text-neutral-500 uppercase tracking-wider font-semibold border-b border-slate-100 dark:border-neutral-800">
+              <tr>
+                <th class="px-6 py-3.5">
+                  Pengguna
+                </th>
+                <th class="px-4 py-3.5">
+                  Kontak
+                </th>
+                <th class="px-4 py-3.5">
+                  Peran / Akses
+                </th>
+                <th class="px-4 py-3.5">
+                  Saldo Poin
+                </th>
+                <th class="px-4 py-3.5">
+                  Verifikasi
+                </th>
+                <th class="px-4 py-3.5">
+                  Status Akun
+                </th>
+                <th class="px-4 py-3.5">
+                  Terdaftar
+                </th>
+                <th class="px-6 py-3.5 text-right">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-neutral-800/80">
+              <tr
+                v-for="u in filteredUsers"
+                :key="u.$id"
+                class="hover:bg-slate-50/60 dark:hover:bg-neutral-800/30 transition-colors"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <span>{{ actionSuccess }}</span>
-            </div>
-            <button
-              type="button"
-              class="text-emerald-600 hover:text-emerald-800 cursor-pointer"
-              @click="clearFeedback"
-            >
-              ✕
-            </button>
-          </div>
-        </Transition>
-
-        <Transition
-          enter-active-class="transition duration-200 ease-out"
-          enter-from-class="transform -translate-y-2 opacity-0"
-          enter-to-class="transform translate-y-0 opacity-100"
-          leave-active-class="transition duration-150 ease-in"
-          leave-from-class="transform translate-y-0 opacity-100"
-          leave-to-class="transform -translate-y-2 opacity-0"
-        >
-          <div
-            v-if="actionError"
-            class="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm"
-          >
-            <div class="flex items-center gap-2.5">
-              <svg
-                class="w-5 h-5 text-rose-500 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <span>{{ actionError }}</span>
-            </div>
-            <button
-              type="button"
-              class="text-rose-600 hover:text-rose-800 cursor-pointer"
-              @click="clearFeedback"
-            >
-              ✕
-            </button>
-          </div>
-        </Transition>
-
-        <!-- MAIN LAYOUT GRID: SIDEBAR (KIRI) + KONTEN UTAMA (KANAN) -->
-        <div class="flex flex-col md:flex-row items-start gap-6 lg:gap-8">
-          <!-- SIDEBAR SEDERHANA: DAFTAR TOMBOL-TOMBOL -->
-          <aside class="w-full md:w-56 lg:w-60 shrink-0 md:sticky md:top-6 space-y-4">
-            <!-- Card Navigasi Menu Admin -->
-            <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm p-4 space-y-1.5">
-              <div class="px-2.5 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 flex items-center justify-between">
-                <span>Menu Admin</span>
-                <span
-                  class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold"
-                  :class="isAdmin ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'"
-                >
-                  {{ isAdmin ? 'Admin' : 'Tamu' }}
-                </span>
-              </div>
-
-              <!-- Tombol 1: Setting / Pengaturan (/admin/setting) -->
-              <NuxtLink
-                to="/admin/setting"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors text-left cursor-pointer"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <svg
-                    class="w-4 h-4 shrink-0 text-slate-400 dark:text-neutral-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  <span class="truncate">Setting</span>
-                </div>
-              </NuxtLink>
-
-              <!-- Tombol 2: Pengguna & Akses (/admin/users) -> AKTIF -->
-              <NuxtLink
-                to="/admin/users"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all bg-primary-600 text-white shadow-md shadow-primary-500/20"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <svg
-                    class="w-4 h-4 shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <span class="truncate">Pengguna & Akses</span>
-                </div>
-                <span class="w-2 h-2 rounded-full bg-white shadow-sm" />
-              </NuxtLink>
-
-              <!-- Tombol 3: Manajemen Naskah (Segera) -->
-              <button
-                type="button"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors text-left cursor-pointer"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <svg
-                    class="w-4 h-4 shrink-0 text-slate-400 dark:text-neutral-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <span class="truncate">Kelola Naskah</span>
-                </div>
-                <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 font-medium">
-                  Segera
-                </span>
-              </button>
-
-              <!-- Tombol 4: Layanan & Tarif (/admin/services) -->
-              <NuxtLink
-                to="/admin/services"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors text-left cursor-pointer"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <svg
-                    class="w-4 h-4 shrink-0 text-slate-400 dark:text-neutral-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span class="truncate">Layanan & Tarif</span>
-                </div>
-              </NuxtLink>
-
-              <!-- Tombol 5: Statistik & Log (Segera) -->
-              <button
-                type="button"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors text-left cursor-pointer"
-              >
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <svg
-                    class="w-4 h-4 shrink-0 text-slate-400 dark:text-neutral-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                  <span class="truncate">Statistik & Log</span>
-                </div>
-                <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 font-medium">
-                  Segera
-                </span>
-              </button>
-
-              <!-- Garis Pemisah & Navigasi Luar -->
-              <div class="pt-3 mt-3 border-t border-slate-100 dark:border-neutral-800/80 space-y-1">
-                <NuxtLink
-                  to="/profile"
-                  class="w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-medium text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
-                >
-                  <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <span>Profil Pengguna</span>
-                </NuxtLink>
-
-                <NuxtLink
-                  to="/"
-                  class="w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-medium text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
-                >
-                  <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                  </svg>
-                  <span>Kembali ke Beranda</span>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <!-- Card Informasi Status Akun -->
-            <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm p-4 space-y-3">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-primary-600 text-white font-bold text-sm flex items-center justify-center shrink-0 overflow-hidden shadow-sm shadow-primary-500/20">
-                  <img
-                    v-if="userAvatar"
-                    :src="userAvatar"
-                    :alt="currentUser?.name || 'Profil'"
-                    class="w-full h-full object-cover"
-                  >
-                  <span v-else>{{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}</span>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {{ currentUser?.name || 'Administrator' }}
+                <!-- User Info -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 font-bold flex items-center justify-center shrink-0">
+                      {{ u.name ? u.name.charAt(0).toUpperCase() : 'U' }}
+                    </div>
+                    <div class="min-w-0">
+                      <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span class="truncate">{{ u.name || 'Tanpa Nama' }}</span>
+                        <span
+                          v-if="u.$id === currentUser?.$id"
+                          class="px-1.5 py-0.2 rounded text-[9px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold"
+                        >
+                          Anda
+                        </span>
+                      </div>
+                      <div class="text-[11px] text-slate-400 dark:text-neutral-500 truncate">
+                        ID: {{ u.$id.slice(0, 8) }}...
+                      </div>
+                    </div>
                   </div>
-                  <div class="text-[11px] text-slate-500 dark:text-neutral-400 truncate">
-                    {{ currentUser?.email }}
+                </td>
+
+                <!-- Contact Info -->
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <div class="text-slate-700 dark:text-neutral-300 font-medium">
+                    {{ u.email }}
                   </div>
-                </div>
-              </div>
+                  <div class="text-[11px] text-slate-400 dark:text-neutral-500">
+                    {{ u.phone || '-' }}
+                  </div>
+                </td>
 
-              <div class="pt-2 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
-                <span class="text-slate-500 dark:text-neutral-400">Hak Akses:</span>
-                <span
-                  class="px-2 py-0.5 rounded-md font-bold text-[10px]"
-                  :class="isAdmin
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                    : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'"
-                >
-                  {{ isAdmin ? 'Label admin (Aktif)' : 'Akses Dibatasi' }}
-                </span>
-              </div>
-            </div>
-          </aside>
-
-          <!-- KONTEN UTAMA: METRICS, DAFTAR PENGGUNA & FILTER (KANAN) -->
-          <section class="flex-1 w-full min-w-0 space-y-6">
-            <!-- Metric KPI Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <!-- KPI 1: Total Pengguna -->
-              <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Total Pengguna</span>
-                  <div class="w-8 h-8 rounded-xl bg-primary-100 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center">
+                <!-- Role / Access Badge -->
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <span
+                    v-if="getUserRole(u) === 'admin'"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 inline-flex items-center gap-1"
+                  >
                     <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-                  {{ metrics.total || total }}
-                </div>
-                <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  Terdaftar di Auth
-                </p>
-              </div>
-
-              <!-- KPI 2: Pengguna Terverifikasi -->
-              <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Email Terverifikasi</span>
-                  <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-                  {{ metrics.verified }}
-                </div>
-                <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  {{ metrics.unverified }} belum verifikasi
-                </p>
-              </div>
-
-              <!-- KPI 3: Tim Pengelola (Admin & Editor) -->
-              <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Admin & Editor</span>
-                  <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <svg
-                      class="w-4 h-4"
+                      class="w-3 h-3"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -690,450 +759,151 @@ onMounted(async () => {
                         d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                       />
                     </svg>
-                  </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-                  {{ metrics.admins + metrics.editors }}
-                </div>
-                <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  {{ metrics.admins }} Admin • {{ metrics.editors }} Editor
-                </p>
-              </div>
-
-              <!-- KPI 4: Akun Aktif -->
-              <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Akun Aktif</span>
-                  <div class="w-8 h-8 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-                  {{ metrics.active }}
-                </div>
-                <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  {{ metrics.disabled }} dinonaktifkan
-                </p>
-              </div>
-
-              <!-- KPI 5: Total Poin Beredar -->
-              <div class="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold text-slate-500 dark:text-neutral-400">Total Poin Beredar</span>
-                  <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
-                    🪙
-                  </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">
-                  {{ (metrics.totalPoints || users.reduce((acc, u) => acc + (Number(u.prefs?.points) || 0), 0)).toLocaleString('id-ID') }}
-                </div>
-                <p class="text-[11px] text-slate-400 dark:text-neutral-500 mt-1">
-                  Saldo poin semua akun
-                </p>
-              </div>
-            </div>
-
-            <!-- Search & Filters Container -->
-            <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm p-4 sm:p-5">
-              <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
-                <!-- Search Input -->
-                <div class="relative flex-1">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
-                  <input
-                    v-model="searchQuery"
-                    type="text"
-                    placeholder="Cari berdasarkan nama, email, atau ID pengguna..."
-                    class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-                  >
-                  <button
-                    v-if="searchQuery"
-                    type="button"
-                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 cursor-pointer text-xs"
-                    @click="searchQuery = ''"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <!-- Dropdown Filters -->
-                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                  <!-- Role Filter -->
-                  <select
-                    v-model="roleFilter"
-                    class="px-3 py-2 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                  >
-                    <option value="all">
-                      Semua Peran
-                    </option>
-                    <option value="admin">
-                      Administrator
-                    </option>
-                    <option value="editor">
-                      Editor / Reviewer
-                    </option>
-                    <option value="user">
-                      Pengguna Biasa
-                    </option>
-                  </select>
-
-                  <!-- Verification Filter -->
-                  <select
-                    v-model="verificationFilter"
-                    class="px-3 py-2 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                  >
-                    <option value="all">
-                      Semua Verifikasi
-                    </option>
-                    <option value="verified">
-                      Terverifikasi
-                    </option>
-                    <option value="unverified">
-                      Belum Verifikasi
-                    </option>
-                  </select>
-
-                  <!-- Status Filter -->
-                  <select
-                    v-model="statusFilter"
-                    class="px-3 py-2 bg-slate-50 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                  >
-                    <option value="all">
-                      Semua Status
-                    </option>
-                    <option value="active">
-                      Aktif
-                    </option>
-                    <option value="disabled">
-                      Nonaktif
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Table Card -->
-            <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden">
-              <div class="px-6 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Daftar Akun Pengguna
-                  </h3>
-                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300">
-                    {{ filteredUsers.length }} dari {{ users.length }}
+                    Administrator
                   </span>
-                </div>
-                <span class="text-xs text-slate-400 dark:text-neutral-500">
-                  Data langsung dari Appwrite Server
-                </span>
-              </div>
-
-              <!-- Loading State -->
-              <div
-                v-if="isUsersLoading"
-                class="py-16 text-center space-y-3"
-              >
-                <div class="w-8 h-8 mx-auto border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-                <p class="text-xs text-slate-400 dark:text-neutral-500">
-                  Memuat data pengguna...
-                </p>
-              </div>
-
-              <!-- Empty State -->
-              <div
-                v-else-if="filteredUsers.length === 0"
-                class="py-16 text-center space-y-3"
-              >
-                <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-neutral-800 text-slate-400 flex items-center justify-center">
-                  <svg
-                    class="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  <span
+                    v-else-if="getUserRole(u) === 'editor'"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 inline-flex items-center gap-1"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h4 class="text-sm font-bold text-slate-900 dark:text-white">
-                    Tidak ada pengguna ditemukan
-                  </h4>
-                  <p class="text-xs text-slate-400 dark:text-neutral-500 mt-0.5">
-                    Coba sesuaikan kata kunci pencarian atau filter yang dipilih.
-                  </p>
-                </div>
-              </div>
-
-              <!-- Users Table -->
-              <div
-                v-else
-                class="overflow-x-auto"
-              >
-                <table class="w-full text-left text-xs">
-                  <thead class="bg-slate-50/80 dark:bg-neutral-800/40 text-slate-400 dark:text-neutral-500 uppercase tracking-wider font-semibold border-b border-slate-100 dark:border-neutral-800">
-                    <tr>
-                      <th class="px-6 py-3.5">
-                        Pengguna
-                      </th>
-                      <th class="px-4 py-3.5">
-                        Kontak
-                      </th>
-                      <th class="px-4 py-3.5">
-                        Peran / Akses
-                      </th>
-                      <th class="px-4 py-3.5">
-                        Saldo Poin
-                      </th>
-                      <th class="px-4 py-3.5">
-                        Verifikasi
-                      </th>
-                      <th class="px-4 py-3.5">
-                        Status Akun
-                      </th>
-                      <th class="px-4 py-3.5">
-                        Terdaftar
-                      </th>
-                      <th class="px-6 py-3.5 text-right">
-                        Aksi
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 dark:divide-neutral-800/80">
-                    <tr
-                      v-for="u in filteredUsers"
-                      :key="u.$id"
-                      class="hover:bg-slate-50/60 dark:hover:bg-neutral-800/30 transition-colors"
+                    <svg
+                      class="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <!-- User Info -->
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center gap-3">
-                          <div class="w-9 h-9 rounded-xl bg-primary-100 dark:bg-primary-950/80 text-primary-700 dark:text-primary-300 font-bold flex items-center justify-center shrink-0">
-                            {{ u.name ? u.name.charAt(0).toUpperCase() : 'U' }}
-                          </div>
-                          <div class="min-w-0">
-                            <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                              <span class="truncate">{{ u.name || 'Tanpa Nama' }}</span>
-                              <span
-                                v-if="u.$id === currentUser?.$id"
-                                class="px-1.5 py-0.2 rounded text-[9px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold"
-                              >
-                                Anda
-                              </span>
-                            </div>
-                            <div class="text-[11px] text-slate-400 dark:text-neutral-500 truncate">
-                              ID: {{ u.$id.slice(0, 8) }}...
-                            </div>
-                          </div>
-                        </div>
-                      </td>
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Editor
+                  </span>
+                  <span
+                    v-else
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
+                  >
+                    Pengguna
+                  </span>
+                </td>
 
-                      <!-- Contact Info -->
-                      <td class="px-4 py-4 whitespace-nowrap">
-                        <div class="text-slate-700 dark:text-neutral-300 font-medium">
-                          {{ u.email }}
-                        </div>
-                        <div class="text-[11px] text-slate-400 dark:text-neutral-500">
-                          {{ u.phone || '-' }}
-                        </div>
-                      </td>
+                <!-- Saldo Poin Badge -->
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <button
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+                    title="Klik untuk ubah saldo poin pengguna"
+                    @click="openEditModal(u)"
+                  >
+                    <span>🪙</span>
+                    <span>{{ (Number(u.prefs?.points) || 0).toLocaleString('id-ID') }}</span>
+                    <span class="text-[10px] font-normal opacity-80">Poin</span>
+                  </button>
+                </td>
 
-                      <!-- Role / Access Badge -->
-                      <td class="px-4 py-4 whitespace-nowrap">
-                        <span
-                          v-if="getUserRole(u) === 'admin'"
-                          class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 inline-flex items-center gap-1"
-                        >
-                          <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                            />
-                          </svg>
-                          Administrator
-                        </span>
-                        <span
-                          v-else-if="getUserRole(u) === 'editor'"
-                          class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 inline-flex items-center gap-1"
-                        >
-                          <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                          Editor
-                        </span>
-                        <span
-                          v-else
-                          class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
-                        >
-                          Pengguna
-                        </span>
-                      </td>
+                <!-- Email Verification Badge -->
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <button
+                    type="button"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                    :class="u.emailVerification
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
+                      : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100'"
+                    title="Klik untuk mengubah status verifikasi"
+                    @click="handleQuickToggleVerification(u)"
+                  >
+                    <span
+                      class="w-1.5 h-1.5 rounded-full"
+                      :class="u.emailVerification ? 'bg-emerald-500' : 'bg-amber-500'"
+                    />
+                    {{ u.emailVerification ? 'Terverifikasi' : 'Belum' }}
+                  </button>
+                </td>
 
-                      <!-- Saldo Poin Badge -->
-                      <td class="px-4 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
-                          title="Klik untuk ubah saldo poin pengguna"
-                          @click="openEditModal(u)"
-                        >
-                          <span>🪙</span>
-                          <span>{{ (Number(u.prefs?.points) || 0).toLocaleString('id-ID') }}</span>
-                          <span class="text-[10px] font-normal opacity-80">Poin</span>
-                        </button>
-                      </td>
+                <!-- Account Status Badge -->
+                <td class="px-4 py-4 whitespace-nowrap">
+                  <button
+                    type="button"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors disabled:cursor-not-allowed"
+                    :disabled="u.$id === currentUser?.$id"
+                    :class="u.status
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200'
+                      : 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 hover:bg-red-200'"
+                    :title="u.$id === currentUser?.$id ? 'Tidak dapat menonaktifkan akun sendiri' : 'Klik untuk mengubah status aktif/nonaktif'"
+                    @click="handleQuickToggleStatus(u)"
+                  >
+                    <span
+                      class="w-1.5 h-1.5 rounded-full"
+                      :class="u.status ? 'bg-emerald-500' : 'bg-red-500'"
+                    />
+                    {{ u.status ? 'Aktif' : 'Nonaktif' }}
+                  </button>
+                </td>
 
-                      <!-- Email Verification Badge -->
-                      <td class="px-4 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          class="px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
-                          :class="u.emailVerification
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
-                            : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100'"
-                          title="Klik untuk mengubah status verifikasi"
-                          @click="handleQuickToggleVerification(u)"
-                        >
-                          <span
-                            class="w-1.5 h-1.5 rounded-full"
-                            :class="u.emailVerification ? 'bg-emerald-500' : 'bg-amber-500'"
-                          />
-                          {{ u.emailVerification ? 'Terverifikasi' : 'Belum' }}
-                        </button>
-                      </td>
+                <!-- Registration Date -->
+                <td class="px-4 py-4 whitespace-nowrap text-slate-500 dark:text-neutral-400">
+                  <div>{{ formatDate(u.registration) }}</div>
+                  <div class="text-[10px] text-slate-400 dark:text-neutral-500">
+                    Akses: {{ formatDate(u.accessedAt) }}
+                  </div>
+                </td>
 
-                      <!-- Account Status Badge -->
-                      <td class="px-4 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          class="px-2.5 py-1 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors disabled:cursor-not-allowed"
-                          :disabled="u.$id === currentUser?.$id"
-                          :class="u.status
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-200'
-                            : 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 hover:bg-red-200'"
-                          :title="u.$id === currentUser?.$id ? 'Tidak dapat menonaktifkan akun sendiri' : 'Klik untuk mengubah status aktif/nonaktif'"
-                          @click="handleQuickToggleStatus(u)"
-                        >
-                          <span
-                            class="w-1.5 h-1.5 rounded-full"
-                            :class="u.status ? 'bg-emerald-500' : 'bg-red-500'"
-                          />
-                          {{ u.status ? 'Aktif' : 'Nonaktif' }}
-                        </button>
-                      </td>
+                <!-- Actions -->
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <!-- Kelola Akses Button -->
+                    <button
+                      type="button"
+                      class="p-1.5 rounded-lg border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-200 transition-colors cursor-pointer"
+                      title="Kelola Hak Akses & Peran"
+                      @click="openEditModal(u)"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
+                    </button>
 
-                      <!-- Registration Date -->
-                      <td class="px-4 py-4 whitespace-nowrap text-slate-500 dark:text-neutral-400">
-                        <div>{{ formatDate(u.registration) }}</div>
-                        <div class="text-[10px] text-slate-400 dark:text-neutral-500">
-                          Akses: {{ formatDate(u.accessedAt) }}
-                        </div>
-                      </td>
-
-                      <!-- Actions -->
-                      <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="flex items-center justify-end gap-1.5">
-                          <!-- Kelola Akses Button -->
-                          <button
-                            type="button"
-                            class="p-1.5 rounded-lg border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-200 transition-colors cursor-pointer"
-                            title="Kelola Hak Akses & Peran"
-                            @click="openEditModal(u)"
-                          >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                              />
-                            </svg>
-                          </button>
-
-                          <!-- Hapus User Button -->
-                          <button
-                            type="button"
-                            class="p-1.5 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                            :disabled="u.$id === currentUser?.$id"
-                            :title="u.$id === currentUser?.$id ? 'Tidak dapat menghapus akun sendiri' : 'Hapus Akun Pengguna'"
-                            @click="promptDeleteUser(u)"
-                          >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
+                    <!-- Hapus User Button -->
+                    <button
+                      type="button"
+                      class="p-1.5 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      :disabled="u.$id === currentUser?.$id"
+                      :title="u.$id === currentUser?.$id ? 'Tidak dapat menghapus akun sendiri' : 'Hapus Akun Pengguna'"
+                      @click="promptDeleteUser(u)"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </main>
+    </section>
 
     <!-- MODAL: TAMBAH PENGGUNA BARU -->
     <div
@@ -1690,7 +1460,5 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
-    <LandingFooter />
   </div>
 </template>
