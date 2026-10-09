@@ -48,6 +48,13 @@ const isDeductingPoints = ref(false)
 // Active Tab: 'upload' | 'history'
 const activeTab = ref<'upload' | 'history'>('upload')
 
+const setActiveTab = (tab: 'upload' | 'history') => {
+  activeTab.value = tab
+  if (tab === 'history' && user.value?.$id) {
+    fetchUserManuscripts(targetServiceId)
+  }
+}
+
 // Form State
 const form = reactive<{
   title: string
@@ -401,7 +408,7 @@ const parseOptions = (raw?: string): ExcludeOptions => {
               :class="activeTab === 'upload'
                 ? 'bg-primary-600 text-white shadow-sm shadow-primary-500/25'
                 : 'text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900'"
-              @click="activeTab === 'upload'"
+              @click="setActiveTab('upload')"
             >
               <UIcon
                 name="i-lucide-upload"
@@ -416,7 +423,7 @@ const parseOptions = (raw?: string): ExcludeOptions => {
               :class="activeTab === 'history'
                 ? 'bg-primary-600 text-white shadow-sm shadow-primary-500/25'
                 : 'text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-900'"
-              @click="activeTab === 'history'"
+              @click="setActiveTab('history')"
             >
               <UIcon
                 name="i-lucide-history"
@@ -1124,7 +1131,7 @@ const parseOptions = (raw?: string): ExcludeOptions => {
             <button
               type="button"
               class="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md shadow-primary-500/20 transition-colors cursor-pointer"
-              @click="activeTab = 'upload'"
+              @click="setActiveTab('upload')"
             >
               + Unggah Naskah Sekarang
             </button>
@@ -1339,7 +1346,7 @@ const parseOptions = (raw?: string): ExcludeOptions => {
             <button
               type="button"
               class="w-full py-2.5 px-4 rounded-xl bg-primary-600 text-white font-bold text-xs shadow-md shadow-primary-500/20 hover:bg-primary-700 transition-colors cursor-pointer"
-              @click="isSuccessModalOpen = false; activeTab = 'history'"
+              @click="isSuccessModalOpen = false; setActiveTab('history')"
             >
               Lihat di Riwayat Naskah
             </button>
