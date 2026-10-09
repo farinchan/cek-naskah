@@ -33,9 +33,8 @@ const navItems: NavItem[] = [
   {
     id: 'manuscripts',
     label: 'Kelola Naskah',
-    icon: 'i-lucide-file-text',
-    badge: 'Segera',
-    disabled: true
+    to: '/admin/naskah',
+    icon: 'i-lucide-file-text'
   },
   {
     id: 'stats',

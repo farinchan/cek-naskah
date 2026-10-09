@@ -176,6 +176,43 @@ export const usePoints = () => {
     }
   }
 
+  const deductPoints = async (amount: number, serviceName?: string, notes?: string) => {
+    try {
+      const { jwt } = await account.createJWT()
+      const res = await $fetch<{
+        success: boolean
+        deducted: number
+        balanceBefore: number
+        balanceAfter: number
+      }>('/api/points/deduct', {
+        method: 'POST',
+        headers: {
+          'x-appwrite-jwt': jwt
+        },
+        body: {
+          amount,
+          serviceName,
+          notes
+        }
+      })
+
+      const { fetchUser } = useAuth()
+      await fetchUser()
+
+      return res
+    } catch (err: unknown) {
+      const errorData = err && typeof err === 'object' && 'data' in err
+        ? (err as { data: unknown }).data
+        : null
+      const errorMsg = (errorData && typeof errorData === 'object' && 'statusMessage' in errorData)
+        ? String((errorData as { statusMessage: unknown }).statusMessage)
+        : (err && typeof err === 'object' && 'message' in err)
+            ? String((err as { message: unknown }).message)
+            : 'Gagal memproses pemotongan saldo poin.'
+      throw new Error(errorMsg, { cause: err })
+    }
+  }
+
   return {
     POINT_RATE,
     user,
@@ -196,6 +233,7 @@ export const usePoints = () => {
     fetchHistory,
     isPaying,
     paymentError,
-    createTopupPayment
+    createTopupPayment,
+    deductPoints
   }
 }
