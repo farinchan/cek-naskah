@@ -462,15 +462,6 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
           <option value="all">
             Semua Layanan
           </option>
-          <option value="turnitin-plagiarism">
-            iThenticate
-          </option>
-          <option value="turnitin-similarity">
-            Turnitin
-          </option>
-          <option value="turnitin-ai">
-            AI Detector
-          </option>
           <option
             v-for="s in services"
             :key="s.id"
