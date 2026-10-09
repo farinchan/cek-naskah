@@ -179,7 +179,7 @@ export const useManuscripts = () => {
   }
 
   // Fetch manuscripts submitted by the current user
-  const fetchUserManuscripts = async (serviceId?: string) => {
+  const fetchUserManuscripts = async (serviceId?: string, limitCount = 100) => {
     if (!user.value?.$id) {
       manuscripts.value = []
       return []
@@ -189,7 +189,7 @@ export const useManuscripts = () => {
       const queries = [
         Query.equal('userId', user.value.$id),
         Query.orderDesc('$createdAt'),
-        Query.limit(50)
+        Query.limit(limitCount)
       ]
       if (serviceId) {
         queries.push(Query.equal('serviceId', serviceId))

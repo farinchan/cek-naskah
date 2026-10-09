@@ -477,6 +477,33 @@ onUnmounted(() => {
 
                   <!-- Navigasi Menu Dropdown -->
                   <div class="p-1.5 space-y-0.5">
+                    <!-- Menu Riwayat Naskah -->
+                    <NuxtLink
+                      to="/riwayat-naskah"
+                      class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      @click="closeUserDropdown"
+                    >
+                      <svg
+                        class="w-4 h-4 text-slate-400 dark:text-neutral-500 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <div class="flex-1">
+                        <span>Riwayat Naskah</span>
+                      </div>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-300 font-bold">
+                        Semua
+                      </span>
+                    </NuxtLink>
+
                     <!-- Menu Profile -->
                     <NuxtLink
                       to="/profile"
@@ -741,6 +768,32 @@ onUnmounted(() => {
                 Top Up
               </button>
             </div>
+
+            <NuxtLink
+              to="/riwayat-naskah"
+              class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 text-sm font-semibold text-slate-700 dark:text-neutral-200 transition-colors hover:text-primary-600"
+              @click="isMobileMenuOpen = false"
+            >
+              <div class="flex items-center gap-2.5">
+                <svg
+                  class="w-4 h-4 text-slate-400 dark:text-neutral-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span>Riwayat Naskah</span>
+              </div>
+              <span class="text-xs px-2 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-bold">
+                Semua
+              </span>
+            </NuxtLink>
 
             <NuxtLink
               v-if="isAdmin"
