@@ -64,6 +64,7 @@ export interface ManuscriptSubmissionPayload {
   file: File
   excludeOptions?: ExcludeOptions | Record<string, unknown>
   userNotes?: string
+  language?: string
 }
 
 export const useManuscripts = () => {
@@ -263,66 +264,83 @@ export const useManuscripts = () => {
     }
 
     uploading.value = true
+    let uploadedFileId: string | null = null
     try {
-      // 1. Upload original manuscript to Appwrite Storage
+      // 1. Upload file naskah ke Appwrite Storage terlebih dahulu (saldo belum dipotong)
       const uploadedFile = await storage.createFile({
         bucketId,
         fileId: ID.unique(),
         file: payload.file
       })
+      uploadedFileId = uploadedFile.$id
 
-      const fileUrl = getFileDownloadUrl(uploadedFile.$id)
+      // 2. Dapatkan sesi JWT untuk transaksi backend
+      const { jwt } = await account.createJWT()
 
-      // 2. Prepare payload row for naskah table
-      const dataPayload = {
-        userId: user.value.$id,
-        userName: user.value.name || 'Pengguna',
-        userEmail: user.value.email || '',
-        userPhone: user.value.phone || (user.value.prefs?.phone as string) || '',
-        title: payload.title.trim(),
-        serviceId: payload.serviceId || 'turnitin-plagiarism',
-        serviceName: payload.serviceName || 'Cek Plagiarisme iThenticate',
-        price: payload.price || 'Rp 8.000',
-        status: 'pending',
-        fileId: uploadedFile.$id,
-        fileName: payload.file.name,
-        fileSize: payload.file.size,
-        fileType: payload.file.type || payload.file.name.split('.').pop() || 'application/octet-stream',
-        fileUrl,
-        excludeOptions: JSON.stringify(payload.excludeOptions),
-        userNotes: (payload.userNotes || '').trim(),
-        similarityScore: '',
-        resultFileId: '',
-        resultFileName: '',
-        resultFileUrl: '',
-        adminUploaderId: '',
-        adminUploaderName: '',
-        adminUploaderEmail: '',
-        adminNotes: ''
-      }
-
-      // 3. Create document in database table `naskah`
-      const newRow = await tablesDB.createRow<ManuscriptRow>({
-        databaseId,
-        tableId,
-        rowId: ID.unique(),
-        data: dataPayload
+      // 3. Panggil endpoint server atomik untuk pemotongan poin & pembuatan naskah
+      const res = await $fetch<{
+        success: boolean
+        manuscript: ManuscriptRow
+        deductedPoints: number
+        balanceAfter: number
+        message: string
+      }>('/api/manuscripts/submit', {
+        method: 'POST',
+        headers: {
+          'x-appwrite-jwt': jwt
+        },
+        body: {
+          fileId: uploadedFile.$id,
+          fileName: payload.file.name,
+          fileSize: payload.file.size,
+          fileType: payload.file.type || payload.file.name.split('.').pop() || 'application/octet-stream',
+          title: payload.title.trim(),
+          serviceId: payload.serviceId || 'turnitin-plagiarism',
+          serviceName: payload.serviceName || 'Cek Plagiarisme',
+          price: payload.price || 'Rp 0',
+          excludeOptions: payload.excludeOptions,
+          userNotes: payload.userNotes || '',
+          language: payload.language || ''
+        }
       })
 
-      // Prepend to current list
-      manuscripts.value = [newRow, ...manuscripts.value]
+      // 4. Perbarui data profil & saldo poin pengguna di antarmuka
+      const { fetchUser } = useAuth()
+      await fetchUser()
+
+      // Tambahkan ke riwayat lokal naskah
+      manuscripts.value = [res.manuscript, ...manuscripts.value]
       success.value = 'Naskah berhasil dikirim! Tim pemeriksa segera memproses naskah Anda.'
 
       return {
         success: true,
-        manuscript: newRow,
-        message: 'Naskah berhasil dikirim!'
+        manuscript: res.manuscript,
+        message: res.message || 'Naskah berhasil dikirim!'
       }
     } catch (err: unknown) {
       console.error('Error submitting manuscript:', err)
-      const msg = err && typeof err === 'object' && 'message' in err
-        ? String((err as { message: unknown }).message)
-        : 'Gagal mengunggah naskah. Silakan coba kembali.'
+
+      // Bersihkan file di storage jika transaksi pemesanan di server gagal
+      if (uploadedFileId) {
+        try {
+          await storage.deleteFile({
+            bucketId,
+            fileId: uploadedFileId
+          })
+        } catch {
+          // Abaikan jika pembersihan storage gagal
+        }
+      }
+
+      const errorData = err && typeof err === 'object' && 'data' in err
+        ? (err as { data: unknown }).data
+        : null
+      const msg = (errorData && typeof errorData === 'object' && 'statusMessage' in errorData)
+        ? String((errorData as { statusMessage: unknown }).statusMessage)
+        : (err && typeof err === 'object' && 'message' in err)
+            ? String((err as { message: unknown }).message)
+            : 'Gagal mengunggah naskah. Silakan coba kembali.'
+
       error.value = msg
       return { success: false, message: msg }
     } finally {

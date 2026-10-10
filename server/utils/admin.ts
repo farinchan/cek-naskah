@@ -288,6 +288,64 @@ export function useAdminAppwrite() {
         console.warn(`[PointHistory] Database table '${tableId}' row creation notice:`, (err as { message?: string })?.message || err)
         return null
       }
+    },
+
+    async createManuscriptRow(data: Record<string, unknown>) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = process.env.APPWRITE_TABLE_MANUSCRIPTS || 'naskah'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey,
+        'content-type': 'application/json'
+      }
+
+      return await $fetch<Record<string, unknown>>(`${endpoint}/databases/${databaseId}/collections/${tableId}/documents`, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: {
+          documentId: 'unique()',
+          data
+        }
+      })
+    },
+
+    async findPointTransaction(paymentId?: string, orderId?: string) {
+      if (!paymentId && !orderId) return null
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey
+      }
+
+      try {
+        const queries: string[] = []
+        if (paymentId) {
+          queries.push(`equal("id", ["${paymentId}"])`)
+        }
+        if (orderId) {
+          queries.push(`equal("orderId", ["${orderId}"])`)
+        }
+
+        const queryParams = queries.map(q => `queries[]=${encodeURIComponent(q)}`).join('&')
+        const url = `${endpoint}/databases/${databaseId}/collections/${tableId}/documents${queryParams ? '?' + queryParams : ''}`
+
+        const res = await $fetch<{ total: number, documents: Array<Record<string, unknown>> }>(url, {
+          method: 'GET',
+          headers: requestHeaders
+        })
+
+        if (res.total > 0 && res.documents.length > 0) {
+          return res.documents[0]
+        }
+        return null
+      } catch {
+        return null
+      }
     }
   }
 }

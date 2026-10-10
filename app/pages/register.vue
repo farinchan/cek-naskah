@@ -49,7 +49,7 @@ const handleGoogleRegister = () => {
     error.value = 'Pendaftaran pengguna baru sedang dinonaktifkan oleh administrator.'
     return
   }
-  const redirect = (route.query.redirect as string) || '/'
+  const redirect = sanitizeRedirectPath((route.query.redirect as string) || '/')
   loginWithGoogle(redirect)
 }
 

@@ -322,10 +322,12 @@ export const useAuth = () => {
         ? window.location.origin
         : 'http://localhost:3000'
 
+      const safeRedirect = sanitizeRedirectPath(redirectPath)
+
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('oauth_redirect_path', redirectPath)
-          sessionStorage.setItem('oauth_redirect_path', redirectPath)
+          localStorage.setItem('oauth_redirect_path', safeRedirect)
+          sessionStorage.setItem('oauth_redirect_path', safeRedirect)
         } catch {
           // Ignore storage restrictions
         }

@@ -175,3 +175,40 @@ export const extractZodErrors = (error: z.ZodError): Record<string, string> => {
   }
   return errors
 }
+
+/**
+ * Sanitizes a redirect path to prevent Open Redirect vulnerabilities.
+ * Ensures the destination is strictly an internal application path.
+ */
+export const sanitizeRedirectPath = (rawPath?: string | null): string => {
+  if (!rawPath || typeof rawPath !== 'string') {
+    return '/'
+  }
+
+  const trimmed = rawPath.trim()
+  if (!trimmed) {
+    return '/'
+  }
+
+  // Must strictly start with a single '/' and not with '//' or '/\'
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.startsWith('/\\')) {
+    return '/'
+  }
+
+  // Verify decoded URL to block percent-encoded bypasses (e.g. /%2f, /%5c)
+  try {
+    const decoded = decodeURIComponent(trimmed)
+    if (!decoded.startsWith('/') || decoded.startsWith('//') || decoded.startsWith('/\\')) {
+      return '/'
+    }
+  } catch {
+    return '/'
+  }
+
+  // Reject explicit protocol schemes (e.g. javascript:, data:, https:)
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+    return '/'
+  }
+
+  return trimmed
+}

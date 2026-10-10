@@ -45,7 +45,7 @@ onMounted(async () => {
 })
 
 const handleGoogleLogin = () => {
-  const redirect = (route.query.redirect as string) || '/'
+  const redirect = sanitizeRedirectPath((route.query.redirect as string) || '/')
   loginWithGoogle(redirect)
 }
 
@@ -65,9 +65,11 @@ const handleLogin = async () => {
 
   const result = await login(parseResult.data.email, parseResult.data.password)
   if (result.success) {
-    const destination = settings.value.requireEmailVerification && !result.user?.emailVerification
+    const redirectParam = (route.query.redirect as string) || ''
+    const fallback = settings.value.requireEmailVerification && !result.user?.emailVerification
       ? '/profile'
       : '/'
+    const destination = redirectParam ? sanitizeRedirectPath(redirectParam) : fallback
     setTimeout(() => {
       navigateTo(destination)
     }, 1200)

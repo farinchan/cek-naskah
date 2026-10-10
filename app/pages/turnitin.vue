@@ -30,7 +30,7 @@ useSchemaOrg([
 // Composables
 const { user } = useAuth()
 const { getWhatsappUrl } = useAppSettings()
-const { userPoints, openTopupModal, deductPoints, rupiahToPoints } = usePoints()
+const { userPoints, openTopupModal, rupiahToPoints } = usePoints()
 const { services, fetchServices } = useServices()
 const {
   manuscripts,
@@ -238,24 +238,7 @@ const handleSubmitManuscript = async () => {
 
   isDeductingPoints.value = true
 
-  // 2. Potong saldo poin seharga biaya layanan
-  try {
-    await deductPoints(
-      requiredPoints.value,
-      currentService.value.name,
-      `Pemeriksaan Turnitin naskah: ${form.title}`
-    )
-  } catch (deductErr: unknown) {
-    console.error('Point deduction failed:', deductErr)
-    const msg = deductErr && typeof deductErr === 'object' && 'message' in deductErr
-      ? String((deductErr as { message: unknown }).message)
-      : 'Gagal memproses pemotongan saldo poin.'
-    submitError.value = msg
-    isDeductingPoints.value = false
-    return
-  }
-
-  // 3. Simpan naskah ke Appwrite Storage & Database
+  // Simpan naskah dan proses pemotongan poin secara atomik di backend
   const res = await submitManuscript({
     title: form.title,
     serviceId: currentService.value.id,
@@ -280,6 +263,8 @@ const handleSubmitManuscript = async () => {
     if (fileInputRef.value) {
       fileInputRef.value.value = ''
     }
+  } else {
+    submitError.value = res.message || 'Gagal mengirim naskah. Silakan coba kembali.'
   }
 }
 

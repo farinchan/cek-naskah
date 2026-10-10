@@ -65,9 +65,9 @@ const handleSubmit = async () => {
       let destination = '/'
       if (typeof window !== 'undefined') {
         try {
-          destination = localStorage.getItem('oauth_redirect_path')
+          const raw = localStorage.getItem('oauth_redirect_path')
             || sessionStorage.getItem('oauth_redirect_path')
-            || '/'
+          destination = sanitizeRedirectPath(raw)
           localStorage.removeItem('oauth_redirect_path')
           sessionStorage.removeItem('oauth_redirect_path')
         } catch {

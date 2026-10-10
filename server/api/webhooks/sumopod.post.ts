@@ -15,36 +15,40 @@ export default defineEventHandler(async (event) => {
   const hasSecret = Boolean(expectedSecret)
   const hasToken = Boolean(expectedToken)
 
-  // 3. Verifikasi Keaslian Webhook jika Secret atau Token dikonfigurasi
-  if (hasSecret || hasToken) {
-    let isVerified = false
+  // 3. Verifikasi Keaslian Webhook (Wajib Fail-Closed)
+  if (!hasSecret && !hasToken) {
+    console.error('[Sumopod Webhook] Fatal: SUMOPOD_WEBHOOK_SECRET atau SUMOPOD_WEBHOOK_TOKEN belum dikonfigurasi di environment server.')
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Webhook signature verification is not configured on the server'
+    })
+  }
 
-    // Metode A: Svix Signature Verification (HMAC SHA-256)
-    if (hasSecret && svixId && svixTimestamp && svixSignature) {
-      isVerified = verifySvixSignature(expectedSecret, svixId, svixTimestamp, svixSignature, rawBody)
-      if (!isVerified) {
-        console.warn(`[Sumopod Webhook] Verifikasi Svix signature gagal untuk svix-id: "${svixId}"`)
-      }
-    }
+  let isVerified = false
 
-    // Metode B: Direct Webhook Token Verification (X-Webhook-Token)
-    if (!isVerified && receivedToken) {
-      if (hasToken && receivedToken === expectedToken) {
-        isVerified = true
-      } else if (hasSecret && receivedToken === expectedSecret) {
-        isVerified = true
-      }
-    }
-
+  // Metode A: Svix Signature Verification (HMAC SHA-256)
+  if (hasSecret && svixId && svixTimestamp && svixSignature) {
+    isVerified = verifySvixSignature(expectedSecret, svixId, svixTimestamp, svixSignature, rawBody)
     if (!isVerified) {
-      console.error('[Sumopod Webhook] Akses ditolak: Webhook signature atau token tidak valid.')
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Invalid signature or webhook token'
-      })
+      console.warn(`[Sumopod Webhook] Verifikasi Svix signature gagal untuk svix-id: "${svixId}"`)
     }
-  } else {
-    console.warn('[Sumopod Webhook] PERINGATAN: SUMOPOD_WEBHOOK_SECRET atau SUMOPOD_WEBHOOK_TOKEN belum dikonfigurasi di .env. Memproses webhook tanpa verifikasi signature.')
+  }
+
+  // Metode B: Direct Webhook Token Verification (X-Webhook-Token)
+  if (!isVerified && receivedToken) {
+    if (hasToken && receivedToken === expectedToken) {
+      isVerified = true
+    } else if (hasSecret && receivedToken === expectedSecret) {
+      isVerified = true
+    }
+  }
+
+  if (!isVerified) {
+    console.error('[Sumopod Webhook] Akses ditolak: Webhook signature atau token tidak valid.')
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Invalid signature or webhook token'
+    })
   }
 
   // 4. Parse payload JSON dari rawBody
@@ -96,68 +100,98 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const lockKey = `webhook_tx_${data.payment_id}_${data.order_id}`
+    const acquired = acquireWebhookLock(lockKey)
+    if (!acquired) {
+      console.log(`[Sumopod Webhook] Webhook untuk transaksi "${lockKey}" sedang diproses serentak. Mengabaikan eksekusi duplikat.`)
+      return {
+        success: true,
+        message: 'Transaksi sedang diproses secara paralel (Idempotent concurrency guard).'
+      }
+    }
+
     const adminAppwrite = useAdminAppwrite()
 
     try {
-      const user = await adminAppwrite.getUser(userId)
-      const currentPrefs = user.prefs || {}
-      const currentPoints = typeof currentPrefs.points === 'number'
-        ? currentPrefs.points
-        : Number(currentPrefs.points) || 0
-
-      // Check for Idempotency (prevent duplicate credit if webhook is retried)
-      const rawHistory = Array.isArray(currentPrefs.pointHistory)
-        ? currentPrefs.pointHistory
-        : []
-
-      const isAlreadyProcessed = rawHistory.some((tx: Record<string, unknown>) => {
-        return tx.id === data.payment_id || tx.orderId === data.order_id
-      })
-
-      if (isAlreadyProcessed) {
-        console.log(`[Sumopod Webhook] Payment "${data.payment_id}" / order "${data.order_id}" already processed. Skipping duplicate.`)
+      // 1. Cek idempotensi ke tabel point_transactions di database (mencegah batas 50 riwayat)
+      const existingDbTx = await adminAppwrite.findPointTransaction(data.payment_id, data.order_id)
+      if (existingDbTx) {
+        console.log(`[Sumopod Webhook] Payment "${data.payment_id}" / order "${data.order_id}" sudah terdaftar di database. Melewati duplikat.`)
         return {
           success: true,
-          message: 'Transaksi sudah pernah diproses sebelumnya (Idempotent).'
+          message: 'Transaksi sudah pernah diproses sebelumnya di database (Idempotent).'
         }
       }
 
-      const addPoints = Math.round(Number(data.amount))
-      const newPoints = currentPoints + addPoints
+      // 2. Jalankan pembaruan saldo dengan mutex user lock
+      return await withUserLock(userId, async () => {
+        const user = await adminAppwrite.getUser(userId)
+        const currentPrefs = user.prefs || {}
+        const currentPoints = typeof currentPrefs.points === 'number'
+          ? currentPrefs.points
+          : Number(currentPrefs.points) || 0
 
-      const methodLabel = (data.payment_method || 'QRIS').toUpperCase()
-      const txRecord = {
-        id: data.payment_id,
-        orderId: data.order_id,
-        userId,
-        userEmail: user.email || '',
-        userName: user.name || '',
-        type: 'topup',
-        amount: addPoints,
-        balanceBefore: currentPoints,
-        balanceAfter: newPoints,
-        notes: `Top up otomatis via ${methodLabel} (${data.order_id})`,
-        createdAt: data.completed_at || new Date().toISOString()
-      }
+        // Cek riwayat lokal dan daftar processedPaymentIds
+        const rawHistory = Array.isArray(currentPrefs.pointHistory)
+          ? currentPrefs.pointHistory
+          : []
+        const processedIds = Array.isArray(currentPrefs.processedPaymentIds)
+          ? currentPrefs.processedPaymentIds as string[]
+          : []
 
-      const updatedHistory = [txRecord, ...rawHistory].slice(0, 50)
-      const updatedPrefs = {
-        ...currentPrefs,
-        points: newPoints,
-        pointHistory: updatedHistory
-      }
+        const isAlreadyProcessed = processedIds.includes(data.payment_id)
+          || processedIds.includes(data.order_id)
+          || rawHistory.some((tx: Record<string, unknown>) => tx.id === data.payment_id || tx.orderId === data.order_id)
 
-      await adminAppwrite.updatePrefs(userId, updatedPrefs)
-      await adminAppwrite.recordPointTransaction(txRecord)
+        if (isAlreadyProcessed) {
+          console.log(`[Sumopod Webhook] Payment "${data.payment_id}" / order "${data.order_id}" sudah pernah diproses pada preferensi akun. Melewati duplikat.`)
+          return {
+            success: true,
+            message: 'Transaksi sudah pernah diproses sebelumnya (Idempotent).'
+          }
+        }
 
-      console.log(`[Sumopod Webhook] Successfully added ${addPoints} points to user ${userId} (${user.email}). New points: ${newPoints}`)
+        const addPoints = Math.round(Number(data.amount))
+        const newPoints = currentPoints + addPoints
 
-      return {
-        success: true,
-        message: `Saldo ${addPoints} poin berhasil ditambahkan ke akun pengguna.`,
-        points: newPoints,
-        order_id: data.order_id
-      }
+        const methodLabel = (data.payment_method || 'QRIS').toUpperCase()
+        const txRecord = {
+          id: data.payment_id,
+          orderId: data.order_id,
+          userId,
+          userEmail: user.email || '',
+          userName: user.name || '',
+          type: 'topup',
+          amount: addPoints,
+          balanceBefore: currentPoints,
+          balanceAfter: newPoints,
+          notes: `Top up otomatis via ${methodLabel} (${data.order_id})`,
+          createdAt: data.completed_at || new Date().toISOString()
+        }
+
+        const updatedHistory = [txRecord, ...rawHistory].slice(0, 100)
+        const updatedProcessedIds = [data.payment_id, data.order_id, ...processedIds].slice(0, 200)
+
+        const updatedPrefs = {
+          ...currentPrefs,
+          points: newPoints,
+          pointHistory: updatedHistory,
+          processedPaymentIds: updatedProcessedIds,
+          pointsUpdatedAt: new Date().toISOString()
+        }
+
+        await adminAppwrite.updatePrefs(userId, updatedPrefs)
+        await adminAppwrite.recordPointTransaction(txRecord)
+
+        console.log(`[Sumopod Webhook] Berhasil menambahkan ${addPoints} poin ke pengguna ${userId} (${user.email}). Saldo baru: ${newPoints}`)
+
+        return {
+          success: true,
+          message: `Saldo ${addPoints} poin berhasil ditambahkan ke akun pengguna.`,
+          points: newPoints,
+          order_id: data.order_id
+        }
+      })
     } catch (err: unknown) {
       const msg = err && typeof err === 'object' && 'message' in err
         ? String((err as { message: unknown }).message)
@@ -168,6 +202,8 @@ export default defineEventHandler(async (event) => {
         statusCode: 500,
         statusMessage: msg
       })
+    } finally {
+      releaseWebhookLock(lockKey)
     }
   }
 

@@ -146,7 +146,25 @@ export function verifySvixSignature(
   }
 
   try {
-    const secretBytes = Buffer.from(secret.replace('whsec_', ''), 'base64')
+    // 1. Validasi batas kedaluwarsa replay attack (jendela toleransi 5 menit)
+    const rawTime = parseInt(svixTimestamp, 10)
+    if (isNaN(rawTime)) {
+      console.warn('[Sumopod Webhook] svix-timestamp bukan angka yang valid:', svixTimestamp)
+      return false
+    }
+
+    const timestampMs = rawTime > 1e11 ? rawTime : rawTime * 1000
+    const nowMs = Date.now()
+    const toleranceMs = 5 * 60 * 1000 // 5 menit
+
+    if (Math.abs(nowMs - timestampMs) > toleranceMs) {
+      console.warn(`[Sumopod Webhook] svix-timestamp kedaluwarsa atau di luar batas toleransi 5 menit. Timestamp: ${timestampMs}, Server: ${nowMs}`)
+      return false
+    }
+
+    // 2. Hitung HMAC SHA-256 yang diharapkan
+    const secretClean = secret.startsWith('whsec_') ? secret.slice(6) : secret
+    const secretBytes = Buffer.from(secretClean, 'base64')
     const signedContent = `${svixId}.${svixTimestamp}.${rawBody}`
 
     const expectedSignature = crypto
@@ -154,10 +172,27 @@ export function verifySvixSignature(
       .update(signedContent)
       .digest('base64')
 
-    // svix-signature may contain multiple space-separated "v1,<sig>" values
-    // (this happens for ~24h after rotating the secret)
-    const signatures = svixSignature.split(' ').map(s => s.split(',')[1])
-    return signatures.includes(expectedSignature)
+    const expectedBuf = Buffer.from(expectedSignature, 'utf-8')
+
+    // 3. Ekstrak signature kandidat (mendukung format v1,<sig> dan rotasi secret berganda)
+    const signatures = svixSignature
+      .split(' ')
+      .map((s) => {
+        const parts = s.split(',')
+        return parts.length > 1 ? parts[1] : parts[0]
+      })
+      .filter((sig): sig is string => Boolean(sig))
+
+    // 4. Perbandingan waktu konstan (timingSafeEqual) untuk mencegah timing attack
+    const isMatch = signatures.some((candidate) => {
+      const candidateBuf = Buffer.from(candidate, 'utf-8')
+      if (candidateBuf.length !== expectedBuf.length) {
+        return false
+      }
+      return crypto.timingSafeEqual(candidateBuf, expectedBuf)
+    })
+
+    return isMatch
   } catch (err) {
     console.error('[Sumopod Webhook] Error verifying signature:', err)
     return false
