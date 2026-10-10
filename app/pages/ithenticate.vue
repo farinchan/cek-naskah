@@ -29,6 +29,7 @@ useSchemaOrg([
 
 // Composables
 const { user } = useAuth()
+const { getWhatsappUrl } = useAppSettings()
 const { userPoints, openTopupModal, deductPoints, rupiahToPoints } = usePoints()
 const { services, fetchServices } = useServices()
 const {
@@ -44,6 +45,10 @@ const {
 } = useManuscripts()
 
 const isDeductingPoints = ref(false)
+
+const whatsappOrderUrl = computed(() => {
+  return getWhatsappUrl('Halo Admin Cek Naskah, saya ingin cek plagiarisme iThenticate lebih cepat via WhatsApp')
+})
 
 // Active Tab: 'upload' | 'history'
 const activeTab = ref<'upload' | 'history'>('upload')
@@ -394,6 +399,19 @@ const parseOptions = (raw?: string): ExcludeOptions => {
                   />
                   <span>Tarif: {{ currentService.price }} {{ currentService.unit }}</span>
                 </div>
+
+                <a
+                  :href="whatsappOrderUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                >
+                  <UIcon
+                    name="i-simple-icons-whatsapp"
+                    class="w-3.5 h-3.5"
+                  />
+                  <span>Ingin Lebih Cepat? via WhatsApp</span>
+                </a>
               </div>
             </div>
           </div>
@@ -915,6 +933,29 @@ const parseOptions = (raw?: string): ExcludeOptions => {
                 />
                 <span>Isi Poin Terlebih Dahulu (Kurang 🪙 {{ pointsDeficit.toLocaleString('id-ID') }} Poin)</span>
               </button>
+
+              <!-- Tombol Ingin Lebih Cepat Langsung ke WhatsApp -->
+              <div class="pt-3 border-t border-slate-100 dark:border-neutral-800 text-center space-y-2">
+                <p class="text-xs text-slate-500 dark:text-neutral-400">
+                  Butuh hasil lebih cepat atau kendala saat mengunggah?
+                </p>
+                <a
+                  :href="whatsappOrderUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm font-bold transition-all shadow-2xs group"
+                >
+                  <UIcon
+                    name="i-simple-icons-whatsapp"
+                    class="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform"
+                  />
+                  <span>Ingin Lebih Cepat? Bisa Langsung ke WhatsApp</span>
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
+                  />
+                </a>
+              </div>
             </form>
           </div>
 
@@ -1052,18 +1093,30 @@ const parseOptions = (raw?: string): ExcludeOptions => {
                 </div>
               </div>
 
-              <!-- Security & Policy Guarantee Callout -->
-              <div class="rounded-2xl bg-slate-50 dark:bg-neutral-950 p-4 border border-slate-100 dark:border-neutral-800 space-y-2">
-                <div class="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+              <!-- Fast Track via WhatsApp Card -->
+              <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 space-y-2.5 text-xs">
+                <div class="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-200">
                   <UIcon
-                    name="i-lucide-shield-alert"
-                    class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                    name="i-simple-icons-whatsapp"
+                    class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0"
                   />
-                  <span>Jaminan Kerahasiaan 100%</span>
+                  <span>Ingin Lebih Cepat?</span>
                 </div>
-                <p class="text-[11px] text-slate-600 dark:text-neutral-400 leading-relaxed">
-                  Naskah tidak pernah disimpan ke repositori Turnitin maupun database publik. Saat naskah Anda diuji lagi di kampus atau penerbit jurnal, skor similarity index tidak akan bertambah.
+                <p class="text-[11px] text-emerald-800/90 dark:text-emerald-300 leading-relaxed">
+                  Bisa kirim naskah dan proses langsung via WhatsApp dengan respon cepat dari admin.
                 </p>
+                <a
+                  :href="whatsappOrderUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <UIcon
+                    name="i-simple-icons-whatsapp"
+                    class="w-3.5 h-3.5"
+                  />
+                  <span>Langsung ke WhatsApp</span>
+                </a>
               </div>
             </div>
           </div>

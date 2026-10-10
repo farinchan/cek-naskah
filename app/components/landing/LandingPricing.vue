@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ServicePlan } from '~/composables/useServices'
+
 const { getWhatsappUrl, fetchSettings } = useAppSettings()
 const { activeServices, fetchServices } = useServices()
 const { formatPriceToPoints } = usePoints()
@@ -10,10 +12,27 @@ onMounted(async () => {
   ])
 })
 
+const serviceWebRoutes: Record<string, string> = {
+  'turnitin-similarity': '/turnitin',
+  'turnitin-plagiarism': '/ithenticate',
+  'turnitin-ai': '/turnitin-ai'
+}
+
+const getServiceWebRoute = (serviceId: string): string | null => {
+  return serviceWebRoutes[serviceId] || null
+}
+
+const getServiceWaLink = (plan: ServicePlan) => {
+  if (plan.ctaLink && (plan.ctaLink.startsWith('https://wa.me') || plan.ctaLink.startsWith('https://api.whatsapp.com'))) {
+    return plan.ctaLink
+  }
+  return getWhatsappUrl(`Halo Admin Cek Naskah, saya ingin pesan layanan ${plan.name}`)
+}
+
 const pricingPlans = computed(() => {
   return activeServices.value.map(s => ({
     ...s,
-    ctaLink: s.ctaLink || getWhatsappUrl(`Halo Admin Cek Naskah, saya ingin pesan layanan ${s.name}`)
+    ctaLink: getServiceWaLink(s)
   }))
 })
 </script>
@@ -142,47 +161,68 @@ const pricingPlans = computed(() => {
             </ul>
           </div>
 
-          <!-- CTA Button -->
-          <button
+          <!-- CTA Action Buttons -->
+          <div
             v-if="!plan.active"
-            type="button"
-            disabled
-            class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
-            :class="plan.highlight
-              ? 'bg-white/30 text-white'
-              : 'bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400'"
+            class="pt-2"
           >
-            <span>Tidak Tersedia</span>
-            <UIcon
-              name="i-lucide-ban"
-              class="w-4 h-4"
-            />
-          </button>
-          <NuxtLink
-            v-else
-            :to="plan.ctaLink"
-            :target="plan.ctaLink && plan.ctaLink.startsWith('http') ? '_blank' : undefined"
-            :rel="plan.ctaLink && plan.ctaLink.startsWith('http') ? 'noopener noreferrer' : undefined"
-            class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-2"
-            :class="plan.highlight
-              ? 'bg-white text-primary-700 hover:bg-primary-50 shadow-md'
-              : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm shadow-primary-600/20'"
-          >
-            <span>{{ plan.ctaText }}</span>
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <button
+              type="button"
+              disabled
+              class="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-not-allowed opacity-60 flex items-center justify-center gap-2"
+              :class="plan.highlight
+                ? 'bg-white/30 text-white'
+                : 'bg-slate-200 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400'"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              <span>Tidak Tersedia</span>
+              <UIcon
+                name="i-lucide-ban"
+                class="w-4 h-4"
               />
-            </svg>
-          </NuxtLink>
+            </button>
+          </div>
+
+          <div
+            v-else
+            class="space-y-2 pt-2"
+          >
+            <!-- Tombol Via Web (Untuk service yang punya halaman khusus) -->
+            <NuxtLink
+              v-if="getServiceWebRoute(plan.id)"
+              :to="getServiceWebRoute(plan.id)!"
+              class="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-center transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+              :class="plan.highlight
+                ? 'bg-white text-primary-700 hover:bg-primary-50 shadow-md'
+                : 'bg-primary-600 hover:bg-primary-700 text-white shadow-sm shadow-primary-600/20'"
+            >
+              <UIcon
+                name="i-lucide-globe"
+                class="w-4 h-4 shrink-0"
+              />
+              <span>Pesan via Web</span>
+            </NuxtLink>
+
+            <!-- Tombol Via WhatsApp -->
+            <a
+              :href="getServiceWaLink(plan)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-2 border"
+              :class="plan.highlight
+                ? (getServiceWebRoute(plan.id)
+                  ? 'bg-primary-700/80 hover:bg-primary-700 text-white border-white/20'
+                  : 'bg-white text-primary-700 hover:bg-primary-50 shadow-md border-transparent')
+                : (getServiceWebRoute(plan.id)
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 border-transparent')"
+            >
+              <UIcon
+                name="i-simple-icons-whatsapp"
+                class="w-4 h-4 shrink-0"
+              />
+              <span>Pesan via WhatsApp</span>
+            </a>
+          </div>
         </div>
       </div>
 
