@@ -93,16 +93,16 @@ export async function notifyNewUserRegistration(data: NewUserNotificationData): 
 
   const lines = [
     '🔔 <b>REGISTRASI PENGGUNA BARU</b>',
-    '━━━━━━━━━━━━━━━━━━━━',
+    ' ',
     `<b>Nama:</b> ${nameText}`,
     `<b>Email:</b> ${emailText}`,
     `<b>WhatsApp:</b> ${phoneText}`,
-    `${methodIcon} <b>Metode:</b> ${methodLabel}`,
+    `<b>Metode:</b> ${methodLabel}`,
     `<b>Waktu:</b> ${timeText}`
   ]
 
   if (data.userId) {
-    lines.push(`🆔 <b>ID Pengguna:</b> <code>${escapeHtml(data.userId)}</code>`)
+    lines.push(`<b>ID Pengguna:</b> <code>${escapeHtml(data.userId)}</code>`)
   }
 
   return await sendTelegramMessage(lines.join('\n'))
@@ -139,15 +139,15 @@ export async function notifyManuscriptSubmission(data: ManuscriptNotificationDat
 
   const lines = [
     '📄 <b>NASKAH BARU DIUNGGAH</b>',
-    '━━━━━━━━━━━━━━━━━━━━',
+    ' ',
     `<b>Judul:</b> ${titleText}`,
     `<b>Layanan:</b> ${serviceText}`,
     `<b>Biaya:</b> ${priceText}`,
-    '────────────────────',
+    ' ',
     `<b>Pengguna:</b> ${userNameText}`,
     `<b>Email:</b> ${userEmailText}`,
     `<b>WhatsApp:</b> ${phoneText}`,
-    '────────────────────',
+    ' ',
     `📎 <b>File:</b> ${fileNameText} ${fileSizeText}`
   ]
 
