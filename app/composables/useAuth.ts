@@ -250,16 +250,58 @@ export const useAuth = () => {
     }
   }
 
+  // Helper to completely purge Appwrite local fallback cookies, session tokens, and storage
+  const clearClientSessionStorage = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('cookieFallback')
+        localStorage.removeItem('oauth_redirect_path')
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i)
+          if (key && (key.startsWith('a_session') || key.includes('appwrite') || key.includes('cookieFallback'))) {
+            localStorage.removeItem(key)
+          }
+        }
+        sessionStorage.clear()
+      } catch {
+        // Ignore storage access errors
+      }
+
+      if (typeof document !== 'undefined') {
+        try {
+          const cookies = document.cookie.split(';')
+          for (const cookie of cookies) {
+            const eqPos = cookie.indexOf('=')
+            const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
+            if (name.startsWith('a_session') || name.includes('appwrite')) {
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`
+              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};`
+            }
+          }
+        } catch {
+          // Ignore cookie access errors
+        }
+      }
+    }
+  }
+
   // Logout
   const logout = async () => {
     loading.value = true
     clearMessages()
     try {
-      await account.deleteSession({ sessionId: 'current' })
+      try {
+        await account.deleteSession({ sessionId: 'current' })
+      } catch (sessionErr) {
+        console.warn('Appwrite session delete warning:', sessionErr)
+      }
       user.value = null
+      clearClientSessionStorage()
       success.value = 'Berhasil keluar dari akun.'
       return { success: true }
     } catch (err: unknown) {
+      user.value = null
+      clearClientSessionStorage()
       const formatted = formatError(err)
       error.value = formatted
       return { success: false, error: formatted }
@@ -273,6 +315,9 @@ export const useAuth = () => {
     loading.value = true
     clearMessages()
     try {
+      // Clear any stale local session before starting a fresh OAuth flow
+      clearClientSessionStorage()
+
       const origin = typeof window !== 'undefined'
         ? window.location.origin
         : 'http://localhost:3000'
@@ -679,9 +724,12 @@ export const useAuth = () => {
     try {
       await account.deleteSessions()
       user.value = null
+      clearClientSessionStorage()
       success.value = 'Semua sesi berhasil dihentikan. Anda telah keluar dari semua perangkat.'
       return { success: true }
     } catch (err: unknown) {
+      user.value = null
+      clearClientSessionStorage()
       const formatted = formatError(err)
       error.value = formatted
       return { success: false, error: formatted }
