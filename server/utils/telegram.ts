@@ -85,7 +85,6 @@ export interface NewUserNotificationData {
  */
 export async function notifyNewUserRegistration(data: NewUserNotificationData): Promise<boolean> {
   const methodLabel = data.method === 'google' ? 'Google OAuth' : 'Email & Password'
-  const methodIcon = data.method === 'google' ? '🌐' : '✉️'
   const phoneText = data.phone ? `<code>${escapeHtml(data.phone)}</code>` : '<i>(Belum diisi)</i>'
   const nameText = escapeHtml(data.name || 'Pengguna Baru')
   const emailText = escapeHtml(data.email)
@@ -164,6 +163,63 @@ export async function notifyManuscriptSubmission(data: ManuscriptNotificationDat
   }
 
   lines.push(`<b>Waktu:</b> ${timeText}`)
+
+  return await sendTelegramMessage(lines.join('\n'))
+}
+
+export interface TestimonialNotificationData {
+  userName: string
+  userEmail: string
+  userPhone?: string
+  userOccupation?: string
+  userAffiliation?: string
+  rating: number
+  comment: string
+  pointsAwarded: number
+  manuscriptTitle: string
+  serviceName: string
+}
+
+/**
+ * Sends a formatted Telegram notification when a user submits a review/testimonial.
+ */
+export async function notifyTestimonialSubmitted(data: TestimonialNotificationData): Promise<boolean> {
+  const stars = '⭐'.repeat(Math.max(1, Math.min(5, data.rating)))
+  const timeText = formatWibDate()
+  const bonusText = data.pointsAwarded > 0
+    ? `<b>Bonus Poin:</b> +${data.pointsAwarded.toLocaleString('id-ID')} Poin`
+    : '<b>Bonus Poin:</b> -'
+
+  const lines = [
+    '🌟 <b>TESTIMONI BARU DITERIMA</b>',
+    ' ',
+    `<b>Rating:</b> ${stars} (${data.rating}/5)`,
+    bonusText,
+    ' ',
+    `<b>Pengguna:</b> ${escapeHtml(data.userName || 'Pengguna')}`,
+    `<b>Email:</b> ${escapeHtml(data.userEmail || '')}`
+  ]
+
+  if (data.userPhone) {
+    lines.push(`<b>WhatsApp:</b> <code>${escapeHtml(data.userPhone)}</code>`)
+  }
+
+  if (data.userOccupation) {
+    lines.push(`<b>Profesi:</b> ${escapeHtml(data.userOccupation)}`)
+  }
+
+  if (data.userAffiliation) {
+    lines.push(`<b>Afiliasi/Kampus:</b> ${escapeHtml(data.userAffiliation)}`)
+  }
+
+  lines.push(
+    `<b>Naskah:</b> ${escapeHtml(data.manuscriptTitle || 'Naskah')}`,
+    `<b>Layanan:</b> ${escapeHtml(data.serviceName || 'Layanan')}`,
+    ' ',
+    '<b>Ulasan:</b>',
+    `<i>"${escapeHtml(data.comment)}"</i>`,
+    `<b>Waktu:</b> ${timeText}`
+  )
 
   return await sendTelegramMessage(lines.join('\n'))
 }

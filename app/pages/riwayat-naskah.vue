@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ManuscriptRow, ExcludeOptions } from '~/composables/useManuscripts'
 import { defaultExcludeOptions } from '~/composables/useManuscripts'
+import { OCCUPATION_OPTIONS } from '~/utils/rewards'
 
 useSeoMeta({
   title: 'Riwayat Naskah — Cek Naskah',
@@ -11,7 +12,7 @@ useSeoMeta({
 })
 
 // Composables
-const { user } = useAuth()
+const { user, fetchUser } = useAuth()
 const { services, fetchServices } = useServices()
 const {
   manuscripts,
@@ -20,6 +21,7 @@ const {
   getStatusBadge,
   fetchUserManuscripts
 } = useManuscripts()
+const { submitReview, calculateReviewPoints } = useTestimonials()
 
 // View State
 const viewMode = ref<'table' | 'cards'>('table')
@@ -31,11 +33,36 @@ const statusFilter = ref('all')
 const isDetailModalOpen = ref(false)
 const selectedManuscript = ref<ManuscriptRow | null>(null)
 
+// Review Modal State
+const isReviewModalOpen = ref(false)
+const isViewReviewModalOpen = ref(false)
+const reviewTarget = ref<ManuscriptRow | null>(null)
+const reviewRating = ref(5)
+const reviewHoverRating = ref(0)
+const reviewComment = ref('')
+const reviewOccupation = ref('')
+const reviewCustomOccupation = ref('')
+const reviewAffiliation = ref('')
+const isSubmittingReview = ref(false)
+const reviewError = ref<string | null>(null)
+const reviewSuccessMsg = ref<string | null>(null)
+const awardedPointsCelebration = ref<number | null>(null)
+
+// Live preview bonus reward
+const currentRewardPreview = computed(() => {
+  return calculateReviewPoints(reviewRating.value, reviewComment.value.trim().length)
+})
+
 // Custom Service Options interface for parsing JSON
 interface CustomServiceOptions {
   language?: string
   languageLabel?: string
   languageNative?: string
+  isReviewed?: boolean
+  reviewRating?: number
+  reviewPoints?: number
+  reviewComment?: string
+  reviewedAt?: string
   [key: string]: unknown
 }
 
@@ -54,6 +81,109 @@ const parseRawOptions = (raw?: string): CustomServiceOptions => {
     return JSON.parse(raw) as CustomServiceOptions
   } catch {
     return {}
+  }
+}
+
+const isReviewed = (item: ManuscriptRow): boolean => {
+  const opt = parseRawOptions(item.excludeOptions)
+  return Boolean(opt.isReviewed)
+}
+
+const getReviewData = (item: ManuscriptRow) => {
+  const opt = parseRawOptions(item.excludeOptions)
+  return {
+    isReviewed: Boolean(opt.isReviewed),
+    rating: Number(opt.reviewRating) || 5,
+    points: Number(opt.reviewPoints) || 0,
+    comment: String(opt.reviewComment || ''),
+    occupation: String(opt.reviewOccupation || ''),
+    affiliation: String(opt.reviewAffiliation || ''),
+    reviewedAt: String(opt.reviewedAt || '')
+  }
+}
+
+const openReviewModal = (item: ManuscriptRow) => {
+  reviewTarget.value = item
+  reviewRating.value = 5
+  reviewHoverRating.value = 0
+  reviewComment.value = ''
+  reviewError.value = null
+  reviewSuccessMsg.value = null
+  awardedPointsCelebration.value = null
+
+  // Pre-fill pekerjaan dan afiliasi dari preferensi akun user
+  const currentOcc = (user.value?.prefs?.pekerjaan as string) || ''
+  if (OCCUPATION_OPTIONS.includes(currentOcc)) {
+    reviewOccupation.value = currentOcc
+    reviewCustomOccupation.value = ''
+  } else if (currentOcc) {
+    reviewOccupation.value = 'Lainnya'
+    reviewCustomOccupation.value = currentOcc
+  } else {
+    reviewOccupation.value = ''
+    reviewCustomOccupation.value = ''
+  }
+
+  reviewAffiliation.value = (user.value?.prefs?.afiliasi as string) || (user.value?.prefs?.affiliasi as string) || ''
+
+  isReviewModalOpen.value = true
+}
+
+const openViewReviewModal = (item: ManuscriptRow) => {
+  reviewTarget.value = item
+  isViewReviewModalOpen.value = true
+}
+
+const handleSubmitReview = async () => {
+  if (!reviewTarget.value?.$id) return
+  const cleanComment = reviewComment.value.trim()
+
+  if (cleanComment.length < 15) {
+    reviewError.value = 'Mohon tulis ulasan minimal 15 karakter agar memberikan masukan yang bermanfaat.'
+    return
+  }
+
+  let finalOccupation = reviewOccupation.value.trim()
+  if (finalOccupation === 'Lainnya' && reviewCustomOccupation.value.trim()) {
+    finalOccupation = reviewCustomOccupation.value.trim()
+  }
+  const finalAffiliation = reviewAffiliation.value.trim()
+
+  isSubmittingReview.value = true
+  reviewError.value = null
+
+  const res = await submitReview({
+    manuscriptId: reviewTarget.value.$id,
+    rating: reviewRating.value,
+    comment: cleanComment,
+    occupation: finalOccupation,
+    affiliation: finalAffiliation
+  })
+
+  isSubmittingReview.value = false
+
+  if (res.success) {
+    awardedPointsCelebration.value = res.pointsAwarded
+    reviewSuccessMsg.value = res.message
+
+    // Perbarui data naskah lokal
+    const currentOpt = parseRawOptions(reviewTarget.value.excludeOptions)
+    const updatedOpt = {
+      ...currentOpt,
+      isReviewed: true,
+      reviewRating: reviewRating.value,
+      reviewPoints: res.pointsAwarded,
+      reviewComment: cleanComment,
+      reviewOccupation: finalOccupation,
+      reviewAffiliation: finalAffiliation,
+      reviewedAt: new Date().toISOString()
+    }
+    reviewTarget.value.excludeOptions = JSON.stringify(updatedOpt)
+
+    // Perbarui saldo poin & preferensi akun di antarmuka
+    await fetchUser()
+  } else {
+    reviewError.value = res.message
   }
 }
 
@@ -104,6 +234,134 @@ const getServiceMeta = (serviceId: string) => {
     badgeClass: 'bg-primary-100 text-primary-700 dark:bg-primary-950/60 dark:text-primary-300 border-primary-200 dark:border-primary-900',
     icon: 'i-lucide-file-text',
     isAi: false
+  }
+}
+
+interface SummaryParamsResult {
+  type: 'ai' | 'similarity'
+  items: string[]
+  label: string
+  flag?: string
+  badgeClass?: string
+}
+
+const getSummaryParams = (item: ManuscriptRow): SummaryParamsResult => {
+  if (item.serviceId === 'turnitin-ai') {
+    const raw = parseRawOptions(item.excludeOptions)
+    if (raw.language === 'en') {
+      return {
+        type: 'ai',
+        items: [],
+        label: 'English',
+        flag: '🇬🇧',
+        badgeClass: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-800/40'
+      }
+    }
+    if (raw.language === 'es') {
+      return {
+        type: 'ai',
+        items: [],
+        label: 'Español',
+        flag: '🇪🇸',
+        badgeClass: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-800/40'
+      }
+    }
+    if (raw.language === 'ja') {
+      return {
+        type: 'ai',
+        items: [],
+        label: '日本語',
+        flag: '🇯🇵',
+        badgeClass: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/40'
+      }
+    }
+    return {
+      type: 'ai',
+      items: [],
+      label: 'AI Engine',
+      flag: '🤖',
+      badgeClass: 'bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-700'
+    }
+  }
+
+  const opt = parseOptions(item.excludeOptions)
+  const items: string[] = []
+  if (opt.bibliography) items.push('Biblio')
+  if (opt.quotes) items.push('Quotes')
+  if (opt.abstract) items.push('Abstract')
+  if (opt.methodsAndMaterial) items.push('Methods')
+  if (opt.citations) items.push('Citations')
+  if (opt.smallMatches) items.push(`${opt.smallMatchesValue || 8}w`)
+
+  return {
+    type: 'similarity',
+    items,
+    label: items.length > 0 ? items.join(', ') : 'Standar'
+  }
+}
+
+const getScoreBadge = (scoreStr?: string, serviceId?: string) => {
+  if (!scoreStr) return null
+  const num = parseInt(scoreStr.replace(/[^0-9]/g, ''), 10)
+  const isAi = serviceId === 'turnitin-ai'
+
+  if (isNaN(num)) {
+    return {
+      text: scoreStr,
+      prefix: isAi ? 'AI: ' : 'Sim: ',
+      badgeClass: 'bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:text-neutral-300 border-slate-200 dark:border-neutral-700',
+      dotClass: 'bg-slate-400'
+    }
+  }
+
+  // Plagiarism similarity rules
+  if (!isAi) {
+    if (num <= 15) {
+      return {
+        text: scoreStr,
+        prefix: 'Sim: ',
+        badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60',
+        dotClass: 'bg-emerald-500'
+      }
+    }
+    if (num <= 25) {
+      return {
+        text: scoreStr,
+        prefix: 'Sim: ',
+        badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60',
+        dotClass: 'bg-amber-500'
+      }
+    }
+    return {
+      text: scoreStr,
+      prefix: 'Sim: ',
+      badgeClass: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60',
+      dotClass: 'bg-rose-500'
+    }
+  }
+
+  // AI detector score rules
+  if (num <= 10) {
+    return {
+      text: scoreStr,
+      prefix: 'AI: ',
+      badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60',
+      dotClass: 'bg-emerald-500'
+    }
+  }
+  if (num <= 30) {
+    return {
+      text: scoreStr,
+      prefix: 'AI: ',
+      badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60',
+      dotClass: 'bg-amber-500'
+    }
+  }
+  return {
+    text: scoreStr,
+    prefix: 'AI: ',
+    badgeClass: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200/80 dark:border-rose-800/60',
+    dotClass: 'bg-rose-500'
   }
 }
 
@@ -566,212 +824,227 @@ const metrics = computed(() => {
           <!-- VIEW MODE 1: TABLE VIEW -->
           <div
             v-else-if="viewMode === 'table'"
-            class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden"
+            class="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 shadow-sm overflow-hidden"
           >
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr class="border-b border-slate-200 dark:border-neutral-800 bg-slate-50/75 dark:bg-neutral-950/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
-                    <th class="py-3.5 px-4">
-                      Naskah & ID
+                  <tr class="border-b border-slate-200/80 dark:border-neutral-800 bg-slate-50/90 dark:bg-neutral-950/60 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">
+                    <th class="py-3.5 px-4 font-bold">
+                      Naskah & Berkas
                     </th>
-                    <th class="py-3.5 px-4">
+                    <th class="py-3.5 px-4 font-bold">
                       Layanan
                     </th>
-                    <th class="py-3.5 px-4">
-                      Parameter / Bahasa
+                    <th class="py-3.5 px-4 font-bold">
+                      Parameter
                     </th>
-                    <th class="py-3.5 px-4">
+                    <th class="py-3.5 px-4 font-bold">
                       Status
                     </th>
-                    <th class="py-3.5 px-4">
+                    <th class="py-3.5 px-4 font-bold text-center">
                       Skor Hasil
                     </th>
-                    <th class="py-3.5 px-4">
-                      Laporan & File
+                    <th class="py-3.5 px-4 font-bold">
+                      Laporan Hasil
                     </th>
-                    <th class="py-3.5 px-4 text-right">
+                    <th class="py-3.5 px-4 font-bold">
+                      <div class="flex items-center gap-1.5">
+                        <span>Ulasan</span>
+                        <UTooltip text="Beri ulasan pengalaman Anda dan dapatkan bonus saldo hingga 1.000 Poin!">
+                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-[10px] text-amber-700 dark:text-amber-300 font-extrabold normal-case cursor-help">
+                            <UIcon
+                              name="i-lucide-gift"
+                              class="w-3 h-3 text-amber-600 dark:text-amber-400"
+                            />
+                            <span>s/d 1.000 Poin</span>
+                          </span>
+                        </UTooltip>
+                      </div>
+                    </th>
+                    <th class="py-3.5 px-4 font-bold text-right">
                       Aksi
                     </th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800/80">
+                <tbody class="divide-y divide-slate-100 dark:divide-neutral-800/70">
                   <tr
                     v-for="item in filteredManuscripts"
                     :key="item.$id"
-                    class="hover:bg-slate-50/60 dark:hover:bg-neutral-800/40 transition-colors"
+                    class="group hover:bg-slate-50/70 dark:hover:bg-neutral-800/40 transition-colors"
                   >
-                    <!-- 1. Naskah & ID -->
-                    <td class="py-4 px-4 max-w-[240px]">
-                      <div class="space-y-1">
+                    <!-- 1. Naskah & Berkas -->
+                    <td class="py-4 px-4 min-w-[280px] max-w-[340px]">
+                      <div class="flex items-start gap-3">
                         <div
-                          class="font-bold text-slate-900 dark:text-white line-clamp-2"
-                          :title="item.title"
-                        >
-                          {{ item.title }}
-                        </div>
-                        <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
-                          <span class="font-mono text-[9px]">{{ item.$id }}</span>
-                          <span>•</span>
-                          <span>{{ formatDate(item.$createdAt) }}</span>
-                        </div>
-                        <div
-                          v-if="item.fileName"
-                          class="text-[11px] text-slate-500 dark:text-neutral-400 flex items-center gap-1 truncate"
+                          class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-neutral-800 flex items-center justify-center text-slate-500 dark:text-neutral-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-950/60 group-hover:text-primary-600 transition-colors shrink-0 mt-0.5"
+                          title="Klik judul untuk melihat rincian"
                         >
                           <UIcon
-                            name="i-lucide-file"
-                            class="w-3 h-3 shrink-0"
+                            name="i-lucide-file-text"
+                            class="w-5 h-5"
                           />
-                          <span class="truncate">{{ item.fileName }}</span>
-                          <span v-if="item.fileSize">({{ formatFileSize(item.fileSize) }})</span>
+                        </div>
+                        <div class="min-w-0 flex-1 space-y-1">
+                          <div
+                            class="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 hover:text-primary-600 transition-colors cursor-pointer"
+                            :title="item.title"
+                            @click="openDetailModal(item)"
+                          >
+                            {{ item.title }}
+                          </div>
+                          <div
+                            v-if="item.fileName"
+                            class="text-[11px] text-slate-500 dark:text-neutral-400 flex items-center gap-1.5 truncate"
+                          >
+                            <UIcon
+                              name="i-lucide-paperclip"
+                              class="w-3 h-3 text-slate-400 shrink-0"
+                            />
+                            <span class="truncate">{{ item.fileName }}</span>
+                            <span
+                              v-if="item.fileSize"
+                              class="text-[10px] text-slate-400 shrink-0"
+                            >({{ formatFileSize(item.fileSize) }})</span>
+                          </div>
+                          <div class="flex items-center gap-2 text-[10px] text-slate-400 pt-0.5">
+                            <span class="inline-flex items-center gap-1">
+                              <UIcon
+                                name="i-lucide-calendar"
+                                class="w-3 h-3 text-slate-400"
+                              />
+                              <span>{{ formatDate(item.$createdAt) }}</span>
+                            </span>
+                            <span>•</span>
+                            <span class="font-mono text-[9px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-neutral-800 text-slate-500">ID: {{ item.$id.slice(-6) }}</span>
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <!-- 2. Layanan -->
+                    <!-- 2. Layanan & Biaya -->
                     <td class="py-4 px-4 whitespace-nowrap">
                       <div class="space-y-1">
                         <span
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border"
+                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border"
                           :class="getServiceMeta(item.serviceId).badgeClass"
                         >
                           <UIcon
                             :name="getServiceMeta(item.serviceId).icon"
-                            class="w-3 h-3"
+                            class="w-3.5 h-3.5"
                           />
                           <span>{{ item.serviceName || getServiceMeta(item.serviceId).name }}</span>
                         </span>
                         <div
                           v-if="item.price"
-                          class="text-[10px] text-slate-400"
+                          class="text-[11px] text-slate-500 dark:text-neutral-400 font-medium pl-0.5"
                         >
-                          Biaya: {{ item.price }}
+                          {{ item.price }}
                         </div>
                       </div>
                     </td>
 
-                    <!-- 3. Parameter / Bahasa -->
-                    <td class="py-4 px-4 max-w-[180px]">
-                      <!-- Turnitin AI: Bahasa -->
+                    <!-- 3. Parameter -->
+                    <td class="py-4 px-4 min-w-[140px] max-w-[180px]">
+                      <!-- AI Engine -->
                       <div
-                        v-if="item.serviceId === 'turnitin-ai'"
-                        class="flex flex-wrap gap-1"
+                        v-if="getSummaryParams(item).type === 'ai'"
+                        class="flex items-center gap-1"
                       >
                         <span
-                          v-if="parseRawOptions(item.excludeOptions).language === 'en'"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40"
+                          class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border"
+                          :class="getSummaryParams(item).badgeClass"
                         >
-                          🇬🇧 English
-                        </span>
-                        <span
-                          v-else-if="parseRawOptions(item.excludeOptions).language === 'es'"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40"
-                        >
-                          🇪🇸 Español
-                        </span>
-                        <span
-                          v-else-if="parseRawOptions(item.excludeOptions).language === 'ja'"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40"
-                        >
-                          🇯🇵 日本語
-                        </span>
-                        <span
-                          v-else
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
-                        >
-                          AI Engine
+                          <span>{{ getSummaryParams(item).flag }}</span>
+                          <span>{{ getSummaryParams(item).label }}</span>
                         </span>
                       </div>
-
-                      <!-- Similarity Exclude Badges -->
+                      <!-- Similarity Filters -->
                       <div
                         v-else
-                        class="flex flex-wrap gap-1"
+                        class="space-y-1"
                       >
-                        <span
-                          v-if="parseOptions(item.excludeOptions).bibliography"
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
+                        <div
+                          v-if="getSummaryParams(item).items.length > 0"
+                          class="flex flex-wrap gap-1"
                         >
-                          Biblio
-                        </span>
+                          <span
+                            v-for="param in getSummaryParams(item).items.slice(0, 3)"
+                            :key="param"
+                            class="px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200/50 dark:border-neutral-700/50"
+                          >
+                            {{ param }}
+                          </span>
+                          <span
+                            v-if="getSummaryParams(item).items.length > 3"
+                            class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-neutral-800 text-slate-500"
+                            :title="getSummaryParams(item).label"
+                          >
+                            +{{ getSummaryParams(item).items.length - 3 }}
+                          </span>
+                        </div>
                         <span
-                          v-if="parseOptions(item.excludeOptions).quotes"
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
+                          v-else
+                          class="text-[11px] text-slate-400 italic"
                         >
-                          Quotes
-                        </span>
-                        <span
-                          v-if="parseOptions(item.excludeOptions).abstract"
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
-                        >
-                          Abstract
-                        </span>
-                        <span
-                          v-if="parseOptions(item.excludeOptions).methodsAndMaterial"
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
-                        >
-                          Methods
-                        </span>
-                        <span
-                          v-if="parseOptions(item.excludeOptions).citations"
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
-                        >
-                          Citations
-                        </span>
-                        <span
-                          v-if="parseOptions(item.excludeOptions).smallMatches"
-                          class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400"
-                        >
-                          Small ({{ parseOptions(item.excludeOptions).smallMatchesValue }}w)
+                          Standar
                         </span>
                       </div>
                     </td>
 
-                    <!-- 4. Status -->
+                    <!-- 4. Status Pengerjaan -->
                     <td class="py-4 px-4 whitespace-nowrap">
                       <span
-                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold"
                         :class="getStatusBadge(item.status).badgeClass"
                       >
                         <UIcon
                           :name="getStatusBadge(item.status).icon"
                           class="w-3.5 h-3.5"
+                          :class="{ 'animate-spin': item.status === 'processing' }"
                         />
                         <span>{{ getStatusBadge(item.status).label }}</span>
                       </span>
                     </td>
 
                     <!-- 5. Skor Hasil -->
-                    <td class="py-4 px-4 whitespace-nowrap">
-                      <div v-if="item.similarityScore">
+                    <td class="py-4 px-4 whitespace-nowrap text-center">
+                      <div
+                        v-if="getScoreBadge(item.similarityScore, item.serviceId)"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black border shadow-2xs"
+                        :class="getScoreBadge(item.similarityScore, item.serviceId)?.badgeClass"
+                      >
                         <span
-                          class="px-2 py-0.5 rounded-md text-[11px] font-extrabold border"
-                          :class="item.serviceId === 'turnitin-ai'
-                            ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-800'
-                            : 'bg-primary-50 dark:bg-primary-950/50 text-primary-800 dark:text-primary-200 border-primary-200 dark:border-primary-800'"
-                        >
-                          {{ item.serviceId === 'turnitin-ai' ? 'AI: ' : 'Sim: ' }}{{ item.similarityScore }}
-                        </span>
+                          class="w-2 h-2 rounded-full"
+                          :class="getScoreBadge(item.similarityScore, item.serviceId)?.dotClass"
+                        />
+                        <span>{{ getScoreBadge(item.similarityScore, item.serviceId)?.prefix }}{{ getScoreBadge(item.similarityScore, item.serviceId)?.text }}</span>
                       </div>
                       <div
                         v-else
-                        class="text-[11px] text-slate-400 italic"
+                        class="text-[11px] text-slate-400 italic flex items-center justify-center gap-1"
                       >
-                        {{ item.status === 'completed' ? '-' : 'Menunggu hasil' }}
+                        <span
+                          v-if="item.status === 'processing'"
+                          class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400"
+                        >
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                          <span>Diproses</span>
+                        </span>
+                        <span v-else>{{ item.status === 'completed' ? '-' : 'Menunggu hasil' }}</span>
                       </div>
                     </td>
 
-                    <!-- 6. Berkas / Unduhan Laporan -->
+                    <!-- 6. Laporan Hasil -->
                     <td class="py-4 px-4 whitespace-nowrap">
                       <div class="flex items-center gap-2">
-                        <!-- Unduh Laporan PDF Resmi (Jika Ada) -->
+                        <!-- Unduh Laporan PDF Hasil Resmi -->
                         <a
                           v-if="item.resultFileUrl"
                           :href="item.resultFileUrl"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-colors"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm hover:shadow-md transition-all"
                           title="Unduh laporan hasil resmi PDF"
                         >
                           <UIcon
@@ -780,6 +1053,12 @@ const metrics = computed(() => {
                           />
                           <span>Laporan PDF</span>
                         </a>
+                        <span
+                          v-else
+                          class="text-[11px] text-slate-400 italic"
+                        >
+                          {{ item.status === 'processing' ? 'Menunggu...' : '-' }}
+                        </span>
 
                         <!-- Unduh Naskah Asli -->
                         <a
@@ -787,7 +1066,7 @@ const metrics = computed(() => {
                           :href="item.fileUrl"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="p-1.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+                          class="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
                           title="Unduh naskah asli yang Anda kirim"
                         >
                           <UIcon
@@ -798,17 +1077,73 @@ const metrics = computed(() => {
                       </div>
                     </td>
 
-                    <!-- 7. Aksi -->
+                    <!-- 7. Ulasan & Poin (Kolom Baru) -->
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <!-- Belum review & Naskah selesai: Tombol Klaim Poin dengan Tooltip -->
+                      <div v-if="(item.resultFileUrl || item.status === 'completed') && !isReviewed(item)">
+                        <UTooltip text="Beri ulasan pengalaman Anda dan dapatkan bonus saldo gratis hingga 1.000 Poin!">
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs shadow-sm hover:shadow-md transition-all cursor-pointer animate-pulse"
+                            @click="openReviewModal(item)"
+                          >
+                            <UIcon
+                              name="i-lucide-gift"
+                              class="w-3.5 h-3.5"
+                            />
+                            <span>Ulas (+s/d 1.000 Poin)</span>
+                          </button>
+                        </UTooltip>
+                      </div>
+
+                      <!-- Sudah review: Badge Ulasan dengan Tooltip -->
+                      <div v-else-if="(item.resultFileUrl || item.status === 'completed') && isReviewed(item)">
+                        <UTooltip :text="`Ulasan Anda: ${getReviewData(item).rating}.0 Bintang (${getReviewData(item).points > 0 ? '+' + getReviewData(item).points.toLocaleString('id-ID') + ' Poin didapatkan' : 'Tanpa bonus'})`">
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 font-bold text-xs transition-colors cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                            @click="openViewReviewModal(item)"
+                          >
+                            <UIcon
+                              name="i-lucide-star"
+                              class="w-3.5 h-3.5 fill-current text-amber-500"
+                            />
+                            <span>⭐ {{ getReviewData(item).rating }}.0</span>
+                            <span
+                              v-if="getReviewData(item).points > 0"
+                              class="px-1.5 py-0.2 rounded text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black"
+                            >
+                              +{{ getReviewData(item).points }}
+                            </span>
+                          </button>
+                        </UTooltip>
+                      </div>
+
+                      <!-- Belum selesai: Keterangan terkunci dengan Tooltip -->
+                      <div v-else>
+                        <UTooltip text="Setelah naskah selesai diproses, Anda dapat memberikan ulasan untuk klaim saldo hingga 1.000 Poin.">
+                          <span class="inline-flex items-center gap-1 text-[11px] text-slate-400 italic cursor-help">
+                            <UIcon
+                              name="i-lucide-lock"
+                              class="w-3 h-3 text-slate-400"
+                            />
+                            <span>Tersedia setelah selesai</span>
+                          </span>
+                        </UTooltip>
+                      </div>
+                    </td>
+
+                    <!-- 8. Aksi -->
                     <td class="py-4 px-4 text-right whitespace-nowrap">
                       <button
                         type="button"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-                        title="Lihat rincian naskah"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 text-xs font-semibold text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:border-slate-300 dark:hover:border-neutral-700 transition-all cursor-pointer"
+                        title="Lihat rincian lengkap naskah"
                         @click="openDetailModal(item)"
                       >
                         <UIcon
                           name="i-lucide-info"
-                          class="w-3.5 h-3.5"
+                          class="w-3.5 h-3.5 text-primary-500"
                         />
                         <span>Rincian</span>
                       </button>
@@ -816,6 +1151,33 @@ const metrics = computed(() => {
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Footer Ringkasan Tabel -->
+            <div class="px-5 py-3.5 bg-slate-50/70 dark:bg-neutral-950/40 border-t border-slate-200/80 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-neutral-400">
+              <div class="flex items-center gap-2">
+                <span>Menampilkan <b>{{ filteredManuscripts.length }}</b> dari <b>{{ manuscripts.length }}</b> naskah</span>
+                <span
+                  v-if="filteredManuscripts.length < manuscripts.length"
+                  class="text-amber-600 dark:text-amber-400 font-medium"
+                >
+                  (Filter Aktif)
+                </span>
+              </div>
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 text-xs font-semibold text-slate-600 dark:text-neutral-300 transition-colors cursor-pointer"
+                  @click="fetchUserManuscripts()"
+                >
+                  <UIcon
+                    name="i-lucide-refresh-cw"
+                    class="w-3.5 h-3.5"
+                    :class="{ 'animate-spin': manuscriptsLoading }"
+                  />
+                  <span>Segarkan</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -926,6 +1288,41 @@ const metrics = computed(() => {
                     />
                     <span>Unduh Laporan</span>
                   </a>
+
+                  <!-- Review Button Card View with Tooltips -->
+                  <UTooltip
+                    v-if="(item.resultFileUrl || item.status === 'completed') && !isReviewed(item)"
+                    text="Beri ulasan pengalaman Anda dan dapatkan bonus saldo gratis hingga 1.000 Poin!"
+                  >
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer animate-pulse"
+                      @click="openReviewModal(item)"
+                    >
+                      <UIcon
+                        name="i-lucide-gift"
+                        class="w-3.5 h-3.5"
+                      />
+                      <span>Ulas (+s/d 1.000 Poin)</span>
+                    </button>
+                  </UTooltip>
+
+                  <UTooltip
+                    v-else-if="(item.resultFileUrl || item.status === 'completed') && isReviewed(item)"
+                    :text="`Ulasan Anda: ${getReviewData(item).rating}.0 Bintang (${getReviewData(item).points > 0 ? '+' + getReviewData(item).points.toLocaleString('id-ID') + ' Poin' : 'Tanpa bonus'})`"
+                  >
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 font-bold text-xs transition-colors cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                      @click="openViewReviewModal(item)"
+                    >
+                      <UIcon
+                        name="i-lucide-star"
+                        class="w-3.5 h-3.5 fill-current text-amber-500"
+                      />
+                      <span>⭐ {{ getReviewData(item).rating }}</span>
+                    </button>
+                  </UTooltip>
 
                   <a
                     v-if="item.fileUrl"
@@ -1128,6 +1525,32 @@ const metrics = computed(() => {
                 <span>Naskah Asli</span>
               </a>
 
+              <button
+                v-if="(selectedManuscript.resultFileUrl || selectedManuscript.status === 'completed') && !isReviewed(selectedManuscript)"
+                type="button"
+                class="py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                @click="openReviewModal(selectedManuscript); isDetailModalOpen = false"
+              >
+                <UIcon
+                  name="i-lucide-star"
+                  class="w-3.5 h-3.5 fill-current"
+                />
+                <span>Beri Review (+Poin)</span>
+              </button>
+
+              <button
+                v-else-if="(selectedManuscript.resultFileUrl || selectedManuscript.status === 'completed') && isReviewed(selectedManuscript)"
+                type="button"
+                class="py-2 px-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 font-bold text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                @click="openViewReviewModal(selectedManuscript); isDetailModalOpen = false"
+              >
+                <UIcon
+                  name="i-lucide-star"
+                  class="w-3.5 h-3.5 fill-current text-amber-500"
+                />
+                <span>Ulasan Anda (⭐ {{ getReviewData(selectedManuscript).rating }})</span>
+              </button>
+
               <a
                 v-if="selectedManuscript.resultFileUrl"
                 :href="selectedManuscript.resultFileUrl"
@@ -1142,6 +1565,410 @@ const metrics = computed(() => {
                 <span>Unduh Laporan PDF</span>
               </a>
             </div>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- MODAL FORM REVIEW & KLAIM POIN -->
+    <UModal
+      v-model:open="isReviewModalOpen"
+      :ui="{ content: 'sm:max-w-lg' }"
+    >
+      <template #content>
+        <div class="p-6 space-y-5">
+          <!-- Celebration State (Setelah Berhasil Kirim) -->
+          <div
+            v-if="awardedPointsCelebration !== null"
+            class="text-center py-6 space-y-4"
+          >
+            <div class="w-16 h-16 rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center mx-auto shadow-md shadow-amber-500/20">
+              <UIcon
+                name="i-lucide-sparkles"
+                class="w-8 h-8 fill-current"
+              />
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                Ulasan Berhasil Dikirim!
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-neutral-400 max-w-sm mx-auto">
+                Terima kasih telah berbagi pengalaman Anda. Ulasan Anda sangat berharga bagi sesama akademisi dan akan ditampilkan secara publik.
+              </p>
+            </div>
+
+            <!-- Reward Points Badge -->
+            <div
+              v-if="awardedPointsCelebration > 0"
+              class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 max-w-xs mx-auto space-y-1"
+            >
+              <div class="text-[11px] font-bold uppercase tracking-wider">
+                Bonus Poin Diterima
+              </div>
+              <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                +{{ awardedPointsCelebration.toLocaleString('id-ID') }} Poin
+              </div>
+              <div class="text-[10px] text-emerald-700/80 dark:text-emerald-300/80">
+                Saldo poin akun Anda telah otomatis bertambah!
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button
+                type="button"
+                class="px-6 py-2.5 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md shadow-primary-500/20 transition-all cursor-pointer"
+                @click="isReviewModalOpen = false"
+              >
+                Tutup & Selesai
+              </button>
+            </div>
+          </div>
+
+          <!-- Form Review State -->
+          <div
+            v-else
+            class="space-y-4"
+          >
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-500">
+                  <UIcon
+                    name="i-lucide-star"
+                    class="w-5 h-5 fill-current"
+                  />
+                </div>
+                <div>
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                    Beri Ulasan & Dapatkan Poin
+                  </h3>
+                  <p class="text-[11px] text-slate-500 dark:text-neutral-400">
+                    Naskah: {{ reviewTarget?.title }}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-neutral-800"
+                @click="isReviewModalOpen = false"
+              >
+                <UIcon
+                  name="i-lucide-x"
+                  class="w-4 h-4"
+                />
+              </button>
+            </div>
+
+            <!-- Notice Publik (Sesuai Aturan Kebutuhan) -->
+            <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2.5">
+              <UIcon
+                name="i-lucide-info"
+                class="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5"
+              />
+              <div class="space-y-0.5 leading-relaxed text-[11px]">
+                <span class="font-bold">Pemberitahuan Publik:</span>
+                <p>
+                  Ulasan, nama akun, dan rating bintang yang Anda kirimkan akan ditampilkan secara publik di halaman Testimoni & Beranda kami. Dokumen naskah Anda tetap 100% terjaga kerahasiaannya.
+                </p>
+              </div>
+            </div>
+
+            <!-- Identitas Akademik: Profesi & Afiliasi Kampus (Tersinkronisasi ke Profil Akun) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/80 dark:border-neutral-700/80">
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 dark:text-neutral-300 flex items-center gap-1">
+                  <UIcon
+                    name="i-lucide-briefcase"
+                    class="w-3.5 h-3.5 text-primary-500"
+                  />
+                  <span>Profesi / Pekerjaan:</span>
+                </label>
+                <select
+                  v-model="reviewOccupation"
+                  class="w-full py-2 px-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                >
+                  <option value="">
+                    -- Pilih Profesi / Jenjang --
+                  </option>
+                  <option
+                    v-for="opt in OCCUPATION_OPTIONS"
+                    :key="opt"
+                    :value="opt"
+                  >
+                    {{ opt }}
+                  </option>
+                </select>
+                <input
+                  v-if="reviewOccupation === 'Lainnya'"
+                  v-model="reviewCustomOccupation"
+                  type="text"
+                  placeholder="Ketik profesi Anda..."
+                  class="w-full mt-1.5 py-1.5 px-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                >
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 dark:text-neutral-300 flex items-center gap-1">
+                  <UIcon
+                    name="i-lucide-building-2"
+                    class="w-3.5 h-3.5 text-primary-500"
+                  />
+                  <span>Afiliasi / Kampus / Instansi:</span>
+                </label>
+                <input
+                  v-model="reviewAffiliation"
+                  type="text"
+                  placeholder="Contoh: Universitas Indonesia, ITB, BRIN..."
+                  class="w-full py-2 px-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 placeholder:text-slate-400"
+                >
+                <p class="text-[10px] text-slate-400 dark:text-neutral-500 leading-tight">
+                  Tampil pada kartu ulasan & otomatis tersimpan ke profil Anda.
+                </p>
+              </div>
+            </div>
+
+            <!-- Pemilihan Bintang (Rating 1 - 5) -->
+            <div class="space-y-2">
+              <label class="text-xs font-bold text-slate-700 dark:text-neutral-300 block">
+                Tingkat Kepuasan Layanan:
+              </label>
+              <div
+                class="flex items-center gap-2 flex-wrap"
+                @mouseleave="reviewHoverRating = 0"
+              >
+                <div class="flex items-center gap-1">
+                  <button
+                    v-for="star in 5"
+                    :key="star"
+                    type="button"
+                    class="p-1 rounded-xl hover:scale-110 transition-transform cursor-pointer focus:outline-hidden"
+                    @click="reviewRating = star"
+                    @mouseenter="reviewHoverRating = star"
+                  >
+                    <!-- Bintang Terisi (Solid Filled) -->
+                    <svg
+                      v-if="star <= (reviewHoverRating || reviewRating)"
+                      class="w-7 h-7 text-amber-400 fill-amber-400 drop-shadow-xs"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+
+                    <!-- Bintang Kosong (Outline) -->
+                    <svg
+                      v-else
+                      class="w-7 h-7 text-slate-300 dark:text-neutral-700 hover:text-amber-300 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Keterangan Kepuasan (Tanpa Bintang Emoji) -->
+                <span class="ml-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                  {{ (reviewHoverRating || reviewRating) === 5 ? 'Sangat Puas' : (reviewHoverRating || reviewRating) === 4 ? 'Puas' : (reviewHoverRating || reviewRating) === 3 ? 'Cukup' : (reviewHoverRating || reviewRating) === 2 ? 'Kurang Puas' : 'Sangat Kecewa' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Teks Review -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <label class="font-bold text-slate-700 dark:text-neutral-300">
+                  Ulasan & Pengalaman Anda:
+                </label>
+                <span
+                  class="font-mono text-[11px]"
+                  :class="reviewComment.trim().length >= 15 ? 'text-slate-500' : 'text-amber-600 dark:text-amber-400'"
+                >
+                  {{ reviewComment.trim().length }} / 2.500 karakter
+                </span>
+              </div>
+              <textarea
+                v-model="reviewComment"
+                rows="4"
+                placeholder="Ceritakan pengalaman Anda terkait kecepatan proses, keakuratan laporan Turnitin/iThenticate, maupun pelayanan admin kami..."
+                class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-neutral-800/80 border border-slate-200 dark:border-neutral-700 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all leading-relaxed placeholder:text-slate-400"
+              />
+            </div>
+
+            <!-- Live Reward Points Gamification Indicator -->
+            <div class="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-xs space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <UIcon
+                    name="i-lucide-gift"
+                    class="w-3.5 h-3.5"
+                  />
+                  <span>{{ currentRewardPreview.tierName }}</span>
+                </span>
+                <span
+                  v-if="currentRewardPreview.points > 0"
+                  class="px-2 py-0.5 rounded-md font-black text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                >
+                  +{{ currentRewardPreview.points.toLocaleString('id-ID') }} Poin
+                </span>
+                <span
+                  v-else
+                  class="text-[10px] text-slate-400"
+                >
+                  Tanpa Poin
+                </span>
+              </div>
+              <p
+                v-if="currentRewardPreview.nextTierHint"
+                class="text-[11px] text-amber-700 dark:text-amber-400 font-medium"
+              >
+                💡 {{ currentRewardPreview.nextTierHint }}
+              </p>
+            </div>
+
+            <!-- Error Feedback -->
+            <div
+              v-if="reviewError"
+              class="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400 flex items-center gap-2"
+            >
+              <UIcon
+                name="i-lucide-alert-circle"
+                class="w-4 h-4 shrink-0"
+              />
+              <span>{{ reviewError }}</span>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+                @click="isReviewModalOpen = false"
+              >
+                Batal
+              </button>
+
+              <button
+                type="button"
+                :disabled="isSubmittingReview || reviewComment.trim().length < 15"
+                class="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs shadow-md shadow-primary-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                @click="handleSubmitReview()"
+              >
+                <UIcon
+                  v-if="isSubmittingReview"
+                  name="i-lucide-loader-2"
+                  class="w-3.5 h-3.5 animate-spin"
+                />
+                <UIcon
+                  v-else
+                  name="i-lucide-send"
+                  class="w-3.5 h-3.5"
+                />
+                <span>Kirim Ulasan & Klaim Poin</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- MODAL LIHAT ULASAN SAYA -->
+    <UModal
+      v-model:open="isViewReviewModalOpen"
+      :ui="{ content: 'sm:max-w-md' }"
+    >
+      <template #content>
+        <div
+          v-if="reviewTarget"
+          class="p-6 space-y-4"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-500">
+                <UIcon
+                  name="i-lucide-star"
+                  class="w-5 h-5 fill-current"
+                />
+              </div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                Ulasan Anda
+              </h3>
+            </div>
+            <button
+              type="button"
+              class="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-neutral-800"
+              @click="isViewReviewModalOpen = false"
+            >
+              <UIcon
+                name="i-lucide-x"
+                class="w-4 h-4"
+              />
+            </button>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-850 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1">
+                <svg
+                  v-for="s in 5"
+                  :key="s"
+                  class="w-4 h-4 fill-current"
+                  :class="s <= getReviewData(reviewTarget).rating ? 'text-amber-400' : 'text-slate-300 dark:text-neutral-700'"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span class="ml-1 text-xs font-bold text-slate-900 dark:text-white">
+                  {{ getReviewData(reviewTarget).rating }}.0
+                </span>
+              </div>
+              <span
+                v-if="getReviewData(reviewTarget).points > 0"
+                class="px-2 py-0.5 rounded-md font-bold text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+              >
+                +{{ getReviewData(reviewTarget).points.toLocaleString('id-ID') }} Poin Diterima
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              Naskah: <b>{{ reviewTarget.title }}</b>
+            </div>
+            <div
+              v-if="getReviewData(reviewTarget).occupation || getReviewData(reviewTarget).affiliation"
+              class="text-[11px] text-primary-600 dark:text-primary-400 font-medium pt-0.5"
+            >
+              💼 {{ [getReviewData(reviewTarget).occupation, getReviewData(reviewTarget).affiliation].filter(Boolean).join(' • ') }}
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-700 dark:text-neutral-300">Isi Testimoni:</label>
+            <div class="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 text-xs text-slate-700 dark:text-neutral-200 italic leading-relaxed whitespace-pre-line">
+              "{{ getReviewData(reviewTarget).comment || 'Ulasan telah terkirim.' }}"
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2">
+            <UIcon
+              name="i-lucide-check-circle"
+              class="w-4 h-4 shrink-0 text-blue-500"
+            />
+            <span>Testimoni ini telah terverifikasi dan aktif di halaman publik.</span>
+          </div>
+
+          <div class="flex justify-end pt-1">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 font-bold text-xs"
+              @click="isViewReviewModalOpen = false"
+            >
+              Tutup
+            </button>
           </div>
         </div>
       </template>

@@ -37,6 +37,12 @@ const navItems: NavItem[] = [
     icon: 'i-lucide-file-text'
   },
   {
+    id: 'testimonials',
+    label: 'Testimoni & Review',
+    to: '/admin/testimonials',
+    icon: 'i-lucide-message-square-quote'
+  },
+  {
     id: 'stats',
     label: 'Statistik & Log',
     icon: 'i-lucide-bar-chart-3',

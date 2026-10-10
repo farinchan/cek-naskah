@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const { getWhatsappUrl } = useAppSettings()
+const { publicTestimonials, fetchPublicTestimonials } = useTestimonials()
+
+await useAsyncData('testimony_page_list', () => fetchPublicTestimonials())
 
 useSeoMeta({
   title: 'Testimoni Klien Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia — Cek Naskah',
@@ -27,116 +30,35 @@ useSchemaOrg([
   })
 ])
 
-const testimonials = [
-  {
-    name: 'Dr. Hendra Pratama, M.Si',
-    role: 'Dosen & Peneliti',
-    campus: 'Universitas Indonesia',
-    category: 'Cek Plagiarisme',
-    service: 'iThenticate / Turnitin No-Repo',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-    quote: 'Cek plagiarisme iThenticate di sini sangat memuaskan. Prosesnya cepat dan yang paling penting garansi no-repository membuat kami tenang saat mengirimkan draft naskah jurnal internasional sebelum proses peer review.'
-  },
-  {
-    name: 'Anisa Rahmawati, S.T., M.T.',
-    role: 'Kandidat Doktor Teknik Elektro',
-    campus: 'Institut Teknologi Bandung',
-    category: 'AI Writer Detector',
-    service: 'Turnitin AI Writing Score',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-    quote: 'Fitur AI Writer Detector Turnitin sangat presisi mendeteksi kalimat rawan false-positive pada naskah disertasi saya. Highlight per paragrafnya membuat saya tahu persis bagian mana yang perlu diperbaiki kalimatnya.'
-  },
-  {
-    name: 'Prof. Dr. Ir. Bambang Wijaya',
-    role: 'Guru Besar Fakultas Teknik',
-    campus: 'Universitas Gadjah Mada',
-    category: 'Ambil Artikel Scopus',
-    service: 'Jurnal Scopus Q1 Full-Text',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80',
-    quote: 'Layanan ambil artikel Scopus sangat memudahkan tim riset kami mengunduh literatur Elsevier dan IEEE yang terkunci paywall, lengkap dengan metadata sitasi RIS untuk Mendeley. Sangat menghemat waktu riset kami.'
-  },
-  {
-    name: 'Rian Hidayat, M.Pd',
-    role: 'Author Jurnal Sinta 2',
-    campus: 'Universitas Negeri Malang',
-    category: 'Parafrase Manual',
-    service: 'Parafrase Tim Editor S2/S3',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
-    quote: 'Layanan Parafrase Manual sukses menurunkan skor kemiripan naskah saya dari 36% menjadi 11% tanpa merubah konteks teori dan istilah ilmiah baku. Tim editor benar-benar manusia akademisi yang paham EYD V, bukan bot spinner abal-abal.'
-  },
-  {
-    name: 'drg. Fitri Lestari, Sp.KG',
-    role: 'Peneliti Spesialis Konservasi Gigi',
-    campus: 'Universitas Airlangga',
-    category: 'Cek Plagiarisme',
-    service: 'Turnitin Similarity Report',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&auto=format&fit=crop&q=80',
-    quote: 'Hasil uji Turnitin keluar tepat waktu di jam fast response. Dokumen PDF rapi dengan kode warna per sumber. Pelayanan customer care via WhatsApp sangat ramah, santun, dan langsung tanggap saat kami butuh penjelasan.'
-  },
-  {
-    name: 'Muhammad Fajar, S.Ked',
-    role: 'Dokter Muda / Mahasiswa Profesi',
-    campus: 'Universitas Diponegoro',
-    category: 'AI Writer Detector',
-    service: 'Deteksi AI Writer',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80',
-    quote: 'Naskah tinjauan pustaka saya sempat dicurigai dosen pembimbing karena gaya bahasa terlalu kaku. Setelah dicek dengan AI Detector Turnitin di Cek Naskah, kami tahu kalimat mana saja yang ambigu dan berhasil merevisinya sampai lolos 4%.'
-  },
-  {
-    name: 'Dr. Dian Kusuma, S.E., M.M.',
-    role: 'Dosen Manajemen Keuangan',
-    campus: 'Universitas Padjadjaran',
-    category: 'Parafrase Manual',
-    service: 'Parafrase Naskah Disertasi',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
-    quote: 'Editor Cek Naskah sangat memahami istilah teknis perbankan dan ekonometrika. Kalimat disusun ulang dengan variasi struktur kalimat aktif-pasif yang elegan. Hasilnya langsung disetujui promotor tanpa revisi plagiasi lanjutan.'
-  },
-  {
-    name: 'Nadia Putri Utami, S.Kom',
-    role: 'Lulusan Ilmu Komputer',
-    campus: 'Universitas Brawijaya',
-    category: 'Cek Plagiarisme',
-    service: 'Garansi No-Repository',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-    quote: 'Garansi 100% No-Repository benar-benar terbukti nyata! Ketika naskah skripsi saya diunggah ulang ke Turnitin resmi perpustakaan kampus dua hari kemudian, skor similarity tetap sama dan tidak menjadi 100%. Sangat terpercaya!'
-  },
-  {
-    name: 'Ir. Ahmad Syarifuddin, Ph.D',
-    role: 'Peneliti Bidang Energi Terbarukan',
-    campus: 'Institut Teknologi Sepuluh Nopember',
-    category: 'Ambil Artikel Scopus',
-    service: 'Scopus Q1 Springer & Wiley',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&auto=format&fit=crop&q=80',
-    quote: 'Bantuan legalitas pengunduhan paper internasional dari Springer dan Wiley sangat cepat. File PDF beresolusi tajam lengkap dengan metadata BibTeX. Layanan ini sangat membantu riset publikasi kami di jurnal internasional bereputasi.'
-  },
-  {
-    name: 'Siti Nurhaliza, S.Farm., Apt.',
-    role: 'Mahasiswi Magister Farmasi Bahan Alam',
-    campus: 'Universitas Andalas',
-    category: 'Parafrase Manual',
-    service: 'Parafrase Manual Tesis',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80',
-    quote: 'Sebelumnya saya ragu memakai jasa parafrase karena takut maknanya berubah. Tapi di Cek Naskah, nama latin tanaman obat dan metode ekstraksi tetap terjaga utuh. Skor kemiripan turun drastis dan saya bisa daftar sidang tepat waktu.'
-  },
-  {
-    name: 'Wahyu Pratama, S.H., M.H.',
-    role: 'Peneliti Hukum Agraria',
-    campus: 'Universitas Hasanuddin',
-    category: 'Cek Plagiarisme',
-    service: 'Cek Turnitin Mahasiswa S2',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
-    quote: 'Laporan similarity report berformat PDF berwarna yang diberikan sangat detail. Pasal undang-undang dan rujukan putusan mahkamah teridentifikasi dengan jelas. Sangat transparan dan profesional.'
-  },
-  {
-    name: 'Kevin Sanjaya, M.T.',
-    role: 'Author Konferensi Internasional',
-    campus: 'Telkom University',
-    category: 'AI Writer Detector',
-    service: 'Evaluasi Turnitin AI',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
-    quote: 'Laporan deteksi AI dilengkapi persentase dan highlight spesifik per baris teks. Setelah merevisi bagian yang disorot, paper kami akhirnya lolos seleksi reviewer konferensi IEEE tanpa catatan AI.'
-  }
-]
+interface TestimonyCard {
+  name: string
+  role: string
+  campus: string
+  category: string
+  service: string
+  avatar: string
+  quote: string
+  rating?: number
+}
+
+const displayTestimonials = computed<TestimonyCard[]>(() => {
+  return (publicTestimonials.value || []).map(t => ({
+    name: t.userName || 'Klien Cek Naskah',
+    role: t.userOccupation || 'Civitas Akademika',
+    campus: t.userAffiliation || t.serviceName || 'Cek Naskah',
+    category: t.serviceName || 'Review Naskah',
+    service: t.manuscriptTitle || 'Pemeriksaan Naskah',
+    rating: t.rating || 5,
+    avatar: t.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.userName || 'U')}&background=4F46E5&color=fff`,
+    quote: t.comment
+  }))
+})
+
+const averageRating = computed(() => {
+  if (publicTestimonials.value.length === 0) return '5.0'
+  const total = publicTestimonials.value.reduce((acc, t) => acc + (t.rating || 5), 0)
+  return (total / publicTestimonials.value.length).toFixed(1)
+})
 </script>
 
 <template>
@@ -164,7 +86,7 @@ const testimonials = [
                 ★
               </div>
               <div>
-                <span class="block text-base font-black text-slate-900 dark:text-white">4.9 / 5.0</span>
+                <span class="block text-base font-black text-slate-900 dark:text-white">{{ averageRating }} / 5.0</span>
                 <span class="block text-xs text-slate-500 dark:text-neutral-400">Tingkat Kepuasan</span>
               </div>
             </div>
@@ -195,10 +117,32 @@ const testimonials = [
       <!-- Main Testimonials with Masonry Layout -->
       <section class="py-16 sm:py-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <!-- Empty State -->
+          <div
+            v-if="displayTestimonials.length === 0"
+            class="text-center py-16 bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200/80 dark:border-neutral-800 p-8 max-w-md mx-auto"
+          >
+            <div class="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto mb-4">
+              <UIcon
+                name="i-lucide-message-square-quote"
+                class="w-8 h-8"
+              />
+            </div>
+            <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2">
+              Belum Ada Ulasan
+            </h3>
+            <p class="text-sm text-slate-500 dark:text-neutral-400">
+              Ulasan pengguna yang telah terverifikasi akan segera ditampilkan di sini.
+            </p>
+          </div>
+
           <!-- Masonry Grid Layout via CSS Columns -->
-          <div class="columns-1 sm:columns-2 lg:columns-3 gap-6 [column-fill:_balance]">
+          <div
+            v-else
+            class="columns-1 sm:columns-2 lg:columns-3 gap-6 [column-fill:_balance]"
+          >
             <div
-              v-for="(item, idx) in testimonials"
+              v-for="(item, idx) in displayTestimonials"
               :key="idx"
               class="break-inside-avoid mb-6 p-6 sm:p-7 rounded-3xl bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 shadow-sm hover:shadow-md hover:border-primary-300 dark:hover:border-primary-800 transition-all duration-300 flex flex-col justify-between"
             >
@@ -208,8 +152,12 @@ const testimonials = [
                   <span class="px-2.5 py-1 bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 rounded-lg text-xs font-semibold">
                     {{ item.category }}
                   </span>
-                  <div class="flex text-amber-400 text-sm tracking-widest">
-                    ★★★★★
+                  <div class="flex items-center gap-0.5 text-amber-400 text-xs">
+                    <span
+                      v-for="star in 5"
+                      :key="star"
+                      :class="star <= (item.rating || 5) ? 'text-amber-400' : 'text-slate-300 dark:text-neutral-700'"
+                    >★</span>
                   </div>
                 </div>
 

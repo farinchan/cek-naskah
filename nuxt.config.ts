@@ -44,6 +44,7 @@ export default defineNuxtConfig({
       appwriteTableServices: process.env.APPWRITE_TABLE_SERVICES || 'services',
       appwriteTableManuscripts: process.env.APPWRITE_TABLE_MANUSCRIPTS || process.env.APPWRITE_TABLE_NASKAH || 'naskah',
       appwriteTablePointTransactions: process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions',
+      appwriteTableTestimonials: process.env.APPWRITE_TABLE_TESTIMONIALS || 'testimonials',
       appwriteBucketNaskah: process.env.APPWRITE_BUCKET_NASKAH || process.env.APPWRITE_BUCKET_MANUSCRIPTS || 'naskah'
     }
   },

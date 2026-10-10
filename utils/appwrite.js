@@ -32,6 +32,10 @@ export const APPWRITE_BUCKET_NASKAH = import.meta.env?.APPWRITE_BUCKET_NASKAH
   || (typeof process !== 'undefined' && process.env?.APPWRITE_BUCKET_NASKAH)
   || 'naskah'
 
+export const APPWRITE_TABLE_TESTIMONIALS = import.meta.env?.APPWRITE_TABLE_TESTIMONIALS
+  || (typeof process !== 'undefined' && process.env?.APPWRITE_TABLE_TESTIMONIALS)
+  || 'testimonials'
+
 export const client = new Client()
   .setEndpoint(endpoint)
   .setProject(projectId)

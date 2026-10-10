@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { Query } from 'appwrite'
 
 export interface AppwriteAdminUser {
   $id: string
@@ -325,10 +326,10 @@ export function useAdminAppwrite() {
       try {
         const queries: string[] = []
         if (paymentId) {
-          queries.push(`equal("id", ["${paymentId}"])`)
+          queries.push(Query.equal('id', paymentId))
         }
         if (orderId) {
-          queries.push(`equal("orderId", ["${orderId}"])`)
+          queries.push(Query.equal('orderId', orderId))
         }
 
         const queryParams = queries.map(q => `queries[]=${encodeURIComponent(q)}`).join('&')
@@ -346,6 +347,123 @@ export function useAdminAppwrite() {
       } catch {
         return null
       }
+    },
+
+    async getManuscriptRow(rowId: string) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = (config.public?.appwriteTableManuscripts as string) || process.env.APPWRITE_TABLE_MANUSCRIPTS || 'naskah'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey
+      }
+
+      return await $fetch<Record<string, unknown>>(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, {
+        method: 'GET',
+        headers: requestHeaders
+      })
+    },
+
+    async updateManuscriptRow(rowId: string, data: Record<string, unknown>) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = (config.public?.appwriteTableManuscripts as string) || process.env.APPWRITE_TABLE_MANUSCRIPTS || 'naskah'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey,
+        'content-type': 'application/json'
+      }
+
+      return await $fetch<Record<string, unknown>>(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, {
+        method: 'PATCH',
+        headers: requestHeaders,
+        body: {
+          data
+        }
+      })
+    },
+
+    async createTestimonialRow(data: Record<string, unknown>) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = (config.public?.appwriteTableTestimonials as string) || process.env.APPWRITE_TABLE_TESTIMONIALS || 'testimonials'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey,
+        'content-type': 'application/json'
+      }
+
+      return await $fetch<Record<string, unknown>>(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows`, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: {
+          rowId: 'unique()',
+          data
+        }
+      })
+    },
+
+    async listTestimonialRows(queries: string[] = []) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = (config.public?.appwriteTableTestimonials as string) || process.env.APPWRITE_TABLE_TESTIMONIALS || 'testimonials'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey
+      }
+
+      try {
+        const queryParams = queries.map(q => `queries[]=${encodeURIComponent(q)}`).join('&')
+        const url = `${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows${queryParams ? '?' + queryParams : ''}`
+
+        return await $fetch<{ total: number, rows: Array<Record<string, unknown>> }>(url, {
+          method: 'GET',
+          headers: requestHeaders
+        })
+      } catch (err: unknown) {
+        console.warn(`[Testimonial] Database table '${tableId}' list notice:`, (err as { message?: string })?.message || err)
+        return { total: 0, rows: [] }
+      }
+    },
+
+    async updateTestimonialRow(rowId: string, data: Record<string, unknown>) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = (config.public?.appwriteTableTestimonials as string) || process.env.APPWRITE_TABLE_TESTIMONIALS || 'testimonials'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey,
+        'content-type': 'application/json'
+      }
+
+      return await $fetch<Record<string, unknown>>(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, {
+        method: 'PATCH',
+        headers: requestHeaders,
+        body: {
+          data
+        }
+      })
+    },
+
+    async deleteTestimonialRow(rowId: string) {
+      const config = useRuntimeConfig()
+      const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
+      const tableId = (config.public?.appwriteTableTestimonials as string) || process.env.APPWRITE_TABLE_TESTIMONIALS || 'testimonials'
+
+      const requestHeaders: Record<string, string> = {
+        'x-appwrite-project': projectId,
+        'x-appwrite-key': apiKey
+      }
+
+      return await $fetch(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows/${rowId}`, {
+        method: 'DELETE',
+        headers: requestHeaders
+      })
     }
   }
 }

@@ -12,47 +12,25 @@ const scrollCarousel = (direction: 'prev' | 'next') => {
   })
 }
 
-const testimonials = [
-  {
-    name: 'Dr. Hendra Pratama, M.Si',
-    role: 'Dosen & Peneliti, Universitas Indonesia',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-    quote: '"Cek plagiarisme iThenticate di sini sangat memuaskan, prosesnya cepat dan yang paling penting garansi no-repository membuat kami tenang saat mengirimkan draft naskah jurnal."',
-    bgClass: 'bg-primary-50 dark:bg-primary-900/20'
-  },
-  {
-    name: 'Anisa Rahmawati, S.T., M.T.',
-    role: 'Kandidat Doktor, ITB Bandung',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-    quote: '"Fitur AI Writer Detector Turnitin sangat presisi mendeteksi kalimat rawan AI pada naskah tesis saya. Rekomendasi perbaikannya sangat membantu!"',
-    bgClass: 'bg-slate-100 dark:bg-neutral-800'
-  },
-  {
-    name: 'Prof. Dr. Ir. Bambang Wijaya',
-    role: 'Guru Besar, Universitas Gadjah Mada',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-    quote: '"Layanan ambil artikel Scopus sangat memudahkan tim riset kami mengunduh literatur Q1 yang terkunci paywall secara cepat dan lengkap dengan metadata sitasi."',
-    bgClass: 'bg-primary-50 dark:bg-primary-900/20'
-  },
-  {
-    name: 'Rian Hidayat, M.Pd',
-    role: 'Author Jurnal Sinta 2, Universitas Negeri Malang',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-    quote: '"Layanan Parafrase Manual sukses menurunkan skor kemiripan naskah saya dari 36% menjadi 12% tanpa merubah konteks dan istilah ilmiah. Luar biasa profesional."',
-    bgClass: 'bg-slate-100 dark:bg-neutral-800'
-  },
-  {
-    name: 'drg. Fitri Lestari, Sp.KG',
-    role: 'Peneliti Biomedis, Universitas Airlangga',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80',
-    quote: '"Hasil uji Turnitin dan AI detector keluar kurang dari 15 menit. Dokumen PDF rapi dan customer care via WhatsApp sangat ramah dan sigap membantu."',
-    bgClass: 'bg-primary-50 dark:bg-primary-900/20'
-  }
-]
+const { publicTestimonials, fetchPublicTestimonials } = useTestimonials()
+
+await useAsyncData('landing_testimonials_list', () => fetchPublicTestimonials())
+
+const displayTestimonials = computed(() => {
+  return (publicTestimonials.value || []).map((t, idx) => ({
+    name: t.userName || 'Klien Cek Naskah',
+    role: [t.userOccupation, t.userAffiliation].filter(Boolean).join(' • ') || t.serviceName || 'Pengguna Terverifikasi',
+    avatar: t.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.userName || 'U')}&background=4F46E5&color=fff`,
+    quote: `"${t.comment}"`,
+    rating: t.rating || 5,
+    bgClass: idx % 2 === 0 ? 'bg-primary-50 dark:bg-primary-900/20' : 'bg-slate-100 dark:bg-neutral-800'
+  }))
+})
 </script>
 
 <template>
   <section
+    v-if="displayTestimonials.length > 0"
     id="_testimonial_shaped_cards_v6_t28_001"
     class="py-20 sm:py-24 bg-white dark:bg-neutral-950"
   >
@@ -78,7 +56,7 @@ const testimonials = [
           style="scrollbar-width: none;"
         >
           <div
-            v-for="(item, index) in testimonials"
+            v-for="(item, index) in displayTestimonials"
             :key="index"
             class="shrink-0 w-[320px] sm:w-[360px] p-6 rounded-3xl transition-transform hover:-translate-y-1 duration-300"
             :class="item.bgClass"
@@ -101,12 +79,13 @@ const testimonials = [
             <p class="text-slate-700 dark:text-neutral-300 leading-relaxed mb-4">
               {{ item.quote }}
             </p>
-            <!-- 5 Stars -->
-            <div class="flex gap-1 text-primary-500">
+            <!-- Rating Stars -->
+            <div class="flex gap-1">
               <svg
                 v-for="star in 5"
                 :key="star"
                 class="w-4 h-4 fill-current"
+                :class="star <= (item.rating || 5) ? 'text-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-neutral-700'"
                 viewBox="0 0 20 20"
               >
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
