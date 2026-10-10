@@ -152,6 +152,24 @@ export default defineEventHandler(async (event) => {
       // Ignored if table not setup
     }
 
+    // Kirim notifikasi Telegram ke administrator (non-blocking)
+    notifyManuscriptSubmission({
+      title: body.title.trim(),
+      serviceName: body.serviceName || 'Pemeriksaan Naskah',
+      price: body.price || 'Rp 0',
+      userName: authUser.name || 'Pengguna',
+      userEmail: authUser.email || '',
+      userPhone,
+      fileName: body.fileName || 'dokumen.docx',
+      fileSize: Number(body.fileSize) || 0,
+      fileUrl,
+      language: body.language || '',
+      userNotes: (body.userNotes || '').trim(),
+      transactionId: txId
+    }).catch((telErr) => {
+      console.error('[Telegram] Gagal mengirim notifikasi naskah:', telErr)
+    })
+
     return {
       success: true,
       manuscript: createdManuscript,

@@ -82,6 +82,22 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // 4. Kirim notifikasi Telegram untuk pendaftaran Google OAuth (idempotent)
+    if (!existingPrefs.telegramRegistrationNotified) {
+      updatedPrefs.telegramRegistrationNotified = true
+      await adminAppwrite.updatePrefs(authUser.$id, updatedPrefs)
+
+      notifyNewUserRegistration({
+        userId: authUser.$id,
+        name: (body.name && body.name.trim()) || authUser.name || 'Pengguna Google',
+        email: authUser.email || '',
+        phone: cleaned,
+        method: 'google'
+      }).catch((telErr) => {
+        console.error('[Telegram] Gagal mengirim notifikasi pendaftaran Google:', telErr)
+      })
+    }
+
     return {
       success: true,
       phone: cleaned,

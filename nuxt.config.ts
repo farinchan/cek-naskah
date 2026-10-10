@@ -32,6 +32,8 @@ export default defineNuxtConfig({
     sumopodPayEndpoint: process.env.SUMOPOD_PAY_ENDPOINT || 'https://api-pay-sandbox.sumopod.com/api/v1/payments',
     sumopodWebhookSecret: process.env.SUMOPOD_WEBHOOK_SECRET || '',
     sumopodWebhookToken: process.env.SUMOPOD_WEBHOOK_TOKEN || '',
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    telegramChatId: process.env.TELEGRAM_CHAT_ID || '',
     public: {
       googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
       googleAnalyticsId: process.env.GOOGLE_ANALYTICS_ID || '',

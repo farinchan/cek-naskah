@@ -176,6 +176,25 @@ export const useAuth = () => {
       const currentUser = await account.get<UserPreferences>()
       user.value = currentUser
 
+      // Kirim notifikasi Telegram untuk pendaftaran email baru (non-blocking)
+      try {
+        const { jwt } = await account.createJWT()
+        $fetch('/api/auth/notify-register', {
+          method: 'POST',
+          headers: {
+            'x-appwrite-jwt': jwt
+          },
+          body: {
+            method: 'email',
+            phone: phoneVal
+          }
+        }).catch((telErr) => {
+          console.warn('[Telegram] Gagal memicu notifikasi pendaftaran:', telErr)
+        })
+      } catch {
+        // Abaikan jika pembuatan JWT gagal
+      }
+
       if (settings.value.requireEmailVerification) {
         try {
           const origin = typeof window !== 'undefined'

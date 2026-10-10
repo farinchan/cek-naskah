@@ -57,6 +57,25 @@ onMounted(async () => {
         return
       }
 
+      // Jika user baru dan sudah memiliki nomor telepon, kirim notifikasi pendaftaran
+      if (isNewUser) {
+        try {
+          const { jwt } = await account.createJWT()
+          $fetch('/api/auth/notify-register', {
+            method: 'POST',
+            headers: {
+              'x-appwrite-jwt': jwt
+            },
+            body: {
+              method: 'google',
+              phone: existingPhone
+            }
+          }).catch(() => {})
+        } catch {
+          // Abaikan jika JWT gagal
+        }
+      }
+
       // Retrieve intended destination (sanitized against Open Redirect)
       let destination = '/'
       if (typeof window !== 'undefined') {
