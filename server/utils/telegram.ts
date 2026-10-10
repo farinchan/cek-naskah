@@ -65,9 +65,8 @@ export async function sendTelegramMessage(htmlText: string): Promise<boolean> {
 
     return Boolean(res?.ok)
   } catch (err: unknown) {
-    const errMsg = err && typeof err === 'object' && 'message' in err
-      ? String((err as { message: unknown }).message)
-      : String(err)
+    const fetchErr = err as { data?: { description?: string, error_code?: number }, message?: string }
+    const errMsg = fetchErr?.data?.description || fetchErr?.message || String(err)
     console.error('[Telegram Notification] Gagal mengirim pesan ke Telegram:', errMsg)
     return false
   }
@@ -95,11 +94,11 @@ export async function notifyNewUserRegistration(data: NewUserNotificationData): 
   const lines = [
     '🔔 <b>REGISTRASI PENGGUNA BARU</b>',
     '━━━━━━━━━━━━━━━━━━━━',
-    `👤 <b>Nama:</b> ${nameText}`,
-    `📧 <b>Email:</b> ${emailText}`,
-    `📱 <b>WhatsApp:</b> ${phoneText}`,
+    `<b>Nama:</b> ${nameText}`,
+    `<b>Email:</b> ${emailText}`,
+    `<b>WhatsApp:</b> ${phoneText}`,
     `${methodIcon} <b>Metode:</b> ${methodLabel}`,
-    `⏰ <b>Waktu:</b> ${timeText}`
+    `<b>Waktu:</b> ${timeText}`
   ]
 
   if (data.userId) {
@@ -141,30 +140,30 @@ export async function notifyManuscriptSubmission(data: ManuscriptNotificationDat
   const lines = [
     '📄 <b>NASKAH BARU DIUNGGAH</b>',
     '━━━━━━━━━━━━━━━━━━━━',
-    `📑 <b>Judul:</b> ${titleText}`,
-    `🛠 <b>Layanan:</b> ${serviceText}`,
-    `💰 <b>Biaya:</b> ${priceText}`,
+    `<b>Judul:</b> ${titleText}`,
+    `<b>Layanan:</b> ${serviceText}`,
+    `<b>Biaya:</b> ${priceText}`,
     '────────────────────',
-    `👤 <b>Pengguna:</b> ${userNameText}`,
-    `📧 <b>Email:</b> ${userEmailText}`,
-    `📱 <b>WhatsApp:</b> ${phoneText}`,
+    `<b>Pengguna:</b> ${userNameText}`,
+    `<b>Email:</b> ${userEmailText}`,
+    `<b>WhatsApp:</b> ${phoneText}`,
     '────────────────────',
     `📎 <b>File:</b> ${fileNameText} ${fileSizeText}`
   ]
 
   if (data.language) {
-    lines.push(`🌐 <b>Bahasa:</b> ${escapeHtml(data.language)}`)
+    lines.push(`<b>Bahasa:</b> ${escapeHtml(data.language)}`)
   }
 
   if (data.userNotes) {
-    lines.push(`📝 <b>Catatan:</b> <i>"${escapeHtml(data.userNotes)}"</i>`)
+    lines.push(`<b>Catatan:</b> <i>"${escapeHtml(data.userNotes)}"</i>`)
   }
 
   if (data.fileUrl) {
-    lines.push(`🔗 <b>Tautan Berkas:</b> <a href="${data.fileUrl}">Buka di Storage</a>`)
+    lines.push(`🔗 <b>Tautan Berkas:</b> <a href="${escapeHtml(data.fileUrl)}">Buka di Storage</a>`)
   }
 
-  lines.push(`⏰ <b>Waktu:</b> ${timeText}`)
+  lines.push(`<b>Waktu:</b> ${timeText}`)
 
   return await sendTelegramMessage(lines.join('\n'))
 }

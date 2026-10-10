@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const endpoint = (config.public.appwriteEndpoint as string) || 'https://sgp.cloud.appwrite.io/v1'
   const projectId = (config.public.appwriteProjectId as string) || '6a9e987200268817ec4c'
-  const bucketId = process.env.APPWRITE_BUCKET_MANUSCRIPTS || 'naskah-bucket'
+  const bucketId = (config.public?.appwriteBucketNaskah as string) || process.env.APPWRITE_BUCKET_NASKAH || process.env.APPWRITE_BUCKET_MANUSCRIPTS || 'naskah'
   const fileUrl = `${endpoint}/storage/buckets/${bucketId}/files/${body.fileId}/view?project=${projectId}`
 
   // 2. Eksekusi transaksi atomik dalam User Lock untuk mencegah partial failure & race conditions
@@ -88,6 +88,16 @@ export default defineEventHandler(async (event) => {
 
     // Siapkan data baris naskah
     const userPhone = user.phone || (user.prefs?.phone as string) || ''
+    const rawExclude = typeof body.excludeOptions === 'object' && body.excludeOptions
+      ? body.excludeOptions
+      : {}
+
+    const mergedExcludeOptions = {
+      ...rawExclude,
+      ...(body.language ? { language: body.language } : {}),
+      transactionId: txId
+    }
+
     const manuscriptData: Record<string, unknown> = {
       userId: authUser.$id,
       userName: authUser.name || 'Pengguna',
@@ -103,10 +113,8 @@ export default defineEventHandler(async (event) => {
       fileSize: Number(body.fileSize) || 0,
       fileType: body.fileType || 'application/octet-stream',
       fileUrl,
-      excludeOptions: JSON.stringify(body.excludeOptions || {}),
+      excludeOptions: JSON.stringify(mergedExcludeOptions),
       userNotes: (body.userNotes || '').trim(),
-      language: body.language || '',
-      transactionId: txId,
       similarityScore: '',
       resultFileId: '',
       resultFileName: '',
@@ -114,7 +122,7 @@ export default defineEventHandler(async (event) => {
       adminUploaderId: '',
       adminUploaderName: '',
       adminUploaderEmail: '',
-      adminNotes: ''
+      adminNotes: `Tx: ${txId}`
     }
 
     let createdManuscript: Record<string, unknown>

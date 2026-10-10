@@ -262,7 +262,7 @@ export function useAdminAppwrite() {
     }, jwt?: string) {
       const config = useRuntimeConfig()
       const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
-      const tableId = process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions'
+      const tableId = (config.public?.appwriteTablePointTransactions as string) || process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions'
 
       const requestHeaders: Record<string, string> = {
         'x-appwrite-project': projectId,
@@ -276,11 +276,11 @@ export function useAdminAppwrite() {
       }
 
       try {
-        return await $fetch(`${endpoint}/databases/${databaseId}/collections/${tableId}/documents`, {
+        return await $fetch(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows`, {
           method: 'POST',
           headers: requestHeaders,
           body: {
-            documentId: 'unique()',
+            rowId: 'unique()',
             data: tx
           }
         })
@@ -293,7 +293,7 @@ export function useAdminAppwrite() {
     async createManuscriptRow(data: Record<string, unknown>) {
       const config = useRuntimeConfig()
       const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
-      const tableId = process.env.APPWRITE_TABLE_MANUSCRIPTS || 'naskah'
+      const tableId = (config.public?.appwriteTableManuscripts as string) || process.env.APPWRITE_TABLE_MANUSCRIPTS || 'naskah'
 
       const requestHeaders: Record<string, string> = {
         'x-appwrite-project': projectId,
@@ -301,11 +301,11 @@ export function useAdminAppwrite() {
         'content-type': 'application/json'
       }
 
-      return await $fetch<Record<string, unknown>>(`${endpoint}/databases/${databaseId}/collections/${tableId}/documents`, {
+      return await $fetch<Record<string, unknown>>(`${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows`, {
         method: 'POST',
         headers: requestHeaders,
         body: {
-          documentId: 'unique()',
+          rowId: 'unique()',
           data
         }
       })
@@ -315,7 +315,7 @@ export function useAdminAppwrite() {
       if (!paymentId && !orderId) return null
       const config = useRuntimeConfig()
       const databaseId = (config.public?.appwriteDatabaseId as string) || '6a9f5bfb00026954d579'
-      const tableId = process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions'
+      const tableId = (config.public?.appwriteTablePointTransactions as string) || process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions'
 
       const requestHeaders: Record<string, string> = {
         'x-appwrite-project': projectId,
@@ -332,15 +332,15 @@ export function useAdminAppwrite() {
         }
 
         const queryParams = queries.map(q => `queries[]=${encodeURIComponent(q)}`).join('&')
-        const url = `${endpoint}/databases/${databaseId}/collections/${tableId}/documents${queryParams ? '?' + queryParams : ''}`
+        const url = `${endpoint}/tablesdb/${databaseId}/tables/${tableId}/rows${queryParams ? '?' + queryParams : ''}`
 
-        const res = await $fetch<{ total: number, documents: Array<Record<string, unknown>> }>(url, {
+        const res = await $fetch<{ total: number, rows: Array<Record<string, unknown>> }>(url, {
           method: 'GET',
           headers: requestHeaders
         })
 
-        if (res.total > 0 && res.documents.length > 0) {
-          return res.documents[0]
+        if (res.total > 0 && res.rows.length > 0) {
+          return res.rows[0]
         }
         return null
       } catch {

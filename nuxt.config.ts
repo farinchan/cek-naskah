@@ -41,7 +41,10 @@ export default defineNuxtConfig({
       appwriteProjectId: process.env.APPWRITE_PROJECT_ID || '6a9e987200268817ec4c',
       appwriteDatabaseId: process.env.APPWRITE_DATABASE_ID || '6a9f5bfb00026954d579',
       appwriteTableSettings: process.env.APPWRITE_TABLE_SETTINGS || 'settings',
-      appwriteTableServices: process.env.APPWRITE_TABLE_SERVICES || 'services'
+      appwriteTableServices: process.env.APPWRITE_TABLE_SERVICES || 'services',
+      appwriteTableManuscripts: process.env.APPWRITE_TABLE_MANUSCRIPTS || process.env.APPWRITE_TABLE_NASKAH || 'naskah',
+      appwriteTablePointTransactions: process.env.APPWRITE_TABLE_POINT_TRANSACTIONS || 'point_transactions',
+      appwriteBucketNaskah: process.env.APPWRITE_BUCKET_NASKAH || process.env.APPWRITE_BUCKET_MANUSCRIPTS || 'naskah'
     }
   },
 
