@@ -344,3 +344,55 @@ export async function notifyUserManuscriptResult(data: WhatsappResultData): Prom
 
   return res.success
 }
+
+export interface WhatsappWelcomeData {
+  userName: string
+  userPhone: string
+}
+
+/**
+ * Sends a welcome WhatsApp message to a newly registered user with platform service information.
+ */
+export async function sendWhatsappWelcomeMessage(data: WhatsappWelcomeData): Promise<boolean> {
+  const targetPhone = formatWhatsappChatId(data.userPhone)
+  if (!targetPhone) {
+    console.warn('[WhatsApp Welcome] Nomor telepon pengguna tidak valid, pesan sambutan dilewati.')
+    return false
+  }
+
+  const userName = data.userName || 'Sahabat'
+
+  const lines = [
+    `Halo Kak *${userName}*! 👋`,
+    '',
+    'Selamat datang dan terima kasih telah bergabung di *Cek Naskah* (cek-naskah.web.id) — Platform Pemeriksaan Plagiarisme & AI No. 1 di Indonesia.',
+    '',
+    'Berikut layanan unggulan yang siap membantu kelulusan & publikasi ilmiah Anda:',
+    '',
+    '*1. Cek Plagiarisme iThenticate Resmi*',
+    'Standar internasional penerbit jurnal terakreditasi, Sinta, Scopus, tesis, dan disertasi. 100% No-Repository (naskah Anda tidak tersimpan di database turnitin/iThenticate pusat).',
+    '',
+    '*2. Cek Plagiarisme Turnitin*',
+    'Pemeriksaan cepat untuk tugas akademik dan penelitian. 100% No-Repository (naskah Anda tidak tersimpan di database turnitin/iThenticate pusat).',
+    '',
+    '*3. Turnitin AI Writing Detector*',
+    'Deteksi probabilitas penulisan AI (ChatGPT, Claude, Gemini) dengan mesin resmi Turnitin AI.',
+    '',
+    '*4. Parafrase & Proofreading Naskah Akademik*',
+    'Bantuan penurunan persentase kesamaan dan perbaikan ejaan EYD V / PUEBI secara manual dan profesional.',
+    '',
+    '*Bonus Poin Pengguna:*',
+    'Setiap kali Anda memberikan ulasan setelah naskah selesai diperiksa, Anda akan mendapatkan *Bonus hingga 1.000 Poin* secara instan!',
+    '',
+    'Mulai cek naskah Anda sekarang di:',
+    '🌐 https://cek-naskah.web.id',
+    '',
+    'Jika membutuhkan panduan atau konsultasi, silakan hubungi tim kami kapan saja via WhatsApp ini.',
+    '',
+    'Salam sukses untuk publikasi ilmiah Anda! 🙏',
+    '_Tim Cek Naskah_'
+  ]
+
+  const res = await sendWhatsappText(targetPhone, lines.join('\n'))
+  return res.success
+}

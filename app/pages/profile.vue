@@ -304,7 +304,7 @@ const clearActionFeedback = () => {
 
 // Check if phone number is changed from the saved user phone
 const isPhoneChanged = computed(() => {
-  const currentPhone = user.value?.phone || ''
+  const currentPhone = user.value?.phone || (user.value?.prefs?.phone as string) || ''
   const trimmed = phoneInput.value.trim()
   if (!trimmed && !currentPhone) return false
   const formatted = formatE164Phone(trimmed)
@@ -315,7 +315,7 @@ const isPhoneChanged = computed(() => {
 const hasChanges = computed(() => {
   if (!user.value) return false
   const currentName = user.value.name || ''
-  const currentPhone = user.value.phone || ''
+  const currentPhone = user.value.phone || (user.value.prefs?.phone as string) || ''
   const currentOccupation = (user.value.prefs?.pekerjaan as string) || ''
   const currentAffiliation = (user.value.prefs?.afiliasi as string) || (user.value.prefs?.affiliasi as string) || ''
   const currentAvatar = savedAvatarUrl.value
@@ -339,7 +339,7 @@ const resetFormToUser = () => {
   clearActionFeedback()
   if (!user.value) return
   nameInput.value = user.value.name || ''
-  phoneInput.value = user.value.phone || ''
+  phoneInput.value = user.value.phone || (user.value.prefs?.phone as string) || ''
   phoneConfirmPassword.value = ''
 
   const currentOccupation = (user.value.prefs?.pekerjaan as string) || ''
@@ -471,7 +471,7 @@ const handleSaveProfile = async () => {
       actionError.value = 'Format nomor telepon tidak valid (contoh: 081234567890 atau +6281234567890).'
       return
     }
-    if (!phoneConfirmPassword.value) {
+    if (user.value.passwordUpdate && !phoneConfirmPassword.value) {
       actionError.value = 'Masukkan kata sandi akun Anda untuk mengonfirmasi perubahan nomor telepon resmi.'
       return
     }
@@ -1638,8 +1638,8 @@ const handleLogout = async () => {
                     </p>
                   </div>
 
-                  <!-- Kata Sandi untuk konfirmasi jika no. telepon diubah -->
-                  <div v-if="isPhoneChanged">
+                  <!-- Kata Sandi untuk konfirmasi jika no. telepon diubah (hanya bagi pengguna dengan kata sandi) -->
+                  <div v-if="isPhoneChanged && user?.passwordUpdate">
                     <label
                       for="phonePasswordConfirm"
                       class="block text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1"

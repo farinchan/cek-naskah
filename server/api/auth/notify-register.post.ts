@@ -13,31 +13,50 @@ export default defineEventHandler(async (event) => {
   try {
     const user = await adminAppwrite.getUser(authUser.$id)
     const currentPrefs = user.prefs || {}
+    const phone = (body?.phone || user.phone || (currentPrefs.phone as string) || '').trim()
 
     // Cek apakah notifikasi registrasi sudah pernah dikirimkan sebelumnya
-    if (currentPrefs.telegramRegistrationNotified) {
+    const shouldSendTelegram = !currentPrefs.telegramRegistrationNotified
+    const shouldSendWhatsapp = !currentPrefs.whatsappWelcomeNotified && !!phone
+
+    if (!shouldSendTelegram && !shouldSendWhatsapp) {
       return {
         success: true,
         alreadyNotified: true
       }
     }
 
+    const userName = authUser.name || user.name || 'Sahabat'
+
     // Tandai agar tidak dikirim ganda
     await adminAppwrite.updatePrefs(authUser.$id, {
       ...currentPrefs,
-      telegramRegistrationNotified: true
+      ...(shouldSendTelegram ? { telegramRegistrationNotified: true } : {}),
+      ...(shouldSendWhatsapp ? { whatsappWelcomeNotified: true } : {})
     })
-
-    const phone = (body?.phone || user.phone || (currentPrefs.phone as string) || '').trim()
 
     // Kirim notifikasi Telegram ke admin
-    await notifyNewUserRegistration({
-      userId: authUser.$id,
-      name: authUser.name || user.name || 'Pengguna Baru',
-      email: authUser.email || user.email || '',
-      phone,
-      method: body?.method === 'google' ? 'google' : 'email'
-    })
+    if (shouldSendTelegram) {
+      await notifyNewUserRegistration({
+        userId: authUser.$id,
+        name: userName,
+        email: authUser.email || user.email || '',
+        phone,
+        method: body?.method === 'google' ? 'google' : 'email'
+      }).catch((telErr) => {
+        console.error('[Telegram] Gagal mengirim notifikasi registrasi:', telErr)
+      })
+    }
+
+    // Kirim pesan sambutan WhatsApp ke pengguna baru dengan info layanan (non-blocking)
+    if (shouldSendWhatsapp) {
+      sendWhatsappWelcomeMessage({
+        userName,
+        userPhone: phone
+      }).catch((waErr) => {
+        console.warn('[WhatsApp] Gagal mengirim pesan sambutan registrasi:', waErr)
+      })
+    }
 
     return {
       success: true,

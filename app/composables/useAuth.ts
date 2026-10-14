@@ -150,7 +150,7 @@ export const useAuth = () => {
         password: passwordVal
       })
 
-      // Update user's official phone number using account.updatePhone
+      // Update user's phone number without conflict error
       if (phoneVal) {
         const formattedPhone = formatE164Phone(phoneVal)
         try {
@@ -159,24 +159,25 @@ export const useAuth = () => {
             password: passwordVal
           })
         } catch (phoneErr: unknown) {
-          console.warn('Gagal memperbarui nomor telepon akun:', phoneErr)
-          const phoneMsg = phoneErr && typeof phoneErr === 'object' && 'message' in phoneErr
-            ? String((phoneErr as { message: unknown }).message)
-            : ''
-          if (phoneMsg.includes('already exists') || phoneMsg.includes('user_phone_already_exists')) {
-            throw new Error('Nomor telepon ini sudah digunakan oleh akun lain.', { cause: phoneErr })
-          }
-          if (phoneMsg.includes('Invalid phone') || phoneMsg.includes('must be a valid') || phoneMsg.includes('user_phone_invalid')) {
-            throw new Error('Format nomor telepon tidak valid. Pastikan nomor diawali tanda + tanpa spasi (contoh: +6281234567890).', { cause: phoneErr })
-          }
-          throw phoneErr
+          console.warn('[Register] Appwrite account.updatePhone notice (disimpan ke preferensi):', phoneErr)
+        }
+
+        // Selalu simpan nomor telepon ke preferensi akun pengguna (bebas conflict)
+        try {
+          const currentPrefs = (await account.getPrefs<UserPreferences>()) || {}
+          await account.updatePrefs<UserPreferences>({
+            ...currentPrefs,
+            phone: formattedPhone
+          })
+        } catch (prefsErr) {
+          console.warn('[Register] Gagal update phone di prefs:', prefsErr)
         }
       }
 
       const currentUser = await account.get<UserPreferences>()
       user.value = currentUser
 
-      // Kirim notifikasi Telegram untuk pendaftaran email baru (non-blocking)
+      // Kirim notifikasi Telegram & pesan sambutan WhatsApp untuk pendaftaran baru (non-blocking)
       try {
         const { jwt } = await account.createJWT()
         $fetch('/api/auth/notify-register', {
@@ -186,10 +187,10 @@ export const useAuth = () => {
           },
           body: {
             method: 'email',
-            phone: phoneVal
+            phone: phoneVal ? formatE164Phone(phoneVal) : undefined
           }
         }).catch((telErr) => {
-          console.warn('[Telegram] Gagal memicu notifikasi pendaftaran:', telErr)
+          console.warn('[Register Notification] Gagal memicu notifikasi pendaftaran:', telErr)
         })
       } catch {
         // Abaikan jika pembuatan JWT gagal
@@ -443,18 +444,39 @@ export const useAuth = () => {
   }
 
   // Update Profile Phone
-  const updatePhone = async (phoneVal: string, passwordVal: string) => {
+  const updatePhone = async (phoneVal: string, passwordVal?: string) => {
     loading.value = true
     clearMessages()
     try {
       const formattedPhone = formatE164Phone(phoneVal)
-      const updated = await account.updatePhone<UserPreferences>({
-        phone: formattedPhone,
-        password: passwordVal
-      })
-      user.value = updated
+
+      // Coba perbarui telepon resmi di Appwrite Auth jika password tersedia
+      if (passwordVal) {
+        try {
+          await account.updatePhone<UserPreferences>({
+            phone: formattedPhone,
+            password: passwordVal
+          })
+        } catch (phoneErr: unknown) {
+          console.warn('[Profile] account.updatePhone notice (disimpan ke preferensi):', phoneErr)
+        }
+      }
+
+      // Selalu simpan ke preferensi akun pengguna (bebas conflict)
+      try {
+        const currentPrefs = (await account.getPrefs<UserPreferences>()) || {}
+        await account.updatePrefs<UserPreferences>({
+          ...currentPrefs,
+          phone: formattedPhone
+        })
+      } catch (prefsErr) {
+        console.warn('[Profile] Gagal update phone di prefs:', prefsErr)
+      }
+
+      const refreshedUser = await account.get<UserPreferences>()
+      user.value = refreshedUser
       success.value = 'Nomor telepon berhasil diperbarui.'
-      return { success: true, user: updated }
+      return { success: true, user: refreshedUser }
     } catch (err: unknown) {
       const formatted = formatError(err)
       error.value = formatted

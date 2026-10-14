@@ -55,10 +55,15 @@ export default defineEventHandler(async (event) => {
   const adminAppwrite = useAdminAppwrite()
 
   try {
-    // 1. Update official phone number in Appwrite Auth
-    const updatedUser = await adminAppwrite.updateUserPhone(authUser.$id, cleaned)
+    // 1. Coba perbarui nomor telepon resmi akun di Appwrite Auth jika belum dipakai
+    let updatedUser: AppwriteAdminUser | null = null
+    try {
+      updatedUser = await adminAppwrite.updateUserPhone(authUser.$id, cleaned)
+    } catch (phoneAuthErr) {
+      console.warn('[CompletePhone] Appwrite auth updateUserPhone notice (nomor tetap disimpan ke preferensi akun):', phoneAuthErr)
+    }
 
-    // 2. Update user preferences with phone and additional details
+    // 2. Simpan selalu nomor telepon dan data profil ke preferensi akun pengguna (bebas conflict)
     const existingPrefs = authUser.prefs || {}
     const updatedPrefs: Record<string, unknown> = {
       ...existingPrefs,
@@ -82,6 +87,8 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    const userName = (body.name && body.name.trim()) || authUser.name || 'Sahabat'
+
     // 4. Kirim notifikasi Telegram untuk pendaftaran Google OAuth (idempotent)
     if (!existingPrefs.telegramRegistrationNotified) {
       updatedPrefs.telegramRegistrationNotified = true
@@ -89,7 +96,7 @@ export default defineEventHandler(async (event) => {
 
       notifyNewUserRegistration({
         userId: authUser.$id,
-        name: (body.name && body.name.trim()) || authUser.name || 'Pengguna Google',
+        name: userName,
         email: authUser.email || '',
         phone: cleaned,
         method: 'google'
@@ -98,22 +105,28 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // 5. Kirim kata sambutan WhatsApp ke pengguna baru dengan info layanan (idempotent & non-blocking)
+    if (!existingPrefs.whatsappWelcomeNotified && cleaned) {
+      updatedPrefs.whatsappWelcomeNotified = true
+      await adminAppwrite.updatePrefs(authUser.$id, updatedPrefs)
+
+      sendWhatsappWelcomeMessage({
+        userName,
+        userPhone: cleaned
+      }).catch((waErr) => {
+        console.warn('[WhatsApp] Gagal mengirim pesan sambutan pendaftaran Google:', waErr)
+      })
+    }
+
     return {
       success: true,
       phone: cleaned,
-      user: updatedUser
+      user: updatedUser || { ...authUser, phone: cleaned }
     }
   } catch (err: unknown) {
     const msg = err && typeof err === 'object' && 'message' in err
       ? String((err as { message: unknown }).message)
       : ''
-
-    if (msg.includes('already exists') || msg.includes('user_phone_already_exists')) {
-      throw createError({
-        statusCode: 409,
-        statusMessage: 'Nomor telepon / WhatsApp ini sudah terdaftar pada akun lain. Silakan gunakan nomor lain.'
-      })
-    }
 
     if (msg.includes('Invalid phone') || msg.includes('phone must be a valid')) {
       throw createError({
