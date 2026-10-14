@@ -6,7 +6,8 @@ const { loading, error, success, clearMessages, resetPassword } = useAuth()
 
 useSeoMeta({
   title: 'Atur Ulang Kata Sandi — Cek Naskah',
-  description: 'Atur ulang kata sandi akun Cek Naskah Anda.'
+  description: 'Atur ulang kata sandi akun Cek Naskah Anda.',
+  robots: 'noindex, nofollow'
 })
 
 const userId = ref('')

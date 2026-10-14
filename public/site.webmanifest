@@ -1,0 +1,21 @@
+{
+  "name": "Cek Naskah",
+  "short_name": "Cek Naskah",
+  "description": "Platform Cek Plagiasi & AI No. 1 di Indonesia dengan garansi 100% No-Repository.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

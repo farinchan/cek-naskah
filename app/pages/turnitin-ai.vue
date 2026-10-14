@@ -9,9 +9,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id/turnitin-ai',
   ogImage: 'https://cek-naskah.web.id/logo.png',
+  ogImageAlt: 'AI Writer Detector Turnitin Resmi No-Repository — Cek Naskah',
   twitterCard: 'summary_large_image',
   twitterTitle: 'AI Writer Detector Turnitin — Cek Naskah',
-  twitterDescription: 'Deteksi skor resmi Turnitin AI writing akurat dan rahasia.'
+  twitterDescription: 'Deteksi skor resmi Turnitin AI writing akurat dan rahasia.',
+  twitterImage: 'https://cek-naskah.web.id/logo.png',
+  twitterImageAlt: 'AI Writer Detector Turnitin Resmi No-Repository — Cek Naskah'
 })
 
 useHead({
@@ -24,6 +27,12 @@ useSchemaOrg([
   defineWebPage({
     name: 'AI Writer Detector Turnitin — Cek Naskah',
     description: 'Layanan deteksi AI Turnitin resmi untuk bahasa Inggris, Spanyol, dan Jepang dengan skor resmi dan highlight teks.'
+  }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Beranda', item: '/' },
+      { name: 'AI Writer Detector Turnitin', item: '/turnitin-ai' }
+    ]
   })
 ])
 

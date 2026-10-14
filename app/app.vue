@@ -38,8 +38,10 @@ useHead({
     }
   ],
   link: [
+    { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
     { rel: 'icon', type: 'image/png', href: '/logo.png' },
-    { rel: 'apple-touch-icon', href: '/logo.png' }
+    { rel: 'apple-touch-icon', href: '/logo.png' },
+    { rel: 'manifest', href: '/site.webmanifest' }
   ],
   script: [
     ...(googleAnalyticsId.value

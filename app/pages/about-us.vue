@@ -9,9 +9,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id/about-us',
   ogImage: 'https://cek-naskah.web.id/logo.png',
+  ogImageAlt: 'Tentang Platform Cek Naskah Indonesia',
   twitterCard: 'summary_large_image',
   twitterTitle: 'Tentang Kami — Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia',
-  twitterDescription: 'Mengenal Cek Naskah: Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia untuk integritas karya ilmiah.'
+  twitterDescription: 'Mengenal Cek Naskah: Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia untuk integritas karya ilmiah.',
+  twitterImage: 'https://cek-naskah.web.id/logo.png',
+  twitterImageAlt: 'Tentang Platform Cek Naskah Indonesia'
 })
 
 useHead({
@@ -24,6 +27,12 @@ useSchemaOrg([
   defineWebPage({
     name: 'Tentang Kami — Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia',
     description: 'Profil dan standar integritas akademik Platform Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia.'
+  }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Beranda', item: '/' },
+      { name: 'Tentang Kami', item: '/about-us' }
+    ]
   })
 ])
 

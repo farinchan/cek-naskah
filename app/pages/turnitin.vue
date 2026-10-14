@@ -9,9 +9,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id/turnitin',
   ogImage: 'https://cek-naskah.web.id/logo.png',
+  ogImageAlt: 'Cek Plagiarisme Turnitin Resmi No-Repository — Cek Naskah',
   twitterCard: 'summary_large_image',
   twitterTitle: 'Cek Plagiarisme Turnitin — Cek Naskah',
-  twitterDescription: 'Unggah naskah dan dapatkan laporan resmi Turnitin No-Repository cepat dan akurat.'
+  twitterDescription: 'Unggah naskah dan dapatkan laporan resmi Turnitin No-Repository cepat dan akurat.',
+  twitterImage: 'https://cek-naskah.web.id/logo.png',
+  twitterImageAlt: 'Cek Plagiarisme Turnitin Resmi No-Repository — Cek Naskah'
 })
 
 useHead({
@@ -24,6 +27,12 @@ useSchemaOrg([
   defineWebPage({
     name: 'Cek Plagiarisme Turnitin — Cek Naskah',
     description: 'Layanan pemeriksaan similarity resmi Turnitin dengan kustomisasi exclude abstract, methods, bibliography, quotes, citations, dan small matches.'
+  }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Beranda', item: '/' },
+      { name: 'Cek Plagiarisme Turnitin', item: '/turnitin' }
+    ]
   })
 ])
 

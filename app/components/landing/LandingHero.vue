@@ -87,7 +87,10 @@
         <!-- Right Feature Cards - 4 Core Products -->
         <div class="lg:col-span-5 space-y-4">
           <!-- Product Card 1: Cek Plagiarisme iThenticate/Turnitin -->
-          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
+          <NuxtLink
+            to="/turnitin"
+            class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800 block cursor-pointer"
+          >
             <div class="flex items-start gap-4">
               <div class="w-11 h-11 rounded-xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
                 <img
@@ -97,7 +100,7 @@
                 >
               </div>
               <div>
-                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   Cek Plagiarisme iThenticate / Turnitin
                 </h3>
                 <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
@@ -105,10 +108,13 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- Product Card 2: AI Writer Detector Turnitin -->
-          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
+          <NuxtLink
+            to="/turnitin-ai"
+            class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800 block cursor-pointer"
+          >
             <div class="flex items-start gap-4">
               <div class="w-11 h-11 rounded-xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
                 <img
@@ -118,7 +124,7 @@
                 >
               </div>
               <div>
-                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   AI Writer Detector Turnitin
                 </h3>
                 <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
@@ -126,10 +132,13 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- Product Card 3: Ambil Artikel Scopus -->
-          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
+          <NuxtLink
+            to="/charge"
+            class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800 block cursor-pointer"
+          >
             <div class="flex items-start gap-4">
               <div class="w-11 h-11 rounded-xl bg-white dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 flex items-center justify-center shrink-0 p-1.5 shadow-2xs group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
                 <img
@@ -139,7 +148,7 @@
                 >
               </div>
               <div>
-                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   Ambil Artikel Scopus
                 </h3>
                 <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
@@ -147,10 +156,13 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- Product Card 4: Parafrase Manual -->
-          <div class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800">
+          <NuxtLink
+            to="/charge"
+            class="p-5 bg-slate-50 dark:bg-neutral-900 rounded-2xl group hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all duration-300 border border-slate-100 dark:border-neutral-800/80 hover:border-primary-200 dark:hover:border-primary-800 block cursor-pointer"
+          >
             <div class="flex items-start gap-4">
               <div class="w-11 h-11 rounded-xl bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center shrink-0 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
                 <svg
@@ -168,7 +180,7 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   Parafrase Manual
                 </h3>
                 <p class="text-slate-600 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">
@@ -176,7 +188,7 @@
                 </p>
               </div>
             </div>
-          </div>
+          </NuxtLink>
 
           <!-- Stats Row -->
           <div class="grid grid-cols-3 gap-3 pt-2">

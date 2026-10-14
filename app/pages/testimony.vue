@@ -12,9 +12,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id/testimony',
   ogImage: 'https://cek-naskah.web.id/logo.png',
+  ogImageAlt: 'Testimoni Klien Cek Naskah',
   twitterCard: 'summary_large_image',
   twitterTitle: 'Testimoni Cek Plagiasi & AI Turnitin/iThenticate No. 1 di Indonesia — Cek Naskah',
-  twitterDescription: 'Testimoni ribuan civitas akademika di Indonesia yang mempercayakan naskahnya kepada Cek Naskah.'
+  twitterDescription: 'Testimoni ribuan civitas akademika di Indonesia yang mempercayakan naskahnya kepada Cek Naskah.',
+  twitterImage: 'https://cek-naskah.web.id/logo.png',
+  twitterImageAlt: 'Testimoni Klien Cek Naskah'
 })
 
 useHead({
@@ -27,6 +30,12 @@ useSchemaOrg([
   defineWebPage({
     name: 'Testimoni Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia — Cek Naskah',
     description: 'Ulasan dan bukti kepuasan pengguna layanan Cek Plagiasi & AI Turnitin / iThenticate No. 1 di Indonesia.'
+  }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Beranda', item: '/' },
+      { name: 'Testimoni Klien', item: '/testimony' }
+    ]
   })
 ])
 

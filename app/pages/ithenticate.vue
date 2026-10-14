@@ -9,9 +9,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id/ithenticate',
   ogImage: 'https://cek-naskah.web.id/logo.png',
+  ogImageAlt: 'Cek Plagiarisme iThenticate Resmi No-Repository — Cek Naskah',
   twitterCard: 'summary_large_image',
   twitterTitle: 'Cek Plagiarisme iThenticate — Cek Naskah',
-  twitterDescription: 'Unggah naskah dan dapatkan laporan resmi iThenticate No-Repository cepat dan akurat.'
+  twitterDescription: 'Unggah naskah dan dapatkan laporan resmi iThenticate No-Repository cepat dan akurat.',
+  twitterImage: 'https://cek-naskah.web.id/logo.png',
+  twitterImageAlt: 'Cek Plagiarisme iThenticate Resmi No-Repository — Cek Naskah'
 })
 
 useHead({
@@ -24,6 +27,12 @@ useSchemaOrg([
   defineWebPage({
     name: 'Cek Plagiarisme iThenticate — Cek Naskah',
     description: 'Layanan pemeriksaan similarity resmi iThenticate dengan kustomisasi exclude abstract, methods, bibliography, quotes, citations, dan small matches.'
+  }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Beranda', item: '/' },
+      { name: 'Cek Plagiarisme iThenticate', item: '/ithenticate' }
+    ]
   })
 ])
 

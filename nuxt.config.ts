@@ -87,15 +87,21 @@ export default defineNuxtConfig({
       '/api/**',
       '/auth',
       '/auth/**',
-      '/profile'
+      '/profile',
+      '/profile/**',
+      '/riwayat-naskah',
+      '/riwayat-naskah/**',
+      '/forgot-password',
+      '/reset-password'
     ],
     allow: [
       '/',
+      '/turnitin',
+      '/turnitin-ai',
+      '/ithenticate',
       '/charge',
       '/about-us',
-      '/testimony',
-      '/login',
-      '/register'
+      '/testimony'
     ]
   },
 
@@ -104,8 +110,13 @@ export default defineNuxtConfig({
       '/admin',
       '/admin/**',
       '/profile',
+      '/profile/**',
+      '/riwayat-naskah',
+      '/riwayat-naskah/**',
       '/auth',
       '/auth/**',
+      '/login',
+      '/register',
       '/reset-password',
       '/forgot-password'
     ]

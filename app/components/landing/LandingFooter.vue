@@ -87,17 +87,17 @@ const handleSubscribe = () => {
             <div class="flex -space-x-3">
               <img
                 src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&amp;auto=format&amp;fit=crop&amp;q=80"
-                alt="Client"
+                alt="Akademisi Pengguna Cek Naskah"
                 class="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-neutral-900 shadow-sm"
               >
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&amp;auto=format&amp;fit=crop&amp;q=80"
-                alt="Client"
+                alt="Dosen dan Peneliti Pengguna Cek Naskah"
                 class="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-neutral-900 shadow-sm"
               >
               <img
                 src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&amp;auto=format&amp;fit=crop&amp;q=80"
-                alt="Client"
+                alt="Mahasiswa Pengguna Cek Naskah"
                 class="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-neutral-900 shadow-sm"
               >
             </div>
@@ -116,6 +116,24 @@ const handleSubscribe = () => {
             <ul class="space-y-2 text-sm text-slate-600 dark:text-neutral-400">
               <li>
                 <NuxtLink
+                  to="/turnitin"
+                  class="hover:text-primary-500 transition-colors"
+                >Cek Plagiarisme Turnitin</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/ithenticate"
+                  class="hover:text-primary-500 transition-colors"
+                >Cek Plagiarisme iThenticate</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/turnitin-ai"
+                  class="hover:text-primary-500 transition-colors"
+                >AI Writer Detector</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
                   to="/charge"
                   class="hover:text-primary-500 transition-colors"
                 >Charge & Biaya Layanan</NuxtLink>
@@ -131,30 +149,6 @@ const handleSubscribe = () => {
                   to="/testimony"
                   class="hover:text-primary-500 transition-colors"
                 >Testimoni & Review</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink
-                  to="/charge"
-                  class="hover:text-primary-500 transition-colors"
-                >Cek Plagiarisme Turnitin</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink
-                  to="/charge"
-                  class="hover:text-primary-500 transition-colors"
-                >AI Writer Detector</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink
-                  to="/charge"
-                  class="hover:text-primary-500 transition-colors"
-                >Ambil Artikel Scopus</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink
-                  to="/charge"
-                  class="hover:text-primary-500 transition-colors"
-                >Parafrase Manual</NuxtLink>
               </li>
             </ul>
           </div>

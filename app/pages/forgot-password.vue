@@ -5,7 +5,8 @@ const { loading, error, success, clearMessages, forgotPassword } = useAuth()
 
 useSeoMeta({
   title: 'Lupa Kata Sandi — Cek Naskah',
-  description: 'Pemulihan kata sandi akun Cek Naskah untuk akses uji plagiarisme, deteksi AI, artikel Scopus, dan parafrase manual.'
+  description: 'Pemulihan kata sandi akun Cek Naskah untuk akses uji plagiarisme, deteksi AI, artikel Scopus, dan parafrase manual.',
+  robots: 'noindex, nofollow'
 })
 
 const email = ref('')

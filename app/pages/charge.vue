@@ -9,9 +9,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: 'https://cek-naskah.web.id/charge',
   ogImage: 'https://cek-naskah.web.id/logo.png',
+  ogImageAlt: 'Tarif Cek Plagiasi & AI Turnitin / iThenticate — Cek Naskah',
   twitterCard: 'summary_large_image',
   twitterTitle: 'Tarif Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia — Cek Naskah',
-  twitterDescription: 'Daftar tarif resmi Cek Plagiasi & AI No. 1 di Indonesia: Turnitin No-Repo, AI Detector, Scopus, dan Parafrase.'
+  twitterDescription: 'Daftar tarif resmi Cek Plagiasi & AI No. 1 di Indonesia: Turnitin No-Repo, AI Detector, Scopus, dan Parafrase.',
+  twitterImage: 'https://cek-naskah.web.id/logo.png',
+  twitterImageAlt: 'Tarif Cek Plagiasi & AI Turnitin / iThenticate — Cek Naskah'
 })
 
 useHead({
@@ -24,6 +27,12 @@ useSchemaOrg([
   defineWebPage({
     name: 'Tarif Cek Plagiasi & AI: Turnitin / iThenticate No. 1 di Indonesia — Cek Naskah',
     description: 'Daftar tarif resmi layanan Cek Plagiasi & AI Turnitin / iThenticate No. 1 di Indonesia dengan garansi 100% No-Repository.'
+  }),
+  defineBreadcrumb({
+    itemListElement: [
+      { name: 'Beranda', item: '/' },
+      { name: 'Biaya & Tarif Layanan', item: '/charge' }
+    ]
   })
 ])
 
