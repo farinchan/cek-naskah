@@ -355,7 +355,7 @@ export const useManuscripts = () => {
     resultFile: File
     similarityScore: string
     adminNotes?: string
-  }): Promise<{ success: boolean, message?: string, whatsappNotification?: boolean }> => {
+  }): Promise<{ success: boolean, message?: string, whatsappNotification?: boolean, emailNotification?: boolean }> => {
     clearFeedback()
     if (!isAdmin.value) {
       const msg = 'Akses ditolak: Hanya administrator yang dapat mengunggah hasil laporan.'
@@ -404,12 +404,19 @@ export const useManuscripts = () => {
       updateLocal(manuscripts.value)
       updateLocal(allManuscripts.value)
 
-      // 3. Kirim berkas hasil pemeriksaan ke WhatsApp pengguna (non-blocking)
+      // 3. Kirim berkas hasil pemeriksaan ke WhatsApp & Email pengguna (non-blocking)
       let waNotified = false
+      let emailNotified = false
+      let notificationMsg = ''
       try {
         const { jwt } = await account.createJWT()
         if (jwt) {
-          const notifyRes = await $fetch<{ success: boolean, message?: string }>('/api/admin/manuscripts/notify-result', {
+          const notifyRes = await $fetch<{
+            success: boolean
+            whatsappSent?: boolean
+            emailSent?: boolean
+            message?: string
+          }>('/api/admin/manuscripts/notify-result', {
             method: 'POST',
             headers: {
               'x-appwrite-jwt': jwt
@@ -418,25 +425,34 @@ export const useManuscripts = () => {
               manuscriptId: params.manuscriptId,
               resultFileUrl,
               resultFileName: params.resultFile.name,
+              resultFileId: uploadedResultFile.$id,
               similarityScore: params.similarityScore,
               adminNotes: params.adminNotes
             }
           })
-          waNotified = notifyRes.success
+          waNotified = Boolean(notifyRes.whatsappSent)
+          emailNotified = Boolean(notifyRes.emailSent)
+          notificationMsg = notifyRes.message || ''
         }
-      } catch (waErr) {
-        console.warn('[Admin Upload] Gagal mengirim dokumen hasil via WhatsApp:', waErr)
+      } catch (notifyErr) {
+        console.warn('[Admin Upload] Gagal mengirim notifikasi WhatsApp / Email:', notifyErr)
       }
 
-      const successMsg = waNotified
-        ? 'Laporan hasil similarity berhasil diunggah dan berkas telah dikirim ke WhatsApp pengguna!'
-        : 'Laporan hasil similarity berhasil diunggah!'
+      const successMsg = notificationMsg
+        || (waNotified && emailNotified
+          ? 'Laporan hasil berhasil diunggah serta dikirim ke WhatsApp dan Email pengguna!'
+          : emailNotified
+            ? 'Laporan hasil berhasil diunggah serta dikirim ke Email pengguna via Appwrite!'
+            : waNotified
+              ? 'Laporan hasil berhasil diunggah serta dikirim ke WhatsApp pengguna!'
+              : 'Laporan hasil similarity berhasil diunggah!')
 
       success.value = successMsg
       return {
         success: true,
         message: successMsg,
-        whatsappNotification: waNotified
+        whatsappNotification: waNotified,
+        emailNotification: emailNotified
       }
     } catch (err: unknown) {
       console.error('Error uploading admin result:', err)
@@ -450,20 +466,26 @@ export const useManuscripts = () => {
     }
   }
 
-  // Admin: Kirim ulang / kirim manual berkas hasil pemeriksaan ke WhatsApp pengguna
+  // Admin: Kirim ulang / kirim manual berkas hasil pemeriksaan ke WhatsApp & Email pengguna
   const adminNotifyResult = async (params: {
     manuscriptId: string
     resultFileUrl?: string
     resultFileName?: string
+    resultFileId?: string
     similarityScore?: string
     adminNotes?: string
-  }): Promise<{ success: boolean, message?: string }> => {
+  }): Promise<{ success: boolean, whatsappSent?: boolean, emailSent?: boolean, message?: string }> => {
     try {
       const { jwt } = await account.createJWT()
       if (!jwt) {
         return { success: false, message: 'Sesi admin tidak valid.' }
       }
-      return await $fetch<{ success: boolean, message?: string }>('/api/admin/manuscripts/notify-result', {
+      return await $fetch<{
+        success: boolean
+        whatsappSent?: boolean
+        emailSent?: boolean
+        message?: string
+      }>('/api/admin/manuscripts/notify-result', {
         method: 'POST',
         headers: {
           'x-appwrite-jwt': jwt
@@ -473,7 +495,7 @@ export const useManuscripts = () => {
     } catch (err: unknown) {
       const errMsg = (err as { data?: { statusMessage?: string }, message?: string })?.data?.statusMessage
         || (err as { message?: string })?.message
-        || 'Gagal mengirim dokumen via WhatsApp.'
+        || 'Gagal mengirim notifikasi ke WhatsApp / Email.'
       return { success: false, message: errMsg }
     }
   }

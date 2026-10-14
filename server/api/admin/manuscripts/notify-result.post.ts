@@ -38,10 +38,18 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const userId = (manuscript.userId as string) || ''
+  const userName = (manuscript.userName as string) || 'Pengguna'
+  const userEmail = (manuscript.userEmail as string) || ''
+  const title = (manuscript.title as string) || 'Naskah'
+  const serviceName = (manuscript.serviceName as string) || 'Pemeriksaan Naskah'
+  const similarityScore = body.similarityScore || (manuscript.similarityScore as string) || ''
+  const resultFileName = body.resultFileName || (manuscript.resultFileName as string) || 'Laporan_Hasil.pdf'
+  const resultFileId = (body as { resultFileId?: string })?.resultFileId || (manuscript.resultFileId as string) || ''
+  const adminNotes = body.adminNotes || (manuscript.adminNotes as string) || ''
+
   // 2. Ambil nomor telepon pengguna (dari naskah atau preferensi akun)
   let userPhone = (manuscript.userPhone as string) || ''
-  const userId = manuscript.userId as string
-
   if (!userPhone && userId) {
     try {
       const targetUser = await adminAppwrite.getUser(userId)
@@ -51,30 +59,57 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (!userPhone) {
-    console.warn(`[Notify Result] Naskah ${body.manuscriptId} tidak memiliki nomor telepon pengguna. Notifikasi WA dilewati.`)
-    return {
-      success: false,
-      message: 'Nomor WhatsApp pengguna tidak tersedia pada data naskah atau profil akun.'
-    }
+  // 3. Jalankan pengiriman WhatsApp dan Appwrite Email secara paralel
+  const [waSent, emailSent] = await Promise.all([
+    userPhone
+      ? notifyUserManuscriptResult({
+          userPhone,
+          userName,
+          title,
+          serviceName,
+          similarityScore,
+          resultFileUrl,
+          resultFileName,
+          adminNotes
+        }).catch((err) => {
+          console.error('[Notify Result] Gagal kirim WA:', err)
+          return false
+        })
+      : Promise.resolve(false),
+    userId
+      ? notifyUserResultViaEmail({
+          userId,
+          userEmail,
+          userName,
+          title,
+          serviceName,
+          similarityScore,
+          resultFileUrl,
+          resultFileName,
+          resultFileId,
+          adminNotes
+        }).catch((err) => {
+          console.error('[Notify Result] Gagal kirim Email Appwrite:', err)
+          return false
+        })
+      : Promise.resolve(false)
+  ])
+
+  let message: string
+  if (waSent && emailSent) {
+    message = 'Dokumen hasil pemeriksaan berhasil dikirim ke WhatsApp dan Email pengguna.'
+  } else if (emailSent) {
+    message = 'Laporan hasil berhasil dikirim ke Email pengguna via Appwrite.' + (!userPhone ? ' (Nomor WhatsApp tidak tersedia).' : ' (Gagal mengirim ke WhatsApp).')
+  } else if (waSent) {
+    message = 'Dokumen hasil berhasil dikirim ke WhatsApp pengguna (Gagal mengirimkan notifikasi Email).'
+  } else {
+    message = 'Gagal mengirimkan notifikasi ke WhatsApp maupun Email pengguna.'
   }
 
-  // 3. Kirim berkas hasil pemeriksaan ke WhatsApp pengguna
-  const sent = await notifyUserManuscriptResult({
-    userPhone,
-    userName: (manuscript.userName as string) || 'Pengguna',
-    title: (manuscript.title as string) || 'Naskah',
-    serviceName: (manuscript.serviceName as string) || 'Pemeriksaan Naskah',
-    similarityScore: body.similarityScore || (manuscript.similarityScore as string) || '',
-    resultFileUrl,
-    resultFileName: body.resultFileName || (manuscript.resultFileName as string) || 'Laporan_Hasil.pdf',
-    adminNotes: body.adminNotes || (manuscript.adminNotes as string) || ''
-  })
-
   return {
-    success: sent,
-    message: sent
-      ? 'Dokumen hasil pemeriksaan berhasil dikirim ke WhatsApp pengguna.'
-      : 'Gagal mengirimkan dokumen via WhatsApp gateway.'
+    success: waSent || emailSent,
+    whatsappSent: waSent,
+    emailSent,
+    message
   }
 })

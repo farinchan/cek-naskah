@@ -225,37 +225,40 @@ const handleSaveUploadModal = async () => {
   }, 1200)
 }
 
-const isSendingWa = ref<string | null>(null)
-const handleSendWhatsapp = async (item: ManuscriptRow) => {
+const isSendingNotification = ref<string | null>(null)
+const handleSendNotification = async (item: ManuscriptRow) => {
   if (!item.resultFileUrl) {
     alert('Belum ada dokumen laporan hasil yang diunggah.')
     return
   }
-  isSendingWa.value = item.$id
+  isSendingNotification.value = item.$id
   try {
     const res = await adminNotifyResult({
       manuscriptId: item.$id,
       resultFileUrl: item.resultFileUrl,
       resultFileName: item.resultFileName || 'Laporan_Hasil.pdf',
+      resultFileId: item.resultFileId,
       similarityScore: item.similarityScore,
       adminNotes: item.adminNotes
     })
     if (res.success) {
       clearFeedback()
-      modalSuccess.value = 'Dokumen hasil berhasil dikirim ke WhatsApp ' + (item.userPhone || item.userName)
+      modalSuccess.value = res.message || 'Notifikasi dokumen berhasil dikirim ke WhatsApp dan Email pengguna!'
       setTimeout(() => {
         modalSuccess.value = null
-      }, 4000)
+      }, 5000)
     } else {
-      alert(res.message || 'Gagal mengirim berkas via WhatsApp.')
+      alert(res.message || 'Gagal mengirim notifikasi.')
     }
   } catch (err: unknown) {
-    const msg = (err as { message?: string })?.message || 'Gagal mengirim berkas via WhatsApp.'
+    const msg = (err as { message?: string })?.message || 'Gagal mengirim notifikasi.'
     alert(msg)
   } finally {
-    isSendingWa.value = null
+    isSendingNotification.value = null
   }
 }
+const handleSendWhatsapp = handleSendNotification
+const isSendingWa = isSendingNotification
 
 const openDetailModal = (item: ManuscriptRow) => {
   selectedManuscript.value = item
@@ -864,12 +867,12 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                       <span>Hasil ({{ item.similarityScore || 'PDF' }})</span>
                     </a>
 
-                    <!-- Direct Send Result to User WhatsApp Button -->
+                    <!-- Direct Send Result to User WhatsApp & Email Button -->
                     <button
                       type="button"
                       :disabled="isSendingWa === item.$id"
                       class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-50"
-                      title="Kirim ulang berkas hasil langsung ke WhatsApp pengguna"
+                      title="Kirim ulang berkas hasil langsung ke WhatsApp & Email pengguna"
                       @click="handleSendWhatsapp(item)"
                     >
                       <UIcon
@@ -877,7 +880,7 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                         class="w-3 h-3 text-emerald-600"
                         :class="{ 'animate-spin': isSendingWa === item.$id }"
                       />
-                      <span>{{ isSendingWa === item.$id ? '...' : 'Kirim WA' }}</span>
+                      <span>{{ isSendingWa === item.$id ? '...' : 'Kirim WA & Email' }}</span>
                     </button>
                   </div>
                   <div
@@ -1050,7 +1053,7 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
               type="button"
               :disabled="isSendingWa === item.$id"
               class="p-2 rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer disabled:opacity-50"
-              title="Kirim ulang dokumen hasil ke WhatsApp pengguna"
+              title="Kirim ulang dokumen hasil ke WhatsApp & Email pengguna"
               @click="handleSendWhatsapp(item)"
             >
               <UIcon
