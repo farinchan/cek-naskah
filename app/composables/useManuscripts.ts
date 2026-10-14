@@ -2,6 +2,7 @@ import type { Models } from 'appwrite'
 import {
   storage,
   tablesDB,
+  account,
   APPWRITE_DATABASE_ID,
   APPWRITE_TABLE_NASKAH,
   APPWRITE_BUCKET_NASKAH,
@@ -354,7 +355,7 @@ export const useManuscripts = () => {
     resultFile: File
     similarityScore: string
     adminNotes?: string
-  }): Promise<{ success: boolean, message?: string }> => {
+  }): Promise<{ success: boolean, message?: string, whatsappNotification?: boolean }> => {
     clearFeedback()
     if (!isAdmin.value) {
       const msg = 'Akses ditolak: Hanya administrator yang dapat mengunggah hasil laporan.'
@@ -403,8 +404,40 @@ export const useManuscripts = () => {
       updateLocal(manuscripts.value)
       updateLocal(allManuscripts.value)
 
-      success.value = 'Laporan hasil similarity berhasil diunggah!'
-      return { success: true, message: 'Laporan berhasil diunggah!' }
+      // 3. Kirim berkas hasil pemeriksaan ke WhatsApp pengguna (non-blocking)
+      let waNotified = false
+      try {
+        const { jwt } = await account.createJWT()
+        if (jwt) {
+          const notifyRes = await $fetch<{ success: boolean, message?: string }>('/api/admin/manuscripts/notify-result', {
+            method: 'POST',
+            headers: {
+              'x-appwrite-jwt': jwt
+            },
+            body: {
+              manuscriptId: params.manuscriptId,
+              resultFileUrl,
+              resultFileName: params.resultFile.name,
+              similarityScore: params.similarityScore,
+              adminNotes: params.adminNotes
+            }
+          })
+          waNotified = notifyRes.success
+        }
+      } catch (waErr) {
+        console.warn('[Admin Upload] Gagal mengirim dokumen hasil via WhatsApp:', waErr)
+      }
+
+      const successMsg = waNotified
+        ? 'Laporan hasil similarity berhasil diunggah dan berkas telah dikirim ke WhatsApp pengguna!'
+        : 'Laporan hasil similarity berhasil diunggah!'
+
+      success.value = successMsg
+      return {
+        success: true,
+        message: successMsg,
+        whatsappNotification: waNotified
+      }
     } catch (err: unknown) {
       console.error('Error uploading admin result:', err)
       const msg = err && typeof err === 'object' && 'message' in err
@@ -414,6 +447,34 @@ export const useManuscripts = () => {
       return { success: false, message: msg }
     } finally {
       uploading.value = false
+    }
+  }
+
+  // Admin: Kirim ulang / kirim manual berkas hasil pemeriksaan ke WhatsApp pengguna
+  const adminNotifyResult = async (params: {
+    manuscriptId: string
+    resultFileUrl?: string
+    resultFileName?: string
+    similarityScore?: string
+    adminNotes?: string
+  }): Promise<{ success: boolean, message?: string }> => {
+    try {
+      const { jwt } = await account.createJWT()
+      if (!jwt) {
+        return { success: false, message: 'Sesi admin tidak valid.' }
+      }
+      return await $fetch<{ success: boolean, message?: string }>('/api/admin/manuscripts/notify-result', {
+        method: 'POST',
+        headers: {
+          'x-appwrite-jwt': jwt
+        },
+        body: params
+      })
+    } catch (err: unknown) {
+      const errMsg = (err as { data?: { statusMessage?: string }, message?: string })?.data?.statusMessage
+        || (err as { message?: string })?.message
+        || 'Gagal mengirim dokumen via WhatsApp.'
+      return { success: false, message: errMsg }
     }
   }
 
@@ -527,6 +588,7 @@ export const useManuscripts = () => {
     fetchAllManuscripts,
     submitManuscript,
     adminUploadResult,
+    adminNotifyResult,
     adminUpdateStatus,
     adminDeleteManuscript
   }

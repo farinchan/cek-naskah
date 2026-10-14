@@ -178,6 +178,24 @@ export default defineEventHandler(async (event) => {
       console.error('[Telegram] Gagal mengirim notifikasi naskah:', telErr)
     })
 
+    // Kirim notifikasi WhatsApp ke administrator (non-blocking)
+    notifyAdminNewManuscript({
+      title: body.title.trim(),
+      serviceName: body.serviceName || 'Pemeriksaan Naskah',
+      price: body.price || 'Rp 0',
+      userName: authUser.name || 'Pengguna',
+      userEmail: authUser.email || '',
+      userPhone,
+      fileName: body.fileName || 'dokumen.docx',
+      fileSize: Number(body.fileSize) || 0,
+      fileUrl,
+      language: body.language || '',
+      userNotes: (body.userNotes || '').trim(),
+      transactionId: txId
+    }).catch((waErr) => {
+      console.error('[WhatsApp] Gagal mengirim notifikasi naskah ke admin:', waErr)
+    })
+
     return {
       success: true,
       manuscript: createdManuscript,

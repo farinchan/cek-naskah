@@ -27,6 +27,7 @@ const {
   getStatusBadge,
   fetchAllManuscripts,
   adminUploadResult,
+  adminNotifyResult,
   adminUpdateStatus,
   adminDeleteManuscript
 } = useManuscripts()
@@ -205,6 +206,7 @@ const handleSaveUploadModal = async () => {
       modalError.value = res.message || 'Gagal mengunggah laporan hasil.'
       return
     }
+    modalSuccess.value = res.message || 'Laporan hasil berhasil diunggah dan dikirim ke WhatsApp!'
   } else {
     const res = await adminUpdateStatus(
       targetManuscript.value.$id,
@@ -215,12 +217,44 @@ const handleSaveUploadModal = async () => {
       modalError.value = res.message || 'Gagal memperbarui status.'
       return
     }
+    modalSuccess.value = 'Data status naskah berhasil diperbarui!'
   }
 
-  modalSuccess.value = 'Data naskah dan hasil laporan berhasil diperbarui!'
   setTimeout(() => {
     isUploadModalOpen.value = false
-  }, 1000)
+  }, 1200)
+}
+
+const isSendingWa = ref<string | null>(null)
+const handleSendWhatsapp = async (item: ManuscriptRow) => {
+  if (!item.resultFileUrl) {
+    alert('Belum ada dokumen laporan hasil yang diunggah.')
+    return
+  }
+  isSendingWa.value = item.$id
+  try {
+    const res = await adminNotifyResult({
+      manuscriptId: item.$id,
+      resultFileUrl: item.resultFileUrl,
+      resultFileName: item.resultFileName || 'Laporan_Hasil.pdf',
+      similarityScore: item.similarityScore,
+      adminNotes: item.adminNotes
+    })
+    if (res.success) {
+      clearFeedback()
+      modalSuccess.value = 'Dokumen hasil berhasil dikirim ke WhatsApp ' + (item.userPhone || item.userName)
+      setTimeout(() => {
+        modalSuccess.value = null
+      }, 4000)
+    } else {
+      alert(res.message || 'Gagal mengirim berkas via WhatsApp.')
+    }
+  } catch (err: unknown) {
+    const msg = (err as { message?: string })?.message || 'Gagal mengirim berkas via WhatsApp.'
+    alert(msg)
+  } finally {
+    isSendingWa.value = null
+  }
 }
 
 const openDetailModal = (item: ManuscriptRow) => {
@@ -815,7 +849,7 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                   <!-- Result Report File -->
                   <div
                     v-if="item.resultFileUrl"
-                    class="flex items-center gap-2"
+                    class="flex items-center gap-1.5"
                   >
                     <a
                       :href="item.resultFileUrl"
@@ -829,6 +863,22 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                       />
                       <span>Hasil ({{ item.similarityScore || 'PDF' }})</span>
                     </a>
+
+                    <!-- Direct Send Result to User WhatsApp Button -->
+                    <button
+                      type="button"
+                      :disabled="isSendingWa === item.$id"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 text-[10px] font-bold hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-50"
+                      title="Kirim ulang berkas hasil langsung ke WhatsApp pengguna"
+                      @click="handleSendWhatsapp(item)"
+                    >
+                      <UIcon
+                        :name="isSendingWa === item.$id ? 'i-lucide-loader-2' : 'i-simple-icons-whatsapp'"
+                        class="w-3 h-3 text-emerald-600"
+                        :class="{ 'animate-spin': isSendingWa === item.$id }"
+                      />
+                      <span>{{ isSendingWa === item.$id ? '...' : 'Kirim WA' }}</span>
+                    </button>
                   </div>
                   <div
                     v-else
@@ -995,6 +1045,20 @@ const onQuickStatusChange = (item: ManuscriptRow, e: Event) => {
                 class="w-4 h-4"
               />
             </a>
+            <button
+              v-if="item.resultFileUrl"
+              type="button"
+              :disabled="isSendingWa === item.$id"
+              class="p-2 rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer disabled:opacity-50"
+              title="Kirim ulang dokumen hasil ke WhatsApp pengguna"
+              @click="handleSendWhatsapp(item)"
+            >
+              <UIcon
+                :name="isSendingWa === item.$id ? 'i-lucide-loader-2' : 'i-simple-icons-whatsapp'"
+                class="w-4 h-4"
+                :class="{ 'animate-spin': isSendingWa === item.$id }"
+              />
+            </button>
           </div>
 
           <div class="flex items-center gap-1.5">

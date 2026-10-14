@@ -34,6 +34,10 @@ export default defineNuxtConfig({
     sumopodWebhookToken: process.env.SUMOPOD_WEBHOOK_TOKEN || '',
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
     telegramChatId: process.env.TELEGRAM_CHAT_ID || '',
+    whatsappApiBaseUrl: process.env.WHATSAPP_API_BASE_URL || 'https://wa.nagastra.org/api/whatsapp',
+    whatsappSessionId: process.env.WHATSAPP_SESSION_ID || 'cek-naskah',
+    whatsappApiKey: process.env.WHATSAPP_API_KEY || 'fajri1228',
+    whatsappAdminPhone: process.env.WHATSAPP_ADMIN_PHONE || '6282288358026',
     public: {
       googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION || '',
       googleAnalyticsId: process.env.GOOGLE_ANALYTICS_ID || '',
